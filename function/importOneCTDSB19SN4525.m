@@ -54,25 +54,25 @@ function[]=importOneCTDSB19SN4525(FILENAME,PATHNAME)
     timeNumVector=startingDateNum+(data{8})/(60*60*24);
     
     %assign Pressure variable names and values
-    assignin('base', strcat('P',tempVarName), [timeNumVector,data{1}]);
+    assignin('base', strcat('PRES_REL_',tempVarName), [timeNumVector,data{1}]);
     
     %assign temprature variable names and values
-    assignin('base', strcat('T',tempVarName), [timeNumVector,data{2}]); 
+    assignin('base', strcat('TEMP_',tempVarName), [timeNumVector,data{2}]); 
 
     %assign Conductivity variable names and values
-    assignin('base', strcat('C',tempVarName), [timeNumVector,data{3}]);
+    assignin('base', strcat('CNDC_',tempVarName), [timeNumVector,data{3}]);
     
     %assign DO variable names and values
-    assignin('base', strcat('DO',tempVarName), [timeNumVector,data{4}]);
+    assignin('base', strcat('DOX1',tempVarName), [timeNumVector,data{4}]);
     
     %assign beam transmission variable names and values
-    assignin('base', strcat('Tr',tempVarName), [timeNumVector,data{5}]);
+    assignin('base', strcat('TR_',tempVarName), [timeNumVector,data{5}]);
     
     %assign Fluo variable names and values
-    assignin('base', strcat('Fl',tempVarName), [timeNumVector,data{6}]);
+    assignin('base', strcat('CHLF_',tempVarName), [timeNumVector,data{6}]);
     
     %assign Par variable names and values
-    assignin('base', strcat('Par',tempVarName), [timeNumVector,data{7}]);
+    assignin('base', strcat('PAR_',tempVarName), [timeNumVector,data{7}]);
     
     
     

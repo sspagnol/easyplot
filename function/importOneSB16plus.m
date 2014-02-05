@@ -45,13 +45,13 @@ function[]=importOneSB16plus(FILENAME,PATHNAME)
     timeNumVector=startingDateNum+(data{4})/(60*60*24);
     
     %assign temprature variable names and values
-    assignin('base', strcat('T',tempVarName), [timeNumVector,data{3}]); 
+    assignin('base', strcat('TEMP_',tempVarName), [timeNumVector,data{3}]); 
     
     %assign Pressure variable names and values
-    assignin('base', strcat('P',tempVarName), [timeNumVector,data{2}]);
+    assignin('base', strcat('PRES_REL_',tempVarName), [timeNumVector,data{2}]);
 
     %assign Conductivity variable names and values
-    assignin('base', strcat('C',tempVarName), [timeNumVector,data{1}]);
+    assignin('base', strcat('CNDC_',tempVarName), [timeNumVector,data{1}]);
     
     
     

@@ -52,5 +52,5 @@ end
 tempVarName=genvarname(tempVarName);
 
 %assign temperature variable names and values
-assignin('base', strcat('T',tempVarName), [serialTimeVector , data{1}]);
+assignin('base', strcat('TEMP_',tempVarName), [serialTimeVector , data{1}]);
 

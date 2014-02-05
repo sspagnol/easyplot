@@ -58,9 +58,9 @@ end
 tempVarName=genvarname(tempVarName);
 
 %assign temperature variable names and values
-assignin('base', strcat('T',tempVarName), [serialTimeVector , data{1}]);
+assignin('base', strcat('TEMP_',tempVarName), [serialTimeVector , data{1}]);
 
 %assign Pressure variable names and values
 if pSensor==1
-    assignin('base', strcat('P',tempVarName), [serialTimeVector , data{2}]);
+    assignin('base', strcat('PRES_',tempVarName), [serialTimeVector , data{2}]);
 end

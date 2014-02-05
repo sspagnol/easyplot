@@ -1,7 +1,16 @@
 %import sb19 data
 %each sb19 sensor is loaded separatly into the workspace
 %SB19 data must be in the format:
+% for sbe19 w/o DO
 % 'Pressure' 'Temp' 'Conductivity' ' time elapsed in% second' 'Flag'
+% # name 0 = prdM: Pressure, Strain Gauge [db]
+% # name 1 = tv290C: Temperature [ITS-90, deg C]
+% # name 2 = c0S/m: Conductivity [S/m]
+% # name 3 = timeS: Time, Elapsed [seconds]
+% # name 4 = flag:  0.000e+00
+
+% "*  <StatusData DeviceType='SBE16plus' SerialNumber='01607110'>"
+% "*  <StatusData DeviceType='SBE25plus' SerialNumber='0251009'>"
 
 %Mederic MAINSON.
 
@@ -41,13 +50,13 @@ tempVarName=genvarname(tempVarName);
 %evaluate time vector for associated set of data
 timeNumVector=startingDateNum+(data{4})/(60*60*24);
 
-%assign temprature variable names and values
-assignin('base', strcat('T',tempVarName), [timeNumVector,data{2}]);
-
 %assign Pressure variable names and values
-assignin('base', strcat('P',tempVarName), [timeNumVector,data{1}]);
+assignin('base', strcat('PRES_REL',tempVarName), [timeNumVector,data{1}]);
+
+%assign temprature variable names and values
+assignin('base', strcat('TEMP_',tempVarName), [timeNumVector,data{2}]);
 
 %assign Conductivity variable names and values
-assignin('base', strcat('C',tempVarName), [timeNumVector,data{3}]);
+assignin('base', strcat('CNDC_',tempVarName), [timeNumVector,data{3}]);
 
 
