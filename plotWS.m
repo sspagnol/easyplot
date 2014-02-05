@@ -7,7 +7,6 @@ varList=whos;
 % selVarInd = sscanf(selVarInd, '%d');
 selVarInd=1:length(varList);
 
-
 %set plot figure and toolbar
 hFigure=figure('Visible','off','ToolBar','figure');
 %create a toolbar and a toggle button to display or not the legend
@@ -18,8 +17,8 @@ plotStr=[];
 legendStr=[];
 for i=1:length(selVarInd)
     
-    %only plot if variables is a time serie... ie has two colunm and his double, 
-    if varList(selVarInd(i)).size(2)==2 &&  strcmp(varList(selVarInd(i)).class,'double');   
+    %only plot if variables is a time serie... ie has two colunm and his double,
+    if varList(selVarInd(i)).size(2)==2 &&  strcmp(varList(selVarInd(i)).class,'double');
         plotStr=[plotStr varList(selVarInd(i)).name '(:,1),' varList(selVarInd(i)).name '(:,2),' ];
         legendStr=[legendStr '''' varList(selVarInd(i)).name '''' ',' ];
     end
@@ -35,7 +34,7 @@ legendStr=['hLegend=legend(' legendStr(1:end-1) ');'];
 %evaluate legendStr
 eval(legendStr)
 
-datetick('x','dd-mmm')
+datetick('x','dd-mmm-yyyy')
 xlabel('Time (UTC)')
 setDate4zoom
 set(hFigure,'Visible','on');

@@ -18,7 +18,7 @@ plotStr=[];
 legendStr=[];
 for i=1:length(selVarInd)
     
-    %only plot if variables is a time serie... ie has two colunm and his double, 
+    %only plot if variables is a time serie... ie has two colunm and his double,
     if          varList(selVarInd(i)).size(2)==2 ...
             &&  strcmp(varList(selVarInd(i)).class,'double') ...
             &&  isempty(regexp(varList(selVarInd(i)).name, variableFilterString, 'once'))==0;

@@ -8,7 +8,7 @@
 
 function[]=importOneSB16plus(FILENAME,PATHNAME)
 
-    fid = fopen([PATHNAME, FILENAME]);
+    fid = fopen(fullfile(PATHNAME, FILENAME));
     
     tline = fgetl(fid);
     %look for starting date line in header
@@ -30,15 +30,12 @@ function[]=importOneSB16plus(FILENAME,PATHNAME)
     
     %Import data into temporary cell array
     data = textscan(fid, '%f %f %f %f %f');
-    disp('read data');
-    tempVarName= FILENAME(1:end-4);
 
-%     %clean varname from the end to make it a valid variable name in the workspace
-%     while isvarname(tempVarName)==0;
-%         tempVarName=tempVarName(1:end-1);
-%     end
+    fclose(fid);
+    
     % prepend SBE16 string if required and sanitize to make a valid workspace variable
     % name
+    [PATHSTR,tempVarName,EXT]=fileparts(FILENAME);
     if isempty(strfind(upper(tempVarName),'SBE16'))
         tempVarName=strcat('SBE16_',tempVarName);
     end

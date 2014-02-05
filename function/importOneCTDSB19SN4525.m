@@ -18,7 +18,7 @@
 
 function[]=importOneCTDSB19SN4525(FILENAME,PATHNAME)
 
-    fid = fopen([PATHNAME, FILENAME]);
+    fid = fopen(fullfile(PATHNAME, FILENAME));
     
     tline = fgetl(fid);
     %look for starting date line in header
@@ -41,11 +41,14 @@ function[]=importOneCTDSB19SN4525(FILENAME,PATHNAME)
     %Import data into temporary cell array
     data = textscan(fid, '%f %f %f %f %f %f %f %f %f');
     
-    tempVarName= FILENAME(1:end-4);
-    %clean varname from the end to make it a valid variable name in the workspace
-    while isvarname(tempVarName)==0;
-        tempVarName=tempVarName(1:end-1);
+    fclose(fid);
+    
+    %sanitize filename to create a valid variable name in the workspace
+    [PATHSTR,tempVarName,EXT]=fileparts(FILENAME);
+    if isempty(strfind(upper(tempVarName),'SBE19'))
+        tempVarName=strcat('SBE19_',tempVarName);
     end
+    tempVarName=genvarname(tempVarName);
     
     %evaluate time vector for associated set of data
     timeNumVector=startingDateNum+(data{8})/(60*60*24);
