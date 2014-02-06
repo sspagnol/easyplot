@@ -1,11 +1,13 @@
-varList=whos;
+kk=1;
+for ii=1:length(sample_data)
+   for kk=1:length(sample_data{ii}.variables)
+   varList{kk}=sample_data{ii}.variables{kk}.name;
+   kk=kk+1;
+   end
+end
+varList=unique(varList);
 
-%ask for a string in order to filter variable to plot
-%stringFilter = input('Do you want a filter? Y/N [N]: ', 's');
-
-% selVarInd=variableSelectionGUI1(varList);
-% selVarInd = sscanf(selVarInd, '%d');
-selVarInd=1:length(varList);
+disp(sprintf('%s ','Variable list = ',varList{:}));
 
 %Create a string for legend
 legendStr={};
@@ -22,23 +24,27 @@ figure(fh_overlay);
 set(fh_overlay,'Color',[1 1 1]);
 hold('on');
 
-ii=1;
-for i=1:length(selVarInd)
-    %only plot if variables is a time serie... ie has two colunm and his double,
-    if varList(selVarInd(i)).size(2)==2 &&  strcmp(varList(selVarInd(i)).class,'double');
-        theData=eval(varList(selVarInd(i)).name);
-        plot(theData(:,1), theData(:,2));
-        legendStr{ii}=strrep(varList(selVarInd(i)).name, '_', '\_');
-        ii=ii+1;
+kk=1;
+for ii=1:numel(sample_data)
+    for jj=1:numel(varList)
+        varInd=getVar(sample_data{ii}.variables, char(varList(jj)));
+        if varInd~=0
+            idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+            plot(sample_data{ii}.dimensions{idTime}.data, sample_data{ii}.variables{varInd}.data);
+            legendStr{kk}=strcat(strrep(char(varList(jj)),'_','\_'),'-',sample_data{ii}.meta.instrument_model,'\_',sample_data{ii}.meta.instrument_serial_no);
+            kk=kk+1;
+        end
     end
 end
 
 h = findobj(gca,'Type','line');
-mapping = round(linspace(1,64,length(h)))';
-colors = colormap('jet');
+% mapping = round(linspace(1,64,length(h)))';
+% colors = colormap('jet');
+colors = distinguishable_colors(length(h),'white');
 for j = 1:length(h)
     try
-        set(h(j),'Color',colors( mapping(j),: ));
+        %set(h(j),'Color',colors( mapping(j),: ));
+        set(h(j),'Color',colors(j,:));
     catch e
         fprintf('Error changing plot colours in plot %s \n',get(gcf,'Name'));
         disp(e.message);

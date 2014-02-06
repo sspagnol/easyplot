@@ -1,5 +1,6 @@
+
 %select file
-[FILENAME, PATHNAME, FILTERINDEX] = uigetfile('*.dat', 'Choose WQM files:','MultiSelect','on');
+[FILENAME, PATHNAME, FILTERINDEX] = uigetfile('*.txt', 'Choose TR1060/TDR2050 files:','MultiSelect','on');
 
 if ischar(FILENAME)
     FILENAME = {FILENAME};
@@ -9,7 +10,6 @@ iend=0;
 if exist('sample_data','var')
     iend=numel(sample_data);
 end
-
 notLoaded=0;
 for ii=1:length(FILENAME)
     if exist('sample_data','var')
@@ -19,11 +19,10 @@ for ii=1:length(FILENAME)
     end
     if notLoaded
         disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-        sample_data{ii+iend} = WQMParse( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
+        sample_data{ii+iend} = XRParse( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
     else
         disp(['File ' char(FILENAME{ii}) ' already loaded.']);
     end
 end
 
 clear FILENAME PATHNAME FILTERINDEX ii
-

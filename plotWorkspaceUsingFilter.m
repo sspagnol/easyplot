@@ -1,11 +1,17 @@
-varList=whos;
+kk=1;
+for ii=1:length(sample_data)
+    for jj=1:length(sample_data{ii}.variables)
+        varList{kk}=sample_data{ii}.variables{jj}.name;
+        kk=kk+1;
+    end
+end
+varList=unique(varList);
+
+disp(sprintf('%s ','Variable list = ',varList{:}));
 
 %ask for a string in order to filter variable to plot
-variableFilterStartString = input('filter variable starting with? ', 's');
-variableFilterString = [variableFilterStartString '\w'];
-% selVarInd=variableSelectionGUI1(varList);
-% selVarInd = sscanf(selVarInd, '%d');
-selVarInd=1:length(varList);
+varName = upper(input('Plot variable ? ', 's'));
+varInd=cellfun(@(x) getVar(x.variables, varName), sample_data);
 
 %Create a string for legend
 legendStr={};
@@ -22,28 +28,27 @@ figure(fh_overlay);
 set(fh_overlay,'Color',[1 1 1]);
 hold('on');
 
-ii=1;
-for i=1:length(selVarInd)
+jj=1;
+for ii=1:length(varInd)
     %only plot if variables is a time serie... ie has two colunm and his double,
-    if          varList(selVarInd(i)).size(2)==2 ...
-            &&  strcmp(varList(selVarInd(i)).class,'double') ...
-            &&  isempty(regexp(varList(selVarInd(i)).name, variableFilterString, 'once'))==0;
-        
-        %plotStr=[plotStr varList(selVarInd(i)).name '(:,1),' varList(selVarInd(i)).name '(:,2),' ];
-        theData=eval(varList(selVarInd(i)).name);
-        plot(theData(:,1), theData(:,2));
-        legendStr{ii}=strrep(varList(selVarInd(i)).name, '_', '\_');
-        ii=ii+1;
+    if varInd(ii)~=0
+        idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+        plot(sample_data{ii}.dimensions{idTime}.data, sample_data{ii}.variables{varInd(ii)}.data);
+        legendStr{jj}=strcat(sample_data{ii}.meta.instrument_model,'\_',sample_data{ii}.meta.instrument_serial_no);
+        jj=jj+1;
     end
 end
 
-% make 
+% make
 h = findobj(gca,'Type','line');
-mapping = round(linspace(1,64,length(h)))';
-colors = colormap('jet');
+
+% mapping = round(linspace(1,64,length(h)))';
+% colors = colormap('jet');
+colors = distinguishable_colors(length(h),'white');
 for j = 1:length(h)
     try
-        set(h(j),'Color',colors( mapping(j),: ));
+        %set(h(j),'Color',colors( mapping(j),: ));
+        set(h(j),'Color',colors(j,:));
     catch e
         fprintf('Error changing plot colours in plot %s \n',get(gcf,'Name'));
         disp(e.message);
