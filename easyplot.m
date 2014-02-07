@@ -266,7 +266,7 @@ function clearPlot_Callback(hObject, eventdata, handles)
 % clear plot
 children = get(handles.axes1, 'Children');
 delete(children);
-legend(handles.axes1,'hide')
+legend(handles.axes1,'off')
 handles.sample_data={};
 guidata(hObject, handles);
 end
