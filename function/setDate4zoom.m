@@ -10,7 +10,7 @@ function mypostcallback(obj,evd)
 newLim = get(evd.Axes,'XLim');
 timeScale=newLim(2)-newLim(1);
 if timeScale >= 60 
-    datetick('x','mmm-yy','keeplimits')
+    datetick('x','mmm-yyyy','keeplimits')
 elseif timeScale >= 2
     datetick('x','dd-mmm','keeplimits')
 % elseif timeScale >= 2/24
