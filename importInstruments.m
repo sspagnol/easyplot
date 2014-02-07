@@ -45,7 +45,8 @@ theList.parser{ii}='workhorseParse';
 
 iParse=menu('Choose instrument type',theList.name);
 fhandle = str2func(theList.parser{iParse});
-
+% need to pause to get uigetfile to operate correctly
+pause(0.1);
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(theList.wildcard{iParse}, theList.message{iParse}, 'MultiSelect','on');
 
 if ischar(FILENAME)
