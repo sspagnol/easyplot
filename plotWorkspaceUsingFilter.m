@@ -61,4 +61,5 @@ set(fh_overlay,'Visible','on');
 %set(hLegend,'Interpreter','none');
 legend(legendStr);
 
+
 clear hfigure i selVarInd plotStr legendStr varList hLegend
