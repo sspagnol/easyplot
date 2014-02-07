@@ -162,6 +162,7 @@ function plotData(hObject,handles)
 sample_data=handles.sample_data;
 
 figure(handles.figure1); %make figure current
+set(handles.figure1,'Toolbar','figure');
 
 kk=1;
 for ii=1:length(sample_data)
