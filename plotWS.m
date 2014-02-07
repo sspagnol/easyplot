@@ -1,8 +1,10 @@
 kk=1;
 for ii=1:length(sample_data)
    for kk=1:length(sample_data{ii}.variables)
-   varList{kk}=sample_data{ii}.variables{kk}.name;
-   kk=kk+1;
+        if isvector(sample_data{ii}.variables{jj}.data)
+            varList{kk}=sample_data{ii}.variables{jj}.name;
+            kk=kk+1;
+        end
    end
 end
 varList=unique(varList);

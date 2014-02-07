@@ -31,7 +31,6 @@ set(fh_overlay,'Color',[1 1 1]);
 hold('on');
 
 for ii=1:length(varInd)
-    %only plot if variables is a time serie... ie has two colunm and his double,
     if varInd(ii)~=0
         idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
         plot(sample_data{ii}.dimensions{idTime}.data, sample_data{ii}.variables{varInd(ii)}.data);
