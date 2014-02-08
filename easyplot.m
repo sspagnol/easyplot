@@ -22,7 +22,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 07-Feb-2014 08:15:37
+% Last Modified by GUIDE v2.5 08-Feb-2014 12:42:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -45,7 +45,7 @@ end
 
 end
 
-% --- Executes just before easyplot is made visible.
+%% --- Executes just before easyplot is made visible.
 function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -56,14 +56,19 @@ function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for easyplot
 handles.output = hObject;
 
-% Update handles structure
+set(handles.figure1,'Color',[1 1 1]);
+set(handles.figure1,'Toolbar','figure');
+%set(handles.plotVar,'String','');
+handles.plotVar='';
 guidata(hObject, handles);
+% Update handles structure
+%guidata(hObject, handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 end
 
-% --- Outputs from this function are returned to the command line.
+%% --- Outputs from this function are returned to the command line.
 function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
@@ -74,9 +79,7 @@ function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 end
 
-
-
-% --- Executes on button press in pushbutton1.
+%% --- Executes on button press in pushbutton1.
 function import_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -124,13 +127,15 @@ theList.wildcard{ii}='*.000';
 theList.message{ii}='Choose RDI 000 files:';
 theList.parser{ii}='workhorseParse';
 
-%%
+%
 
 iParse=menu('Choose instrument type',theList.name);
 fhandle = str2func(theList.parser{iParse});
 % need to pause to get uigetfile to operate correctly
-pause(0.1);
+%pause(0.1);
+
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(theList.wildcard{iParse}, theList.message{iParse}, 'MultiSelect','on');
+%uiwait(handles.figure1);
 
 if ischar(FILENAME)
     FILENAME = {FILENAME};
@@ -143,49 +148,74 @@ notLoaded=0;
 for ii=1:length(FILENAME)
     notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
     if notLoaded
+        set(handles.progress,'String',strcat('Loading : ', char(FILENAME{ii})));
+        %uiresume(handles.figure1);
         disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
         handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
+        set(handles.progress,'String',strcat('Loaded : ', char(FILENAME{ii})));
         handles.sample_data{end}.isPlotted=0;
     else
         disp(['File ' char(FILENAME{ii}) ' already loaded.']);
+        set(handles.progress,'String',strcat('Already loaded : ', char(FILENAME{ii})));
+        %uiresume(handles.figure1);
     end
 end
 
+set(handles.listbox1,'String', getVarListNames(hObject,handles));
 guidata(hObject, handles);
 
+set(handles.progress,'String','Finished importing.');
+%uiresume(handles.figure1);
+handles.plotVar=chooseVar(hObject,handles);
+guidata(hObject,handles);
 plotData(hObject,handles);
+guidata(hObject, handles);
 
 end
 
-function plotData(hObject,handles)
+%%
+function varListNames = getVarListNames(hObject,handles)
+varListNames={};
+for ii=1:numel(handles.sample_data)
+    [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
+    varListNames{end+1}=NAME;
+end
 
-sample_data=handles.sample_data;
+end
 
-figure(handles.figure1); %make figure current
-set(handles.figure1,'Toolbar','figure');
+%%
+function plotVar = chooseVar(hObject,handles)
 
 kk=1;
-for ii=1:length(sample_data)
-    for jj=1:length(sample_data{ii}.variables)
-        if isvector(sample_data{ii}.variables{jj}.data)
-            varList{kk}=sample_data{ii}.variables{jj}.name;
+for ii=1:length(handles.sample_data)
+    for jj=1:length(handles.sample_data{ii}.variables)
+        if isvector(handles.sample_data{ii}.variables{jj}.data)
+            varList{kk}=handles.sample_data{ii}.variables{jj}.name;
             kk=kk+1;
         end
     end
 end
 varList=unique(varList);
-
 disp(sprintf('%s ','Variable list = ',varList{:}));
 
-%ask for a string in order to filter variable to plot
-%varName = upper(input('Plot variable ? ', 's'));
 ii=menu('Varialbe to plot?',varList);
-varName=char(varList{ii});
-varInd=cellfun(@(x) getVar(x.variables, varName), sample_data);
+plotVar=char(varList{ii});
+
+% if ~isfield(handles, 'plotVar')
+%     handles.plotVar='';
+% end
+% handles.plotVar=plotVar;
+% guidata(hObject, handles);
+
+end
+
+%%
+function plotData(hObject,handles)
+
+figure(handles.figure1); %make figure current
+
 %Create a string for legend
 legendStr={};
-
-
 
 % mp = get(0, 'MonitorPositions');
 % screen_size = mp(1,:);
@@ -204,11 +234,14 @@ children = get(handles.axes1, 'Children');
 delete(children);
 legend(handles.axes1,'off');
 
+varName=handles.plotVar;
+varInd=cellfun(@(x) getVar(x.variables, varName), handles.sample_data);
+
 for ii=1:length(varInd)
     if varInd(ii)~=0 %&& ~sample_data{ii}.isPlotted
-        idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
-        instStr=strcat(sample_data{ii}.meta.instrument_model,'\_',sample_data{ii}.meta.instrument_serial_no);
-        plot(handles.axes1,sample_data{ii}.dimensions{idTime}.data, sample_data{ii}.variables{varInd(ii)}.data,'DisplayName',instStr);
+        idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
+        instStr=strcat(handles.sample_data{ii}.meta.instrument_model,'\_',handles.sample_data{ii}.meta.instrument_serial_no);
+        plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd(ii)}.data,'DisplayName',instStr);
         legendStr{end+1}=instStr;
         %handles.sample_data{ii}.isPlotted=1;
     end
@@ -240,11 +273,12 @@ lh=legend(legendStr);
 %axc= findobj(get(gca,'Children'),'Type','line');
 %lh=legend(axc,dstrings,'Location','Best','FontSize',6);
 
-%clear hfigure i selVarInd plotStr legendStr varList hLegend
+set(handles.progress,'String',strcat('Plot variable : ', varName));
 guidata(hObject, handles);
+
 end
 
-% --- Executes on button press in saveImage.
+%% --- Executes on button press in saveImage.
 function saveImage_Callback(hObject, eventdata, handles)
 % hObject    handle to saveImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -258,7 +292,8 @@ end
 uiresume(handles.figure1);
 end
 
-% --- Executes on button press in clearPlot.
+
+%% --- Executes on button press in clearPlot.
 function clearPlot_Callback(hObject, eventdata, handles)
 % hObject    handle to clearPlot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -269,11 +304,12 @@ children = get(handles.axes1, 'Children');
 delete(children);
 legend(handles.axes1,'off')
 handles.sample_data={};
+set(handles.listbox1,'String', '');
 guidata(hObject, handles);
 end
 
 
-% --- Executes on button press in exit.
+%% --- Executes on button press in exit.
 function exit_Callback(hObject, eventdata, handles)
 % hObject    handle to exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -283,10 +319,53 @@ delete(handles.figure1);
 end
 
 
-% --- Executes on button press in replot.
+%% --- Executes on button press in replot.
 function replot_Callback(hObject, eventdata, handles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.plotVar=chooseVar(hObject,handles);
+guidata(hObject,handles);
 plotData(hObject,handles);
+guidata(hObject, handles);
+end
+
+
+%% --- Executes on selection change in listbox1.
+function listbox1_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox1
+get(handles.figure1,'SelectionType');
+% If double click
+if strcmp(get(handles.figure1,'SelectionType'),'open')
+    index_selected = get(handles.listbox1,'Value');
+    file_list = get(handles.listbox1,'String');
+    % Item selected in list box
+    filename = file_list{index_selected};
+    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
+    handles.sample_data(iFile)=[];
+    guidata(hObject,handles);
+    set(handles.listbox1,'String', getVarListNames(hObject,handles));
+    plotData(hObject,handles);
+end
+end
+
+
+%% --- Executes during object creation, after setting all properties.
+function listbox1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox1 controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
 end
