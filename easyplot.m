@@ -66,9 +66,9 @@ guidata(hObject, handles);
 
 hoverlines( handles.figure1 );
 
-dcm = datacursormode(handles.figure1);
+dcm_h = datacursormode(handles.figure1);
 %datacursormode on;
-set(dcm, 'updatefcn', @customDatacursorText)
+set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -211,7 +211,7 @@ varList{end+1}='ALLVARS';
 disp(sprintf('%s ','Variable list = ',varList{:}));
 
 ii=menu('Varialbe to plot?',varList);
-if ii==numel(varList)
+if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
 else
     plotVar={varList{ii}};
@@ -266,7 +266,7 @@ for ii=1:numel(allVarInd) % loop over files
         end
     end
 end
-if numel(varInd{1})>1
+if numel(varInd)>1
     ylabel('All Variables');
 else
     ylabel(char(varName{1}));
@@ -399,15 +399,15 @@ end
 end
 
 %%
-function datacursorText = customDatacursorText( obj,event_obj)
+function datacursorText = customDatacursorText(hObject, eventdata)
 % Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
 % output_txt   Data cursor text string (string or cell array of strings).
 % event_obj
 
-dataIndex = get(event_obj,'DataIndex');
-pos = get(event_obj,'Position');
+dataIndex = get(eventdata,'DataIndex');
+pos = get(eventdata,'Position');
 
 output_txt = {[ 'X: ',num2str(pos(1),4)],...
     ['Y: ',num2str(pos(2),4)]};
@@ -415,10 +415,15 @@ output_txt = {[ 'X: ',num2str(pos(1),4)],...
 if length(pos) > 2
     output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
 end
+output_txt{end+1} = ['Time: ', datestr(pos(1),'yyyy-mm-dd HH:MM:SS.FFF')];
 
 try
-    p=get(event_obj,'Target');
-    output_txt{end+1} = ['SourceFileName: ',getappdata(p,'sourceFile_whatever')];
+    p=get(eventdata,'Target');
+    %displayName=get(p,'DisplayName')
+    output_txt{end+1} = ['DisplayName: ',get(p,'DisplayName')];
 end
+
+%set(hObject,'String', output_txt);
+
 end
 
