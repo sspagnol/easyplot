@@ -22,7 +22,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 08-Feb-2014 12:42:31
+% Last Modified by GUIDE v2.5 09-Feb-2014 13:53:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,6 +60,11 @@ set(handles.figure1,'Color',[1 1 1]);
 set(handles.figure1,'Toolbar','figure');
 %set(handles.plotVar,'String','');
 handles.plotVar='';
+handles.xMin=+Inf;
+handles.xMax=-Inf;
+handles.yMin=+Inf;
+handles.yMax=-Inf;
+handles.plotAllVars=0;
 guidata(hObject, handles);
 % Update handles structure
 %guidata(hObject, handles);
@@ -147,55 +152,69 @@ fhandle = str2func(theList.parser{iParse});
 
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(theList.wildcard{iParse}, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
-
-if ischar(FILENAME)
-    FILENAME = {FILENAME};
-end
-if ~isfield(handles,'sample_data')
-    handles.sample_data={};
-end
-
-notLoaded=0;
-for ii=1:length(FILENAME)
-    notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
-    if notLoaded
-        set(handles.progress,'String',strcat('Loading : ', char(FILENAME{ii})));
-        %uiresume(handles.figure1);
-        disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-        handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
-        set(handles.progress,'String',strcat('Loaded : ', char(FILENAME{ii})));
-        handles.sample_data{end}.isPlotted=0;
-    else
-        disp(['File ' char(FILENAME{ii}) ' already loaded.']);
-        set(handles.progress,'String',strcat('Already loaded : ', char(FILENAME{ii})));
-        %uiresume(handles.figure1);
+if isequal(FILENAME,0) || isequal(PATHNAME,0)
+    disp('No file selected.');
+else
+    if ischar(FILENAME)
+        FILENAME = {FILENAME};
     end
+    if ~isfield(handles,'sample_data')
+        handles.sample_data={};
+    end
+    iFailed=0;
+    notLoaded=0;
+    for ii=1:length(FILENAME)
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
+        if notLoaded
+            try
+                set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
+                %uiresume(handles.figure1);
+                disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
+                handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
+                set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
+                handles.sample_data{end}.isPlotted=0;
+            catch
+                astr=['Importing file ', char(FILENAME{ii}), ' failed. Not an IMOS toolbox parseable file.'];
+                disp(astr);
+                set(handles.progress,'String',astr);
+                guidata(hObject, handles);
+                uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
+                iFailed=1;
+            end
+        else
+            disp(['File ' char(FILENAME{ii}) ' already loaded.']);
+            set(handles.progress,'String',strcat({'Already loaded : '}, char(FILENAME{ii})));
+            %uiresume(handles.figure1);
+        end
+    end
+    
+    set(handles.listbox1,'String', getFilelistNames(hObject,handles),'Value',1);
+    guidata(hObject, handles);
+    
+    set(handles.progress,'String','Finished importing.');
+    %uiresume(handles.figure1);
+    if numel(FILENAME)~=iFailed
+        handles.plotVar=chooseVar(hObject,handles);
+        guidata(hObject,handles);
+        handles = plotData(hObject,handles);
+    end
+    guidata(hObject, handles);
 end
-
-set(handles.listbox1,'String', getVarListNames(hObject,handles));
-guidata(hObject, handles);
-
-set(handles.progress,'String','Finished importing.');
-%uiresume(handles.figure1);
-handles.plotVar=chooseVar(hObject,handles);
-guidata(hObject,handles);
-plotData(hObject,handles);
-guidata(hObject, handles);
 
 end
 
 %%
-function varListNames = getVarListNames(hObject,handles)
-varListNames={};
+function fileListNames = getFilelistNames(hObject,handles)
+fileListNames={};
 for ii=1:numel(handles.sample_data)
     [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
-    varListNames{end+1}=NAME;
+    fileListNames{end+1}=[NAME EXT];
 end
 
 end
 
 %%
-function plotVar = chooseVar(hObject,handles)
+function [plotVar, plotAllVars] = chooseVar(hObject,handles)
 
 kk=1;
 for ii=1:length(handles.sample_data)
@@ -213,8 +232,10 @@ disp(sprintf('%s ','Variable list = ',varList{:}));
 ii=menu('Varialbe to plot?',varList);
 if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
+    plotAllVars=1;
 else
     plotVar={varList{ii}};
+    plotAllVars=0;
 end
 % if ~isfield(handles, 'plotVar')
 %     handles.plotVar='';
@@ -225,7 +246,7 @@ end
 end
 
 %%
-function plotData(hObject,handles)
+function handles = plotData(hObject,handles)
 
 figure(handles.figure1); %make figure current
 
@@ -263,6 +284,11 @@ for ii=1:numel(allVarInd) % loop over files
             legendStr{end+1}=strrep(instStr,'_','\_');
             %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
+            handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
+            handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
+            handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
+            handles.yMax=max(max(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMax);
+            guidata(hObject, handles);
         end
     end
 end
@@ -292,9 +318,10 @@ for jj = 1:length(h)
     end
 end
 
-datetick('x','dd-mmm-yyyy');
+%datetick('x','dd-mmm-yyyy');
+dynamicDateTicks(handles.axes1, [], 'dd-mmm');
 xlabel(handles.axes1,'Time (UTC)');
-setDate4zoom;
+%setDate4zoom;
 %set(fh_overlay,'Visible','on');
 %set(hLegend,'Interpreter','none');
 lh=legend(legendStr);
@@ -313,7 +340,9 @@ function saveImage_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
-if FILTERINDEX
+if isequal(FILENAME,0) || isequal(PATHNAME,0)
+    disp('No file selected.');
+else
     %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
     export_fig(fullfile(PATHNAME,FILENAME),'-png',handles.axes1);
 end
@@ -352,9 +381,9 @@ function replot_Callback(hObject, eventdata, handles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.plotVar=chooseVar(hObject,handles);
+[handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
 guidata(hObject,handles);
-plotData(hObject,handles);
+handles = plotData(hObject,handles);
 guidata(hObject, handles);
 end
 
@@ -377,8 +406,8 @@ if strcmp(selectionType,'open')
     iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
     handles.sample_data(iFile)=[];
     guidata(hObject,handles);
-    set(handles.listbox1,'String', getVarListNames(hObject,handles));
-    plotData(hObject,handles);
+    set(handles.listbox1,'String', getFilelistNames(hObject,handles));
+    handles = plotData(hObject,handles);
 end
 
 if strcmp(selectionType,'normal')
@@ -390,10 +419,14 @@ if strcmp(selectionType,'normal')
     idTime  = getVar(handles.sample_data{iFile}.dimensions, 'TIME');
     newXLimits=[handles.sample_data{iFile}.dimensions{idTime}.data(1) handles.sample_data{iFile}.dimensions{idTime}.data(end)];
     %xlim(handles.axes1, newXLimits);
+    zoom(handles.axes1,'reset');
     set(handles.axes1,'XLim',newXLimits);
-    
+    if handles.plotAllVars==1
+        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    end
 end
-
+%zoom('on');
+guidata(hObject, handles);
 end
 
 
@@ -441,3 +474,28 @@ end
 
 end
 
+%%
+% --- Executes on button press in zoomYextent.
+function zoomYextent_Callback(hObject, eventdata, handles)
+% hObject    handle to zoomYextent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%[xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles);
+set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+end
+
+%%
+% --- Executes on button press in zoomXextend.
+function zoomXextend_Callback(hObject, eventdata, handles)
+% hObject    handle to zoomXextend (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+end
+
+%%
+function [xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles)
+
+end
