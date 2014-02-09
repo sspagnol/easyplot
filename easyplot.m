@@ -367,9 +367,9 @@ function listbox1_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
-get(handles.figure1,'SelectionType');
+selectionType=get(handles.figure1,'SelectionType');
 % If double click
-if strcmp(get(handles.figure1,'SelectionType'),'open')
+if strcmp(selectionType,'open')
     index_selected = get(handles.listbox1,'Value');
     file_list = get(handles.listbox1,'String');
     % Item selected in list box
@@ -380,6 +380,20 @@ if strcmp(get(handles.figure1,'SelectionType'),'open')
     set(handles.listbox1,'String', getVarListNames(hObject,handles));
     plotData(hObject,handles);
 end
+
+if strcmp(selectionType,'normal')
+    index_selected = get(handles.listbox1,'Value');
+    file_list = get(handles.listbox1,'String');
+    % Item selected in list box
+    filename = file_list{index_selected};
+    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
+    idTime  = getVar(handles.sample_data{iFile}.dimensions, 'TIME');
+    newXLimits=[handles.sample_data{iFile}.dimensions{idTime}.data(1) handles.sample_data{iFile}.dimensions{idTime}.data(end)];
+    %xlim(handles.axes1, newXLimits);
+    set(handles.axes1,'XLim',newXLimits);
+    
+end
+
 end
 
 
