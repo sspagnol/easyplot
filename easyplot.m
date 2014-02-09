@@ -207,11 +207,15 @@ for ii=1:length(handles.sample_data)
     end
 end
 varList=unique(varList);
+varList{end+1}='ALLVARS';
 disp(sprintf('%s ','Variable list = ',varList{:}));
 
 ii=menu('Varialbe to plot?',varList);
-plotVar=char(varList{ii});
-
+if ii==numel(varList)
+    plotVar=varList(1:end-1);
+else
+    plotVar={varList{ii}};
+end
 % if ~isfield(handles, 'plotVar')
 %     handles.plotVar='';
 % end
@@ -246,18 +250,28 @@ delete(children);
 legend(handles.axes1,'off');
 
 varName=handles.plotVar;
-varInd=cellfun(@(x) getVar(x.variables, varName), handles.sample_data);
+%varInd=cellfun(@(x) getVar(x.variables, varName), handles.sample_data);
+allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
-for ii=1:length(varInd)
-    if varInd(ii)~=0 %&& ~sample_data{ii}.isPlotted
-        idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
-        instStr=strcat(handles.sample_data{ii}.meta.instrument_model,'\_',handles.sample_data{ii}.meta.instrument_serial_no);
-        ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd(ii)}.data,'DisplayName',instStr);
-        legendStr{end+1}=instStr;
-        %handles.sample_data{ii}.isPlotted=1;
+for ii=1:numel(allVarInd) % loop over files
+    varInd=allVarInd{ii};
+    for jj=1:numel(varInd)
+        if varInd{jj}~=0 %&& ~sample_data{ii}.isPlotted
+            idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
+            instStr=strcat(handles.sample_data{ii}.variables{varInd{jj}}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
+            ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
+            legendStr{end+1}=strrep(instStr,'_','\_');
+            %handles.sample_data{ii}.isPlotted=1;
+            set(handles.progress,'String',strcat('Plot : ', instStr));
+        end
     end
 end
-ylabel(varName);
+if numel(varInd{1})>1
+    ylabel('All Variables');
+else
+    ylabel(char(varName{1}));
+end
+
 % make
 h = findobj(handles.axes1,'Type','line');
 
@@ -286,8 +300,8 @@ setDate4zoom;
 lh=legend(legendStr);
 %axc= findobj(get(gca,'Children'),'Type','line');
 %lh=legend(axc,dstrings,'Location','Best','FontSize',6);
+set(handles.progress,'String','Done');
 
-set(handles.progress,'String',strcat('Plot variable : ', varName));
 guidata(hObject, handles);
 
 end
