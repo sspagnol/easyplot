@@ -64,6 +64,12 @@ guidata(hObject, handles);
 % Update handles structure
 %guidata(hObject, handles);
 
+hoverlines( handles.figure1 );
+
+dcm = datacursormode(handles.figure1);
+%datacursormode on;
+set(dcm, 'updatefcn', @customDatacursorText)
+
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 end
@@ -127,6 +133,11 @@ theList.wildcard{ii}='*.000';
 theList.message{ii}='Choose RDI 000 files:';
 theList.parser{ii}='workhorseParse';
 
+ii=ii+1;
+theList.name{ii}='Wetlabs FLNTU';
+theList.wildcard{ii}='*.raw';
+theList.message{ii}='Choose FLNTU *.raw files:';
+theList.parser{ii}='ECOTripletParse';
 %
 
 iParse=menu('Choose instrument type',theList.name);
@@ -241,7 +252,7 @@ for ii=1:length(varInd)
     if varInd(ii)~=0 %&& ~sample_data{ii}.isPlotted
         idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
         instStr=strcat(handles.sample_data{ii}.meta.instrument_model,'\_',handles.sample_data{ii}.meta.instrument_serial_no);
-        plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd(ii)}.data,'DisplayName',instStr);
+        ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd(ii)}.data,'DisplayName',instStr);
         legendStr{end+1}=instStr;
         %handles.sample_data{ii}.isPlotted=1;
     end
@@ -252,7 +263,10 @@ h = findobj(handles.axes1,'Type','line');
 
 % mapping = round(linspace(1,64,length(h)))';
 % colors = colormap('jet');
-colors = distinguishable_colors(length(h),'white');
+%   func = @(x) colorspace('RGB->Lab',x);
+%   c = distinguishable_colors(25,'w',func);
+cfunc = @(x) colorspace('RGB->Lab',x);
+colors = distinguishable_colors(length(h),'white',cfunc);
 for jj = 1:length(h)
     dstrings{jj} = get(h(jj),'DisplayName');
     try
@@ -369,3 +383,28 @@ end
 
 
 end
+
+%%
+function datacursorText = customDatacursorText( obj,event_obj)
+% Display the position of the data cursor
+% obj          Currently not used (empty)
+% event_obj    Handle to event object
+% output_txt   Data cursor text string (string or cell array of strings).
+% event_obj
+
+dataIndex = get(event_obj,'DataIndex');
+pos = get(event_obj,'Position');
+
+output_txt = {[ 'X: ',num2str(pos(1),4)],...
+    ['Y: ',num2str(pos(2),4)]};
+% If there is a Z-coordinate in the position, display it as well
+if length(pos) > 2
+    output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
+end
+
+try
+    p=get(event_obj,'Target');
+    output_txt{end+1} = ['SourceFileName: ',getappdata(p,'sourceFile_whatever')];
+end
+end
+
