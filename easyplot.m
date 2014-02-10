@@ -65,6 +65,7 @@ handles.xMax=-Inf;
 handles.yMin=+Inf;
 handles.yMax=-Inf;
 handles.plotAllVars=0;
+handles.oldPathname='';
 guidata(hObject, handles);
 % Update handles structure
 %guidata(hObject, handles);
@@ -109,6 +110,12 @@ theList.message{ii}='Choose WQM files:';
 theList.parser{ii}='WQMParse';
 
 ii=ii+1;
+theList.name{ii}='SBE37 (.asc)';
+theList.wildcard{ii}='*.asc';
+theList.message{ii}='Choose SBE37 files:';
+theList.parser{ii}='SBE37Parse';
+
+ii=ii+1;
 theList.name{ii}='SBE37';
 theList.wildcard{ii}='*.cnv';
 theList.message{ii}='Choose SBE37 files:';
@@ -149,9 +156,15 @@ iParse=menu('Choose instrument type',theList.name);
 fhandle = str2func(theList.parser{iParse});
 % need to pause to get uigetfile to operate correctly
 %pause(0.1);
-
-[FILENAME, PATHNAME, FILTERINDEX] = uigetfile(theList.wildcard{iParse}, theList.message{iParse}, 'MultiSelect','on');
+if ~exist(handles.oldPathname,'dir')
+    filterSpec=theList.wildcard{iParse};
+else
+    filterSpec=[handles.oldPathname '/' theList.wildcard{iParse}];
+end
+        
+[FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
+handles.oldPathname=PATHNAME;
 if isequal(FILENAME,0) || isequal(PATHNAME,0)
     disp('No file selected.');
 else
