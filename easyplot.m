@@ -357,14 +357,17 @@ function saveImage_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
-if isequal(FILENAME,0) || isequal(PATHNAME,0)
-    disp('No file selected.');
-else
-    %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
-    export_fig(fullfile(PATHNAME,FILENAME),'-png',handles.axes1);
+if isfield(handles,'sample_data') && numel(handles.sample_data) > 0
+    [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
+    if isequal(FILENAME,0) || isequal(PATHNAME,0)
+        disp('No file selected.');
+    else
+        %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
+        export_fig(fullfile(PATHNAME,FILENAME),'-png',handles.axes1);
+    end
+    uiresume(handles.figure1);
 end
-uiresume(handles.figure1);
+
 end
 
 
@@ -375,12 +378,14 @@ function clearPlot_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % clear plot
-children = get(handles.axes1, 'Children');
-delete(children);
-legend(handles.axes1,'off')
-handles.sample_data={};
-set(handles.listbox1,'String', '');
-guidata(hObject, handles);
+if isfield(handles, 'sample_data')
+    children = get(handles.axes1, 'Children');
+    delete(children);
+    legend(handles.axes1,'off')
+    handles.sample_data={};
+    set(handles.listbox1,'String', '');
+    guidata(hObject, handles);
+end
 end
 
 
@@ -502,7 +507,9 @@ function zoomYextent_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %[xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles);
-set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+if isfield(handles,'sample_data')
+    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+end
 end
 
 %%
@@ -512,7 +519,9 @@ function zoomXextent_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+if isfield(handles,'sample_data')
+    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+end
 end
 
 %%
