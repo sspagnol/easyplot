@@ -22,7 +22,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 09-Feb-2014 13:53:37
+% Last Modified by GUIDE v2.5 11-Feb-2014 02:32:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,6 +58,9 @@ handles.output = hObject;
 
 set(handles.figure1,'Color',[1 1 1]);
 set(handles.figure1,'Toolbar','figure');
+% create easyplot toolbar
+%hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
+         
 %set(handles.plotVar,'String','');
 handles.plotVar='';
 handles.xMin=+Inf;
@@ -66,6 +69,62 @@ handles.yMin=+Inf;
 handles.yMax=-Inf;
 handles.plotAllVars=0;
 handles.oldPathname='';
+ii=1;
+theList.name{ii}='RBR (txt)';
+theList.wildcard{ii}='*.txt';
+theList.message{ii}='Choose TR1060/TDR2050 files:';
+theList.parser{ii}='XRParse';
+
+ii=ii+1;
+theList.name{ii}='WQM (dat)';
+theList.wildcard{ii}='*.dat';
+theList.message{ii}='Choose WQM files:';
+theList.parser{ii}='WQMParse';
+
+ii=ii+1;
+theList.name{ii}='SBE37 (asc)';
+theList.wildcard{ii}='*.asc';
+theList.message{ii}='Choose SBE37 files:';
+theList.parser{ii}='SBE37Parse';
+
+ii=ii+1;
+theList.name{ii}='SBE37 (cnv)';
+theList.wildcard{ii}='*.cnv';
+theList.message{ii}='Choose SBE37 files:';
+theList.parser{ii}='SBE37SMParse';
+
+ii=ii+1;
+theList.name{ii}='SBE39 (asc)';
+theList.wildcard{ii}='*.asc';
+theList.message{ii}='Choose SBE39 asc files:';
+theList.parser{ii}='SBE39Parse';
+
+ii=ii+1;
+theList.name{ii}='SBE56 (cnv)';
+theList.wildcard{ii}='*.cnv';
+theList.message{ii}='Choose SBE56 cnv files:';
+theList.parser{ii}='SBE56Parse';
+
+ii=ii+1;
+theList.name{ii}='SBE CTD (cnv)';
+theList.wildcard{ii}='*.cnv';
+theList.message{ii}='Choose CTD cnv files:';
+theList.parser{ii}='SBE19Parse';
+
+ii=ii+1;
+theList.name{ii}='RDI (000)';
+theList.wildcard{ii}='*.000';
+theList.message{ii}='Choose RDI 000 files:';
+theList.parser{ii}='workhorseParse';
+
+ii=ii+1;
+theList.name{ii}='Wetlabs FLNTU (raw)';
+theList.wildcard{ii}='*.raw';
+theList.message{ii}='Choose FLNTU *.raw files:';
+theList.parser{ii}='ECOTripletParse';
+
+handles.theList=theList;
+
 guidata(hObject, handles);
 % Update handles structure
 %guidata(hObject, handles);
@@ -96,72 +155,18 @@ function import_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%%
-ii=1;
-theList.name{ii}='RBR';
-theList.wildcard{ii}='*.txt';
-theList.message{ii}='Choose TR1060/TDR2050 files:';
-theList.parser{ii}='XRParse';
 
-ii=ii+1;
-theList.name{ii}='WQM';
-theList.wildcard{ii}='*.dat';
-theList.message{ii}='Choose WQM files:';
-theList.parser{ii}='WQMParse';
-
-ii=ii+1;
-theList.name{ii}='SBE37 (.asc)';
-theList.wildcard{ii}='*.asc';
-theList.message{ii}='Choose SBE37 files:';
-theList.parser{ii}='SBE37Parse';
-
-ii=ii+1;
-theList.name{ii}='SBE37';
-theList.wildcard{ii}='*.cnv';
-theList.message{ii}='Choose SBE37 files:';
-theList.parser{ii}='SBE37SMParse';
-
-ii=ii+1;
-theList.name{ii}='SBE39';
-theList.wildcard{ii}='*.asc';
-theList.message{ii}='Choose SBE39 files:';
-theList.parser{ii}='SBE39Parse';
-
-ii=ii+1;
-theList.name{ii}='SBE56';
-theList.wildcard{ii}='*.cnv';
-theList.message{ii}='Choose SBE56 files:';
-theList.parser{ii}='SBE56Parse';
-
-ii=ii+1;
-theList.name{ii}='SBE CTD cnv';
-theList.wildcard{ii}='*.cnv';
-theList.message{ii}='Choose CTD cnv files:';
-theList.parser{ii}='SBE19Parse';
-
-ii=ii+1;
-theList.name{ii}='RDI';
-theList.wildcard{ii}='*.000';
-theList.message{ii}='Choose RDI 000 files:';
-theList.parser{ii}='workhorseParse';
-
-ii=ii+1;
-theList.name{ii}='Wetlabs FLNTU';
-theList.wildcard{ii}='*.raw';
-theList.message{ii}='Choose FLNTU *.raw files:';
-theList.parser{ii}='ECOTripletParse';
-%
+theList=handles.theList;
 
 iParse=menu('Choose instrument type',theList.name);
 fhandle = str2func(theList.parser{iParse});
-% need to pause to get uigetfile to operate correctly
-%pause(0.1);
+
 if ~exist(handles.oldPathname,'dir')
     filterSpec=theList.wildcard{iParse};
 else
     filterSpec=[handles.oldPathname '/' theList.wildcard{iParse}];
 end
-        
+pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
 handles.oldPathname=PATHNAME;
@@ -308,7 +313,7 @@ end
 if numel(varInd)>1
     ylabel('All Variables');
 else
-    ylabel(char(varName{1}));
+    ylabel(strrep(char(varName{1}),'_','\_'));
 end
 
 % make
@@ -394,10 +399,12 @@ function replot_Callback(hObject, eventdata, handles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
-guidata(hObject,handles);
-handles = plotData(hObject,handles);
-guidata(hObject, handles);
+if isfield(handles, 'sample_data')
+    [handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
+    guidata(hObject,handles);
+    handles = plotData(hObject,handles);
+    guidata(hObject, handles);
+end
 end
 
 
@@ -499,9 +506,9 @@ set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
 end
 
 %%
-% --- Executes on button press in zoomXextend.
-function zoomXextend_Callback(hObject, eventdata, handles)
-% hObject    handle to zoomXextend (see GCBO)
+% --- Executes on button press in zoomXextent.
+function zoomXextent_Callback(hObject, eventdata, handles)
+% hObject    handle to zoomXextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
