@@ -123,6 +123,12 @@ theList.wildcard{ii}='*.raw';
 theList.message{ii}='Choose FLNTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
+ii=ii+1;
+theList.name{ii}='Vemco Minilog-II-T (csv)';
+theList.wildcard{ii}='*.csv';
+theList.message{ii}='Choose VML2T *.csv files:';
+theList.parser{ii}='VemcoParse';
+
 handles.theList=theList;
 
 guidata(hObject, handles);
@@ -186,15 +192,17 @@ else
         if notLoaded
             try
                 set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
-                %uiresume(handles.figure1);
+                drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
                 handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
+                drawnow;
                 handles.sample_data{end}.isPlotted=0;
             catch
                 astr=['Importing file ', char(FILENAME{ii}), ' failed. Not an IMOS toolbox parseable file.'];
                 disp(astr);
                 set(handles.progress,'String',astr);
+                drawnow;
                 guidata(hObject, handles);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
@@ -202,7 +210,7 @@ else
         else
             disp(['File ' char(FILENAME{ii}) ' already loaded.']);
             set(handles.progress,'String',strcat({'Already loaded : '}, char(FILENAME{ii})));
-            %uiresume(handles.figure1);
+            drawnow;
         end
     end
     
@@ -210,7 +218,7 @@ else
     guidata(hObject, handles);
     
     set(handles.progress,'String','Finished importing.');
-    %uiresume(handles.figure1);
+    drawnow;
     if numel(FILENAME)~=iFailed
         handles.plotVar=chooseVar(hObject,handles);
         guidata(hObject,handles);
@@ -302,6 +310,7 @@ for ii=1:numel(allVarInd) % loop over files
             legendStr{end+1}=strrep(instStr,'_','\_');
             %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
+            drawnow;
             handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
             handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
             handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
@@ -346,7 +355,7 @@ lh=legend(legendStr);
 %axc= findobj(get(gca,'Children'),'Type','line');
 %lh=legend(axc,dstrings,'Location','Best','FontSize',6);
 set(handles.progress,'String','Done');
-
+drawnow;
 guidata(hObject, handles);
 
 end
