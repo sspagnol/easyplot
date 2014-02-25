@@ -1,12 +1,12 @@
-function dynamicDateTicks(axH, link, mdformat)
+function dynamicDateTicks(axH, link, mdformat,varargin)
 % DYNAMICDATETICKS is a wrapper function around DATETICK which creates
 % dynamic date tick labels for plots with dates on the X-axis. The date
 % ticks intelligently include year/month/day information on specific ticks
 % as appropriate. The ticks are dynamic with respect to zooming and
 % panning. They update as the timescale changes (from years to seconds).
-% Data tips on the plot also show intelligently as dates. 
+% Data tips on the plot also show intelligently as dates.
 %
-% The function may be used with linked axes as well as with multiple 
+% The function may be used with linked axes as well as with multiple
 % independent date and non-date axes within a plot.
 %
 % USAGE:
@@ -33,7 +33,7 @@ function dynamicDateTicks(axH, link, mdformat)
 % dynamicDateTicks
 % subplot(2,1,2), plot(dates, Signal4);
 % dynamicDateTicks([], [], 'dd/mm');
-% 
+%
 % figure
 % ax1 = subplot(2,1,1); plot(dates, Signal1);
 % ax2 = subplot(2,1,2); plot(dates, Signal4);
@@ -48,11 +48,23 @@ if nargin < 3 % Default mm/dd format
     mdformat = 'mm/dd';
 end
 
+% allow me to use my own data tip cursor
+defaultUseDataTipCursor=true; %UseDataTipCursor == true use dynamicDateTick datatip cursor
+pr=inputParser;
+%addParamValue(p,'path',defaultPath,@isstring);
+if verLessThan('matlab','8.2')
+    addParamValue(pr,'UseDataTipCursor',defaultUseDataTipCursor,@(x) assert(islogical(x)));
+else
+    addParameter(pr,'UseDataTipCursor',defaultUseDataTipCursor,@(x) assert(islogical(x)));
+end
+pr.KeepUnmatched = true;
+parse(pr, varargin{:});
+
 % Apply datetick to all axes in axH, and store any linking information
 axesInfo.Type = 'dateaxes'; % Information stored in axes userdata indicating that these are date axes
 for i = 1:length(axH)
     datetick(axH(i), 'x');
-    if nargin > 1 && ~isempty(link) % If axes are linked, 
+    if nargin > 1 && ~isempty(link) % If axes are linked,
         axesInfo.Linked = axH; % Need to modify all axes at once
     else
         axesInfo.Linked = axH(i); % Need to modify only 1 axes
@@ -63,7 +75,9 @@ for i = 1:length(axH)
 end
 
 % Set the zoom, pan and datacursor callbacks
-figH = get(axH, 'Parent');
+%figH = get(axH, 'Parent');
+figH = getParentFigure(axH);
+
 if iscell(figH)
     figH = unique([figH{:}]);
 end
@@ -73,14 +87,28 @@ end
 
 z = zoom(figH);
 p = pan(figH);
-d = datacursormode(figH);
 
 set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
-set(d,'UpdateFcn',@dateTip);
+
+% let user decide if to use dynamicDateTicks datacursor tip text
+if pr.Results.UseDataTipCursor
+    d = datacursormode(figH);
+    set(d,'UpdateFcn',@dateTip);
+end
+
+% handle a set Xlim event
+addlistener(axH, 'XLim', 'PostSet', @updateDateLabel);
 
 % ------------ End of dynamicDateTicks-----------------------
 
+    function fig = getParentFigure(fig)
+        % if the object is a figure or figure descendent, return the
+        % figure. Otherwise return [].
+        while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
+            fig = get(fig,'parent');
+        end
+    end
 
     function output_txt = dateTip(gar, ev)
         pos = ev.Position;
@@ -98,22 +126,27 @@ set(d,'UpdateFcn',@dateTip);
     end
 
     function updateDateLabel(obj, ev, varargin)
-        ax1 = ev.Axes; % On which axes has the zoom/pan occurred
-        axesInfo = get(ev.Axes, 'UserData');
+        if isfield(ev,'Axes')
+            ax1 = ev.Axes; % On which axes has the zoom/pan occurred
+            axesInfo = get(ev.Axes, 'UserData');
+        else
+            ax1=ev.AffectedObject;
+            axesInfo = get(ev.AffectedObject, 'UserData');
+        end
         % Check if this axes is a date axes. If not, do nothing more (return)
         try
             if ~strcmp(axesInfo.Type, 'dateaxes')
                 return;
             end
         catch
-            return;   
+            return;
         end
         
         % Re-apply date ticks, but keep limits (unless called the first time)
         if nargin < 3
             datetick(ax1, 'x', 'keeplimits');
         end
-            
+        
         
         % Get the current axes ticks & labels
         ticks  = get(ax1, 'XTick');
@@ -134,9 +167,9 @@ set(d,'UpdateFcn',@dateTip);
             ind = [1 find(diff(yr))+1];
             newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
             labels = strcat(labels, newlabels);
-        
+            
         elseif regexpi(labels(1,:), '\d\d/\d\d', 'once') % Tick format is mm/dd
-        
+            
             % Change mm/dd to dd/mm if necessary
             labels = datestr(ticks, axesInfo.mdformat);
             % Add year information to first tick & ticks where the year changes
@@ -147,7 +180,7 @@ set(d,'UpdateFcn',@dateTip);
         elseif any(labels(1,:) == ':') % Tick format is HH:MM
             
             % Add month/day/year information to the first tick and month/day to other ticks where the day changes
-            ind = find(diff(da))+1; 
+            ind = find(diff(da))+1;
             newlabels{1}   = datestr(ticks(1), [axesInfo.mdformat '-yyyy-']); % Add month/day/year to first tick
             newlabels(ind) = cellstr(datestr(ticks(ind), [axesInfo.mdformat '-'])); % Add month/day to ticks where day changes
             labels = strcat(newlabels, labels);

@@ -60,13 +60,13 @@ set(handles.figure1,'Color',[1 1 1]);
 set(handles.figure1,'Toolbar','figure');
 % create easyplot toolbar
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
-         
+
 %set(handles.plotVar,'String','');
 handles.plotVar='';
-handles.xMin=+Inf;
-handles.xMax=-Inf;
-handles.yMin=+Inf;
-handles.yMax=-Inf;
+handles.xMin=NaN;
+handles.xMax=NaN;
+handles.yMin=NaN;
+handles.yMax=NaN;
 handles.plotAllVars=0;
 handles.oldPathname='';
 ii=1;
@@ -131,15 +131,21 @@ theList.parser{ii}='VemcoParse';
 
 handles.theList=theList;
 
-guidata(hObject, handles);
+handles.firstPlot = true;
+
 % Update handles structure
 %guidata(hObject, handles);
+
+dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+xlabel(handles.axes1,'Time (UTC)');
 
 hoverlines( handles.figure1 );
 
 dcm_h = datacursormode(handles.figure1);
-%datacursormode on;
+% %datacursormode on;
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
+
+guidata(hObject, handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -186,7 +192,7 @@ else
         handles.sample_data={};
     end
     iFailed=0;
-    notLoaded=0;
+    notLoaded=false;
     for ii=1:length(FILENAME)
         notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
         if notLoaded
@@ -263,11 +269,6 @@ else
     plotVar={varList{ii}};
     plotAllVars=0;
 end
-% if ~isfield(handles, 'plotVar')
-%     handles.plotVar='';
-% end
-% handles.plotVar=plotVar;
-% guidata(hObject, handles);
 
 end
 
@@ -311,14 +312,28 @@ for ii=1:numel(allVarInd) % loop over files
             %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
             drawnow;
-            handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
-            handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
-            handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
-            handles.yMax=max(max(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMax);
+            %             handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
+            %             handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
+            %             handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
+            %             handles.yMax=max(max(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMax);
             guidata(hObject, handles);
         end
     end
 end
+
+dataLimits=findVarExtents(varName,handles.sample_data);
+handles.xMin = dataLimits.xMin;
+handles.xMax = dataLimits.xMax;
+handles.yMin = dataLimits.yMin;
+handles.yMax = dataLimits.yMax;
+guidata(hObject, handles);
+
+if handles.firstPlot
+    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    handles.firstPlot=false;
+end
+
 if numel(varInd)>1
     ylabel('All Variables');
 else
@@ -346,8 +361,9 @@ for jj = 1:length(h)
 end
 
 %datetick('x','dd-mmm-yyyy');
-dynamicDateTicks(handles.axes1, [], 'dd-mmm');
-xlabel(handles.axes1,'Time (UTC)');
+%dynamicDateTicks(handles.axes1, [], 'dd-mmm');
+%xlabel(handles.axes1,'Time (UTC)');
+
 %setDate4zoom;
 %set(fh_overlay,'Visible','on');
 %set(hLegend,'Interpreter','none');
@@ -393,6 +409,13 @@ if isfield(handles, 'sample_data')
     legend(handles.axes1,'off')
     handles.sample_data={};
     set(handles.listbox1,'String', '');
+    
+    handles.firstPlot=true;
+    handles.xMin=NaN;
+    handles.xMax=NaN;
+    handles.yMin=NaN;
+    handles.yMax=NaN;
+    
     guidata(hObject, handles);
 end
 end
@@ -433,15 +456,25 @@ function listbox1_Callback(hObject, eventdata, handles)
 selectionType=get(handles.figure1,'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
-    index_selected = get(handles.listbox1,'Value');
-    file_list = get(handles.listbox1,'String');
-    % Item selected in list box
-    filename = file_list{index_selected};
-    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
-    handles.sample_data(iFile)=[];
-    guidata(hObject,handles);
-    set(handles.listbox1,'String', getFilelistNames(hObject,handles));
-    handles = plotData(hObject,handles);
+    if numel(handles.sample_data) == 1
+        % removing last plot
+        clearPlot_Callback(hObject, eventdata, handles);
+    else
+        index_selected = get(handles.listbox1,'Value');
+        file_list = get(handles.listbox1,'String');
+        % Item selected in list box
+        filename = file_list{index_selected};
+        iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
+        handles.sample_data(iFile)=[];
+        guidata(hObject,handles);
+        set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
+        set(handles.listbox1,'String', getFilelistNames(hObject,handles));
+        handles.firstPlot=true;
+        handles = plotData(hObject,handles);
+        %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+        %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+        drawnow;
+    end
 end
 
 if strcmp(selectionType,'normal')
@@ -459,8 +492,8 @@ if strcmp(selectionType,'normal')
         set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     end
 end
-%zoom('on');
 guidata(hObject, handles);
+
 end
 
 
@@ -490,21 +523,17 @@ function datacursorText = customDatacursorText(hObject, eventdata)
 dataIndex = get(eventdata,'DataIndex');
 pos = get(eventdata,'Position');
 
-output_txt = {[ 'X: ',num2str(pos(1),4)],...
+datacursorText = {['Time: ', datestr(pos(1),'yyyy-mm-dd HH:MM:SS.FFF')],...
     ['Y: ',num2str(pos(2),4)]};
 % If there is a Z-coordinate in the position, display it as well
 if length(pos) > 2
-    output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
+    datacursorText{end+1} = ['Z: ',num2str(pos(3),4)];
 end
-output_txt{end+1} = ['Time: ', datestr(pos(1),'yyyy-mm-dd HH:MM:SS.FFF')];
 
 try
     p=get(eventdata,'Target');
-    %displayName=get(p,'DisplayName')
-    output_txt{end+1} = ['DisplayName: ',get(p,'DisplayName')];
+    datacursorText{end+1} = ['DisplayName: ',get(p,'DisplayName')];
 end
-
-%set(hObject,'String', output_txt);
 
 end
 
@@ -533,7 +562,25 @@ if isfield(handles,'sample_data')
 end
 end
 
+
 %%
-function [xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles)
+function dataLimits=findVarExtents(varName,sample_data)
+dataLimits.xMin = NaN;
+dataLimits.xMax = NaN;
+dataLimits.yMin = NaN;
+dataLimits.yMax = NaN;
+
+allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
+
+for ii=1:numel(allVarInd) % loop over files
+    varInd=allVarInd{ii};
+    for jj=1:numel(varInd)
+        idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+        dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
+        dataLimits.yMin=min(min(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMin);
+        dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
+        dataLimits.yMax=max(max(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMax);
+    end
+end
 
 end
