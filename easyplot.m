@@ -315,6 +315,10 @@ fprintf('You modified cell %d,%d (%s) to: %s\n', modifiedRow+1, modifiedCol+1, c
 fprintf('%s %s variable : %s\n', handles.treePanelData{modifiedRow+1,1},handles.treePanelData{modifiedRow+1,2},handles.treePanelData{modifiedRow+1,3});
 for ii=1:numel(handles.sample_data) % loop over files
     for jj=1:numel(handles.sample_data{ii}.variables)
+        handles.sample_data{ii}.meta.instrument_model
+        handles.sample_data{ii}.meta.instrument_serial_no
+        handles.sample_data{ii}.variables{jj}.name
+        handles.sample_data{ii}.variables{jj}.plotThisVar
         if strcmp(handles.sample_data{ii}.meta.instrument_model, handles.treePanelData{modifiedRow+1,1}) && ...
                 strcmp(handles.sample_data{ii}.meta.instrument_serial_no, handles.treePanelData{modifiedRow+1,2}) &&...
                 strcmp(handles.sample_data{ii}.variables{jj}.name, handles.treePanelData{modifiedRow+1,3})
@@ -322,9 +326,10 @@ for ii=1:numel(handles.sample_data) % loop over files
         end
     end
 end
-guidata(hObject, handles);
-handles = plotData(hObject,handles);
-guidata(hObject, handles);
+hFig = getParentFigure(hObject);
+guidata(hFig, handles);
+handles = plotData(hFig,handles);
+guidata(hFig, handles);
 end  % tableChangedCallback
 
 
@@ -341,9 +346,18 @@ end
 end  % getOriginalModel
 
 %%
+function fig = getParentFigure(fig)
+% if the object is a figure or figure descendent, return the
+% figure. Otherwise return [].
+while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
+    fig = get(fig,'parent');
+end
+end
+%%
 function handles = plotData(hObject,handles)
 
-%figure(handles.figure1); %make figure current
+hFig = getParentFigure(hObject);
+figure(hFig); %make figure current
 
 %Create a string for legend
 legendStr={};
@@ -352,8 +366,11 @@ legendStr={};
 %hold('on');
 
 % clear plot
-children = get(handles.axes1, 'Children');
-delete(children);
+%children = get(handles.axes1, 'Children');
+children = findobj(handles.axes1,'Type','line');
+if ~isempty(children)
+    delete(children);
+end
 legend(handles.axes1,'off');
 
 varNames={};
@@ -365,11 +382,11 @@ for ii=1:numel(handles.sample_data) % loop over files
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
-            hold('on');
-            legendStr{end+1}=strrep(instStr,'_','\_')
+            hold(handles.axes1,'on');
+            legendStr{end+1}=strrep(instStr,'_','\_');
             varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
             set(handles.progress,'String',strcat('Plot : ', instStr));
-            guidata(hObject, handles);
+            %guidata(hObject, handles);
             drawnow;
         end
     end
@@ -426,6 +443,7 @@ lh=legend(handles.axes1,legendStr);
 %lh=legend(axc,legendStr,'Location','Best','FontSize',6);
 set(handles.progress,'String','Done');
 drawnow;
+hFig = ancestor(hObject,'figure');
 guidata(hObject, handles);
 
 end
@@ -496,6 +514,15 @@ if isfield(handles, 'sample_data')
     %guidata(hObject,handles);
     handles=markPlotVar(handles);
     guidata(hObject,handles);
+    % surely I don't have to delete and recreate jtable
+    delete(handles.jtable);
+    handles.jtable = treeTable(handles.treePanel, ...
+        {'','Instrument','Variable','Visible'},...
+        handles.treePanelData,...
+        'ColumnTypes',{'','char','char','logical'},...
+        'ColumnEditable',{false, false, true});
+    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
+
     handles = plotData(hObject,handles);
     guidata(hObject, handles);
 end
