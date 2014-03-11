@@ -203,7 +203,9 @@ else
                 handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
-                handles.sample_data{end}.isPlotted=0;
+                for jj=1:numel(handles.sample_data{1}.variables)
+                    handles.sample_data{end}.variables{jj}.plotThisVar=false;
+                end
             catch
                 astr=['Importing file ', char(FILENAME{ii}), ' failed. Not an IMOS toolbox parseable file.'];
                 disp(astr);
@@ -228,6 +230,8 @@ else
     if numel(FILENAME)~=iFailed
         handles.plotVar=chooseVar(hObject,handles);
         guidata(hObject,handles);
+        handles=markPlotVar(hObject,handles);
+        guidata(hObject,handles);
         handles = plotData(hObject,handles);
     end
     guidata(hObject, handles);
@@ -246,11 +250,11 @@ end
 end
 
 %%
-function [plotVar, plotAllVars] = chooseVar(hObject,handles)
+function plotVar = chooseVar(hObject,handles)
 
 kk=1;
-for ii=1:length(handles.sample_data)
-    for jj=1:length(handles.sample_data{ii}.variables)
+for ii=1:numel(handles.sample_data)
+    for jj=1:numel(handles.sample_data{ii}.variables)
         if isvector(handles.sample_data{ii}.variables{jj}.data)
             varList{kk}=handles.sample_data{ii}.variables{jj}.name;
             kk=kk+1;
@@ -261,13 +265,28 @@ varList=unique(varList);
 varList{end+1}='ALLVARS';
 disp(sprintf('%s ','Variable list = ',varList{:}));
 
-ii=menu('Varialbe to plot?',varList);
+ii=menu('Variable to plot?',varList);
 if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
     plotAllVars=1;
 else
     plotVar={varList{ii}};
     plotAllVars=0;
+end
+
+end
+
+%%
+function handles=markPlotVar(hObject,handles)
+
+for ii=1:numel(handles.sample_data) % loop over files
+    for jj=1:numel(handles.sample_data{ii}.variables)
+        if any(ismember(handles.sample_data{ii}.variables{jj}.name, handles.plotVar))
+            handles.sample_data{ii}.variables{jj}.plotThisVar=true;
+        else
+            handles.sample_data{ii}.variables{jj}.plotThisVar=false;
+        end
+    end
 end
 
 end
@@ -298,18 +317,15 @@ delete(children);
 legend(handles.axes1,'off');
 
 varName=handles.plotVar;
-%varInd=cellfun(@(x) getVar(x.variables, varName), handles.sample_data);
-allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
+%allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
-for ii=1:numel(allVarInd) % loop over files
-    varInd=allVarInd{ii};
-    for jj=1:numel(varInd)
-        if varInd{jj}~=0 %&& ~sample_data{ii}.isPlotted
+for ii=1:numel(handles.sample_data) % loop over files
+    for jj=1:numel(handles.sample_data{ii}.variables)
+        if handles.sample_data{ii}.variables{jj}.plotThisVar
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
-            instStr=strcat(handles.sample_data{ii}.variables{varInd{jj}}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
+            instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
+            ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             legendStr{end+1}=strrep(instStr,'_','\_');
-            %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
             drawnow;
             %             handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
@@ -334,7 +350,7 @@ if handles.firstPlot
     handles.firstPlot=false;
 end
 
-if numel(varInd)>1
+if numel(varName)>1
     ylabel('All Variables');
 else
     ylabel(strrep(char(varName{1}),'_','\_'));
@@ -437,7 +453,9 @@ function replot_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if isfield(handles, 'sample_data')
-    [handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
+    handles.plotVar = chooseVar(hObject,handles);
+    guidata(hObject,handles);
+    handles=markPlotVar(hObject,handles);
     guidata(hObject,handles);
     handles = plotData(hObject,handles);
     guidata(hObject, handles);
