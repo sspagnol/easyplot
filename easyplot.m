@@ -68,7 +68,6 @@ handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
 handles.yMax=NaN;
-handles.plotAllVars=0;
 handles.oldPathname='';
 ii=1;
 theList.name{ii}='RBR (txt)';
@@ -230,16 +229,16 @@ else
     set(handles.progress,'String','Finished importing.');
     drawnow;
     if numel(FILENAME)~=iFailed
-        handles.plotVar=chooseVar(hObject,handles);
+        handles.plotVar=chooseVar(handles.sample_data);
         guidata(hObject,handles);
-        handles=markPlotVar(hObject,handles);
+        handles=markPlotVar(handles);
         guidata(hObject,handles);
-        jtable = treeTable(handles.treePanel, ...
+        handles.jtable = treeTable(handles.treePanel, ...
             {'','Instrument','Variable','Visible'},...
             handles.treePanelData,...
             'ColumnTypes',{'','char','char','logical'},...
             'ColumnEditable',{false, false, true});
-        set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, jtable});
+        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
         handles = plotData(hObject,handles);
     end
     guidata(hObject, handles);
@@ -255,17 +254,15 @@ for ii=1:numel(handles.sample_data)
     [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
     fileListNames{end+1}=[NAME EXT];
 end
-
 end
 
 %%
-function plotVar = chooseVar(hObject,handles)
-
+function plotVar = chooseVar(sample_data)
 kk=1;
-for ii=1:numel(handles.sample_data)
-    for jj=1:numel(handles.sample_data{ii}.variables)
-        if isvector(handles.sample_data{ii}.variables{jj}.data)
-            varList{kk}=handles.sample_data{ii}.variables{jj}.name;
+for ii=1:numel(sample_data)
+    for jj=1:numel(sample_data{ii}.variables)
+        if isvector(sample_data{ii}.variables{jj}.data)
+            varList{kk}=sample_data{ii}.variables{jj}.name;
             kk=kk+1;
         end
     end
@@ -277,17 +274,14 @@ disp(sprintf('%s ','Variable list = ',varList{:}));
 ii=menu('Variable to plot?',varList);
 if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
-    plotAllVars=1;
 else
     plotVar={varList{ii}};
-    plotAllVars=0;
 end
-
 end
 
 %%
-function handles=markPlotVar(hObject,handles)
-
+function handles=markPlotVar(handles)
+% create cell array for treeTable data
 handles.treePanelData={};
     kk=1;    
 for ii=1:numel(handles.sample_data) % loop over files
@@ -305,13 +299,12 @@ for ii=1:numel(handles.sample_data) % loop over files
         kk=kk+1;
     end
 end
-
 end
 
 
 %%
-function tableVisibilityCallback(hModel,hEvent,jtable)
-% Get the modification data
+function tableVisibilityCallback(hModel,hEvent,jtable, handles, hObject)
+% Get the modification data, zero indexed
 modifiedRow = get(hEvent,'FirstRow');
 modifiedCol = get(hEvent,'Column');
 label   = hModel.getValueAt(modifiedRow,1);
@@ -319,6 +312,19 @@ newData = hModel.getValueAt(modifiedRow,modifiedCol);
 
 % Now do something useful with this info
 fprintf('You modified cell %d,%d (%s) to: %s\n', modifiedRow+1, modifiedCol+1, char(label), num2str(newData));%% Get the basic JTable data model
+fprintf('%s %s variable : %s\n', handles.treePanelData{modifiedRow+1,1},handles.treePanelData{modifiedRow+1,2},handles.treePanelData{modifiedRow+1,3});
+for ii=1:numel(handles.sample_data) % loop over files
+    for jj=1:numel(handles.sample_data{ii}.variables)
+        if strcmp(handles.sample_data{ii}.meta.instrument_model, handles.treePanelData{modifiedRow+1,1}) && ...
+                strcmp(handles.sample_data{ii}.meta.instrument_serial_no, handles.treePanelData{modifiedRow+1,2}) &&...
+                strcmp(handles.sample_data{ii}.variables{jj}.name, handles.treePanelData{modifiedRow+1,3})
+            handles.sample_data{ii}.variables{jj}.plotThisVar = newData;
+        end
+    end
+end
+guidata(hObject, handles);
+handles = plotData(hObject,handles);
+guidata(hObject, handles);
 end  % tableChangedCallback
 
 
@@ -337,29 +343,20 @@ end  % getOriginalModel
 %%
 function handles = plotData(hObject,handles)
 
-figure(handles.figure1); %make figure current
+%figure(handles.figure1); %make figure current
 
 %Create a string for legend
 legendStr={};
 
-% mp = get(0, 'MonitorPositions');
-% screen_size = mp(1,:);
-% screen_size = [0 0 mp(1,3) mp(1,4) ] .* 0.80 + 50;
-% %create a toolbar and a toggle button to display or not the legend
-% %toggleLegend(hFigure);
-% %fh_overlay=figure('Position',screen_size, 'Visible','off');
-% fh_overlay=figure('Position',screen_size,'Visible','off','ToolBar','figure');
-%figure(fh_overlay);
-%set(fh_overlay, 'Visible', 'off');
-set(handles.figure1,'Color',[1 1 1]);
-hold('on');
+% set(handles.figure1,'Color',[1 1 1]);
+%hold('on');
 
 % clear plot
 children = get(handles.axes1, 'Children');
 delete(children);
 legend(handles.axes1,'off');
 
-varName=handles.plotVar;
+varNames={};
 %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
 for ii=1:numel(handles.sample_data) % loop over files
@@ -368,19 +365,17 @@ for ii=1:numel(handles.sample_data) % loop over files
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
-            legendStr{end+1}=strrep(instStr,'_','\_');
+            hold('on');
+            legendStr{end+1}=strrep(instStr,'_','\_')
+            varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
             set(handles.progress,'String',strcat('Plot : ', instStr));
-            drawnow;
-            %             handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
-            %             handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
-            %             handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
-            %             handles.yMax=max(max(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMax);
             guidata(hObject, handles);
+            drawnow;
         end
     end
 end
-
-dataLimits=findVarExtents(varName,handles.sample_data);
+varNames=unique(varNames);
+dataLimits=findVarExtents(handles.sample_data);
 handles.xMin = dataLimits.xMin;
 handles.xMax = dataLimits.xMax;
 handles.yMin = dataLimits.yMin;
@@ -393,10 +388,10 @@ if handles.firstPlot
     handles.firstPlot=false;
 end
 
-if numel(varName)>1
-    ylabel('All Variables');
+if numel(varNames)>1
+    ylabel(handles.axes1,'Multiple Variables');
 else
-    ylabel(strrep(char(varName{1}),'_','\_'));
+    ylabel(handles.axes1,strrep(char(varNames{1}),'_','\_'));
 end
 
 % make
@@ -426,9 +421,9 @@ end
 %setDate4zoom;
 %set(fh_overlay,'Visible','on');
 %set(hLegend,'Interpreter','none');
-lh=legend(legendStr);
+lh=legend(handles.axes1,legendStr);
 %axc= findobj(get(gca,'Children'),'Type','line');
-%lh=legend(axc,dstrings,'Location','Best','FontSize',6);
+%lh=legend(axc,legendStr,'Location','Best','FontSize',6);
 set(handles.progress,'String','Done');
 drawnow;
 guidata(hObject, handles);
@@ -497,9 +492,9 @@ function replot_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if isfield(handles, 'sample_data')
-    handles.plotVar = chooseVar(hObject,handles);
-    guidata(hObject,handles);
-    handles=markPlotVar(hObject,handles);
+    handles.plotVar = chooseVar(handles.sample_data);
+    %guidata(hObject,handles);
+    handles=markPlotVar(handles);
     guidata(hObject,handles);
     handles = plotData(hObject,handles);
     guidata(hObject, handles);
@@ -531,6 +526,8 @@ if strcmp(selectionType,'open')
         guidata(hObject,handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
         set(handles.listbox1,'String', getFilelistNames(hObject,handles));
+        handles=markPlotVar(handles);
+        guidata(hObject,handles);
         handles.firstPlot=true;
         handles = plotData(hObject,handles);
         %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
@@ -550,9 +547,9 @@ if strcmp(selectionType,'normal')
     %xlim(handles.axes1, newXLimits);
     zoom(handles.axes1,'reset');
     set(handles.axes1,'XLim',newXLimits);
-    if handles.plotAllVars==1
-        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
-    end
+%    if handles.plotAllVars==1
+%        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+%    end
 end
 guidata(hObject, handles);
 
@@ -628,22 +625,25 @@ end
 
 
 %%
-function dataLimits=findVarExtents(varName,sample_data)
+function dataLimits=findVarExtents(sample_data)
 dataLimits.xMin = NaN;
 dataLimits.xMax = NaN;
 dataLimits.yMin = NaN;
 dataLimits.yMax = NaN;
 
-allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
-
-for ii=1:numel(allVarInd) % loop over files
-    varInd=allVarInd{ii};
-    for jj=1:numel(varInd)
-        idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
-        dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-        dataLimits.yMin=min(min(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMin);
-        dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-        dataLimits.yMax=max(max(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMax);
+%allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
+% for ii=1:numel(allVarInd) % loop over files
+%     varInd=allVarInd{ii};
+%     for jj=1:numel(varInd)
+for ii=1:numel(sample_data) % loop over files
+    for jj=1:numel(sample_data{ii}.variables)
+        if sample_data{ii}.variables{jj}.plotThisVar
+            idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+            dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
+            dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
+            dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
+            dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+        end
     end
 end
 
