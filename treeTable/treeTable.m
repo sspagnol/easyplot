@@ -248,7 +248,7 @@ function jtable = treeTable(varargin)
       try
           oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
           %set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableChangedCallback, jtable});
-          set(handle(jtable.getSelectionModel,'CallbackProperties'), 'ValueChangedCallback', {@selectionCallback,    jtable});
+          %set(handle(jtable.getSelectionModel,'CallbackProperties'), 'ValueChangedCallback', {@selectionCallback,    jtable});
           warning(oldWarnState);
       catch
           a=1;  % never mind...

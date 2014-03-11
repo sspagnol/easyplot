@@ -45,6 +45,7 @@ end
 
 end
 
+
 %% --- Executes just before easyplot is made visible.
 function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -162,6 +163,7 @@ function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 end
 
+
 %% --- Executes on button press in pushbutton1.
 function import_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
@@ -232,12 +234,19 @@ else
         guidata(hObject,handles);
         handles=markPlotVar(hObject,handles);
         guidata(hObject,handles);
+        jtable = treeTable(handles.treePanel, ...
+            {'','Instrument','Variable','Visible'},...
+            handles.treePanelData,...
+            'ColumnTypes',{'','char','char','logical'},...
+            'ColumnEditable',{false, false, true});
+        set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, jtable});
         handles = plotData(hObject,handles);
     end
     guidata(hObject, handles);
 end
 
 end
+
 
 %%
 function fileListNames = getFilelistNames(hObject,handles)
@@ -279,6 +288,8 @@ end
 %%
 function handles=markPlotVar(hObject,handles)
 
+handles.treePanelData={};
+    kk=1;    
 for ii=1:numel(handles.sample_data) % loop over files
     for jj=1:numel(handles.sample_data{ii}.variables)
         if any(ismember(handles.sample_data{ii}.variables{jj}.name, handles.plotVar))
@@ -286,10 +297,42 @@ for ii=1:numel(handles.sample_data) % loop over files
         else
             handles.sample_data{ii}.variables{jj}.plotThisVar=false;
         end
+        %  group, variable, visible
+        handles.treePanelData{kk,1}=handles.sample_data{ii}.meta.instrument_model;
+        handles.treePanelData{kk,2}=handles.sample_data{ii}.meta.instrument_serial_no;
+        handles.treePanelData{kk,3}=handles.sample_data{ii}.variables{jj}.name;
+        handles.treePanelData{kk,4}=handles.sample_data{ii}.variables{jj}.plotThisVar;
+        kk=kk+1;
     end
 end
 
 end
+
+
+%%
+function tableVisibilityCallback(hModel,hEvent,jtable)
+% Get the modification data
+modifiedRow = get(hEvent,'FirstRow');
+modifiedCol = get(hEvent,'Column');
+label   = hModel.getValueAt(modifiedRow,1);
+newData = hModel.getValueAt(modifiedRow,modifiedCol);
+
+% Now do something useful with this info
+fprintf('You modified cell %d,%d (%s) to: %s\n', modifiedRow+1, modifiedCol+1, char(label), num2str(newData));%% Get the basic JTable data model
+end  % tableChangedCallback
+
+
+%%
+function originalModel = getOriginalModel(jtable)
+originalModel = jtable.getModel;
+try
+    while(true)
+        originalModel = originalModel.getActualModel;
+    end;
+catch
+    a=1;  % never mind - bail out...
+end
+end  % getOriginalModel
 
 %%
 function handles = plotData(hObject,handles)
@@ -391,6 +434,7 @@ drawnow;
 guidata(hObject, handles);
 
 end
+
 
 %% --- Executes on button press in saveImage.
 function saveImage_Callback(hObject, eventdata, handles)
@@ -527,8 +571,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 end
+
 
 %%
 function datacursorText = customDatacursorText(hObject, eventdata)
@@ -555,6 +599,7 @@ end
 
 end
 
+
 %%
 % --- Executes on button press in zoomYextent.
 function zoomYextent_Callback(hObject, eventdata, handles)
@@ -567,6 +612,7 @@ if isfield(handles,'sample_data')
     set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
 end
 end
+
 
 %%
 % --- Executes on button press in zoomXextent.
