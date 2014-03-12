@@ -63,7 +63,7 @@ set(handles.figure1,'Toolbar','figure');
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
 %set(handles.plotVar,'String','');
-handles.plotVar='';
+%handles.plotVar='';
 handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
@@ -145,7 +145,7 @@ dcm_h = datacursormode(handles.figure1);
 % %datacursormode on;
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-guidata(hObject, handles);
+guidata(ancestor(hObject,'figure'), handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -224,24 +224,26 @@ else
     end
     
     set(handles.listbox1,'String', getFilelistNames(hObject,handles),'Value',1);
-    guidata(hObject, handles);
+    guidata(ancestor(hObject,'figure'), handles);
     
     set(handles.progress,'String','Finished importing.');
     drawnow;
     if numel(FILENAME)~=iFailed
-        handles.plotVar=chooseVar(handles.sample_data);
-        guidata(hObject,handles);
-        handles=markPlotVar(handles);
-        guidata(hObject,handles);
+        plotVar=chooseVar(handles.sample_data);
+        %guidata(hObject,handles);
+        [handles.treePanelData, handles.sample_data]=markPlotVar(handles.sample_data, plotVar);
+        guidata(ancestor(hObject,'figure'),handles);
         handles.jtable = treeTable(handles.treePanel, ...
             {'','Instrument','Variable','Visible'},...
             handles.treePanelData,...
             'ColumnTypes',{'','char','char','logical'},...
             'ColumnEditable',{false, false, true});
-        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
+        oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty')
+        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, ancestor(hObject,'figure')});
+        warning(oldWarnState);
         handles = plotData(hObject,handles);
     end
-    guidata(hObject, handles);
+    guidata(ancestor(hObject,'figure'), handles);
 end
 
 end
@@ -258,6 +260,7 @@ end
 
 %%
 function plotVar = chooseVar(sample_data)
+plotVar={};
 kk=1;
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
@@ -280,22 +283,22 @@ end
 end
 
 %%
-function handles=markPlotVar(handles)
+function [treePanelData, sample_data]=markPlotVar(sample_data, plotVar)
 % create cell array for treeTable data
-handles.treePanelData={};
+treePanelData={};
     kk=1;    
-for ii=1:numel(handles.sample_data) % loop over files
-    for jj=1:numel(handles.sample_data{ii}.variables)
-        if any(ismember(handles.sample_data{ii}.variables{jj}.name, handles.plotVar))
-            handles.sample_data{ii}.variables{jj}.plotThisVar=true;
+for ii=1:numel(sample_data) % loop over files
+    for jj=1:numel(sample_data{ii}.variables)
+        if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
+            sample_data{ii}.variables{jj}.plotThisVar=true;
         else
-            handles.sample_data{ii}.variables{jj}.plotThisVar=false;
+            sample_data{ii}.variables{jj}.plotThisVar=false;
         end
         %  group, variable, visible
-        handles.treePanelData{kk,1}=handles.sample_data{ii}.meta.instrument_model;
-        handles.treePanelData{kk,2}=handles.sample_data{ii}.meta.instrument_serial_no;
-        handles.treePanelData{kk,3}=handles.sample_data{ii}.variables{jj}.name;
-        handles.treePanelData{kk,4}=handles.sample_data{ii}.variables{jj}.plotThisVar;
+        treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
+        treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
+        treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
+        treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
         kk=kk+1;
     end
 end
@@ -307,29 +310,31 @@ function tableVisibilityCallback(hModel,hEvent,jtable, handles, hObject)
 % Get the modification data, zero indexed
 modifiedRow = get(hEvent,'FirstRow');
 modifiedCol = get(hEvent,'Column');
-label   = hModel.getValueAt(modifiedRow,1);
+theModel   = hModel.getValueAt(modifiedRow,0);
+theSerial   = hModel.getValueAt(modifiedRow,1);
+theVariable   = hModel.getValueAt(modifiedRow,2);
 newData = hModel.getValueAt(modifiedRow,modifiedCol);
 
 % Now do something useful with this info
-fprintf('You modified cell %d,%d (%s) to: %s\n', modifiedRow+1, modifiedCol+1, char(label), num2str(newData));%% Get the basic JTable data model
-fprintf('%s %s variable : %s\n', handles.treePanelData{modifiedRow+1,1},handles.treePanelData{modifiedRow+1,2},handles.treePanelData{modifiedRow+1,3});
+fprintf('You modified cell %d,%d to: %s\n', modifiedRow+1, modifiedCol+1, num2str(newData));%% Get the basic JTable data model
+%fprintf('%s %s variable : %s\n', handles.treePanelData{modifiedRow+1,1},handles.treePanelData{modifiedRow+1,2},handles.treePanelData{modifiedRow+1,3});
+fprintf('%s %s variable : %s\n', theModel, theSerial, theVariable);
 for ii=1:numel(handles.sample_data) % loop over files
     for jj=1:numel(handles.sample_data{ii}.variables)
-        handles.sample_data{ii}.meta.instrument_model
-        handles.sample_data{ii}.meta.instrument_serial_no
-        handles.sample_data{ii}.variables{jj}.name
-        handles.sample_data{ii}.variables{jj}.plotThisVar
-        if strcmp(handles.sample_data{ii}.meta.instrument_model, handles.treePanelData{modifiedRow+1,1}) && ...
-                strcmp(handles.sample_data{ii}.meta.instrument_serial_no, handles.treePanelData{modifiedRow+1,2}) &&...
-                strcmp(handles.sample_data{ii}.variables{jj}.name, handles.treePanelData{modifiedRow+1,3})
+        if strcmp(handles.sample_data{ii}.meta.instrument_model, theModel) && ...
+                strcmp(handles.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
+                strcmp(handles.sample_data{ii}.variables{jj}.name, theVariable)
             handles.sample_data{ii}.variables{jj}.plotThisVar = newData;
         end
     end
 end
-hFig = getParentFigure(hObject);
-guidata(hFig, handles);
-handles = plotData(hFig,handles);
-guidata(hFig, handles);
+% guidata(getParentFigure(hObject), handles);
+% handles = plotData(getParentFigure(hObject),handles);
+% guidata(getParentFigure(hObject), handles);
+guidata(ancestor(hObject,'figure'), handles);
+handles = plotData(ancestor(hObject,'figure'),handles);
+guidata(ancestor(hObject,'figure'), handles);
+
 end  % tableChangedCallback
 
 
@@ -397,7 +402,7 @@ handles.xMin = dataLimits.xMin;
 handles.xMax = dataLimits.xMax;
 handles.yMin = dataLimits.yMin;
 handles.yMax = dataLimits.yMax;
-guidata(hObject, handles);
+guidata(ancestor(hObject,'figure'), handles);
 
 if handles.firstPlot
     set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
@@ -431,20 +436,11 @@ for jj = 1:length(h)
     end
 end
 
-%datetick('x','dd-mmm-yyyy');
-%dynamicDateTicks(handles.axes1, [], 'dd-mmm');
-%xlabel(handles.axes1,'Time (UTC)');
-
-%setDate4zoom;
-%set(fh_overlay,'Visible','on');
-%set(hLegend,'Interpreter','none');
 lh=legend(handles.axes1,legendStr);
-%axc= findobj(get(gca,'Children'),'Type','line');
-%lh=legend(axc,legendStr,'Location','Best','FontSize',6);
 set(handles.progress,'String','Done');
 drawnow;
-hFig = ancestor(hObject,'figure');
-guidata(hObject, handles);
+guidata(ancestor(hObject,'figure'), handles);
+%guidata(getParentFigure(hObject), handles);
 
 end
 
@@ -481,6 +477,7 @@ if isfield(handles, 'sample_data')
     delete(children);
     legend(handles.axes1,'off')
     handles.sample_data={};
+    delete(handles.jtable);
     set(handles.listbox1,'String', '');
     
     handles.firstPlot=true;
@@ -489,7 +486,7 @@ if isfield(handles, 'sample_data')
     handles.yMin=NaN;
     handles.yMax=NaN;
     
-    guidata(hObject, handles);
+    guidata(ancestor(hObject,'figure'), handles);
 end
 end
 
@@ -510,10 +507,10 @@ function replot_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if isfield(handles, 'sample_data')
-    handles.plotVar = chooseVar(handles.sample_data);
+    plotVar = chooseVar(handles.sample_data);
     %guidata(hObject,handles);
-    handles=markPlotVar(handles);
-    guidata(hObject,handles);
+    [handles.treePanelData, handles.sample_data]=markPlotVar(handles.sample_data, plotVar);
+    guidata(ancestor(hObject,'figure'),handles);
     % surely I don't have to delete and recreate jtable
     delete(handles.jtable);
     handles.jtable = treeTable(handles.treePanel, ...
@@ -524,7 +521,7 @@ if isfield(handles, 'sample_data')
     set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
 
     handles = plotData(hObject,handles);
-    guidata(hObject, handles);
+    guidata(ancestor(hObject,'figure'), handles);
 end
 end
 
@@ -550,11 +547,11 @@ if strcmp(selectionType,'open')
         filename = file_list{index_selected};
         iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
         handles.sample_data(iFile)=[];
-        guidata(hObject,handles);
+        guidata(ancestor(hObject,'figure'),handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
         set(handles.listbox1,'String', getFilelistNames(hObject,handles));
-        handles=markPlotVar(handles);
-        guidata(hObject,handles);
+        %[handles.treePanelData, handles.sample_data]=markPlotVar(handles.sample_data, handles.plotVar);
+        guidata(ancestor(hObject,'figure'),handles);
         handles.firstPlot=true;
         handles = plotData(hObject,handles);
         %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
@@ -578,7 +575,7 @@ if strcmp(selectionType,'normal')
 %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
 %    end
 end
-guidata(hObject, handles);
+guidata(ancestor(hObject,'figure'), handles);
 
 end
 
