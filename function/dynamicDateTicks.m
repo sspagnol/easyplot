@@ -63,20 +63,26 @@ parse(pr, varargin{:});
 % Apply datetick to all axes in axH, and store any linking information
 axesInfo.Type = 'dateaxes'; % Information stored in axes userdata indicating that these are date axes
 for i = 1:length(axH)
-    datetick(axH(i), 'x');
-    if nargin > 1 && ~isempty(link) % If axes are linked,
-        axesInfo.Linked = axH; % Need to modify all axes at once
-    else
-        axesInfo.Linked = axH(i); % Need to modify only 1 axes
+    if ishghandle(axH(i))
+        datetick(axH(i), 'x');
+        if nargin > 1 && ~isempty(link) % If axes are linked,
+            axesInfo.Linked = axH; % Need to modify all axes at once
+        else
+            axesInfo.Linked = axH(i); % Need to modify only 1 axes
+        end
+        axesInfo.mdformat = mdformat; % Remember mm/dd format for each axes
+        set(axH(i), 'UserData', axesInfo); % Store the fact that this is a date axes and its link & mm/dd information in userdata
+        %set(ancestor(axH(i),'figure'), 'UserData', axesInfo);
+        %setappdata(axH(i), 'UserData', axesInfo);
+        updateDateLabel('', struct('Axes', axH(i)), 0); % Call once to ensure proper formatting
     end
-    axesInfo.mdformat = mdformat; % Remember mm/dd format for each axes
-    set(axH(i), 'UserData', axesInfo); % Store the fact that this is a date axes and its link & mm/dd information in userdata
-    updateDateLabel('', struct('Axes', axH(i)), 0); % Call once to ensure proper formatting
+    
 end
 
 % Set the zoom, pan and datacursor callbacks
 %figH = get(axH, 'Parent');
-figH = getParentFigure(axH);
+%figH = getParentFigure(axH);
+figH = ancestor(axH,'figure');
 
 if iscell(figH)
     figH = unique([figH{:}]);
@@ -97,8 +103,16 @@ if pr.Results.UseDataTipCursor
     set(d,'UpdateFcn',@dateTip);
 end
 
-% handle a set Xlim event
-addlistener(axH, 'XLim', 'PostSet', @updateDateLabel);
+% listen for an Xlim event
+for ii=1:numel(axH)
+    if ishghandle(axH(ii))
+        addlistener(axH(ii), 'XLim', 'PostSet', @updateDateLabel);
+    end
+end
+% hhAxes = handle(axH);  % hAxes is the Matlab handle of our axes
+% hProp = findprop(hhAxes,'XTick');  % a schema.prop object
+% hListener = handle.listener(hhAxes, hProp, 'PropertyPostSet', @updateDateLabel);
+% setappdata(hAxes, 'XTickListener', hListener);
 
 % ------------ End of dynamicDateTicks-----------------------
 
@@ -130,8 +144,9 @@ addlistener(axH, 'XLim', 'PostSet', @updateDateLabel);
             ax1 = ev.Axes; % On which axes has the zoom/pan occurred
             axesInfo = get(ev.Axes, 'UserData');
         else
-            ax1=ev.AffectedObject;
-            axesInfo = get(ev.AffectedObject, 'UserData');
+            ax1=evnt.AffectedObject;
+            hParent=get(ax1,'Parent');
+            axesInfo = get(hParent,'UserData');
         end
         % Check if this axes is a date axes. If not, do nothing more (return)
         try
@@ -186,8 +201,11 @@ addlistener(axH, 'XLim', 'PostSet', @updateDateLabel);
             labels = strcat(newlabels, labels);
             
         end
-        
-        set(axesInfo.Linked, 'XTick', ticks, 'XTickLabel', labels);
+        for ii=1:numel(axesInfo.Linked)
+            if ishghandle(axesInfo.Linked(ii))
+                set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
+            end
+        end
     end
 end
 %#ok<*CTCH>

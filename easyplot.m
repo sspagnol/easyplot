@@ -55,7 +55,8 @@ function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to easyplot (see VARARGIN)
 
 % Choose default command line output for easyplot
-handles=guidata(ancestor(hObject,'figure'));
+figH=ancestor(hObject,'figure');
+handles=guidata(figH);
 handles.output = hObject;
 
 set(handles.figure1,'Color',[1 1 1]);
@@ -137,7 +138,23 @@ handles.firstPlot = true;
 % Update handles structure
 %guidata(hObject, handles);
 
-dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+axesInfo.Linked = handles.axes1;
+axesInfo.mdformat = 'dd-mmm';
+axesInfo.Type = 'dateaxes';
+% where is this being stored
+handles.UserData.axesInfo = axesInfo;
+set(figH,'UserData',axesInfo)
+set(handles.axes1, 'UserData', axesInfo);
+
+%updateDateLabel('', struct('Axes', handles.axes1), 0); % Call once to ensure proper formatting
+updateDateLabel(struct('Axes', handles.axes1), 0);
+z = zoom(figH);
+p = pan(figH);
+set(z,'ActionPostCallback',@updateDateLabel);
+set(p,'ActionPostCallback',@updateDateLabel);
+addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
+%dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+
 xlabel(handles.axes1,'Time (UTC)');
 
 %hoverlines( handles.figure1 );
@@ -644,13 +661,10 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomYextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 handles=guidata(ancestor(hObject,'figure'));
-
-%[xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles);
 if isfield(handles,'sample_data')
     if ~isnan(handles.yMin) || ~isnan(handles.yMax)
-    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     end
 end
 end
@@ -692,4 +706,74 @@ for ii=1:numel(sample_data) % loop over files
     end
 end
 
+end
+
+%%
+function updateDateLabel(hSrc, evnt)
+if isfield(hSrc,'Axes')
+    ax1 = hSrc.Axes; % On which axes has the zoom/pan occurred
+    axesInfo = get(hSrc.Axes, 'UserData');
+else
+    ax1=evnt.AffectedObject;
+    hParent=get(ax1,'Parent');
+    axesInfo = get(hParent,'UserData');
+end
+% Check if this axes is a date axes. If not, do nothing more (return)
+try
+    if ~strcmp(axesInfo.Type, 'dateaxes')
+        return;
+    end
+catch
+    return;
+end
+
+% Re-apply date ticks, but keep limits (unless called the first time)
+if nargin < 3
+    datetick(ax1, 'x', 'keeplimits');
+end
+
+
+% Get the current axes ticks & labels
+ticks  = get(ax1, 'XTick');
+labels = get(ax1, 'XTickLabel');
+
+% Sometimes the first tick can be outside axes limits. If so, remove it & its label
+if all(ticks(1) < get(ax1,'xlim'))
+    ticks(1) = [];
+    labels(1,:) = [];
+end
+
+[yr, mo, da] = datevec(ticks); % Extract year & day information (necessary for ticks on the boundary)
+newlabels = cell(size(labels,1), 1); % Initialize cell array of new tick label information
+
+if regexpi(labels(1,:), '[a-z]{3}', 'once') % Tick format is mmm
+    
+    % Add year information to first tick & ticks where the year changes
+    ind = [1 find(diff(yr))+1];
+    newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
+    labels = strcat(labels, newlabels);
+    
+elseif regexpi(labels(1,:), '\d\d/\d\d', 'once') % Tick format is mm/dd
+    
+    % Change mm/dd to dd/mm if necessary
+    labels = datestr(ticks, axesInfo.mdformat);
+    % Add year information to first tick & ticks where the year changes
+    ind = [1 find(diff(yr))+1];
+    newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
+    labels = strcat(labels, newlabels);
+    
+elseif any(labels(1,:) == ':') % Tick format is HH:MM
+    
+    % Add month/day/year information to the first tick and month/day to other ticks where the day changes
+    ind = find(diff(da))+1;
+    newlabels{1}   = datestr(ticks(1), [axesInfo.mdformat '-yyyy-']); % Add month/day/year to first tick
+    newlabels(ind) = cellstr(datestr(ticks(ind), [axesInfo.mdformat '-'])); % Add month/day to ticks where day changes
+    labels = strcat(newlabels, labels);
+    
+end
+for ii=1:numel(axesInfo.Linked)
+    if ishghandle(axesInfo.Linked(ii))
+        set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
+    end
+end
 end
