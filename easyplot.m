@@ -662,10 +662,16 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+dataLimits=findVarExtents(handles.sample_data);
+handles.xMin = dataLimits.xMin;
+handles.xMax = dataLimits.xMax;
+handles.yMin = dataLimits.yMin;
+handles.yMax = dataLimits.yMax;
 if isfield(handles,'sample_data')
     if ~isnan(handles.yMin) || ~isnan(handles.yMax)
         set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     end
+    guidata(ancestor(hObject,'figure'), handles);
 end
 end
 
@@ -677,8 +683,16 @@ function zoomXextent_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+dataLimits=findVarExtents(handles.sample_data);
+handles.xMin = dataLimits.xMin;
+handles.xMax = dataLimits.xMax;
+handles.yMin = dataLimits.yMin;
+handles.yMax = dataLimits.yMax;
 if isfield(handles,'sample_data')
-    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+    if ~isnan(handles.xMin) || ~isnan(handles.xMax)
+        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+    end
+    guidata(ancestor(hObject,'figure'), handles);
 end
 end
 
