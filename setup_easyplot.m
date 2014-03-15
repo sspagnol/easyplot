@@ -30,7 +30,7 @@ function thePath = genpath_clean( topDir )
 
 b=genpath(topDir);
 s = strread(b, '%s','delimiter', pathsep);  % read path as cell
-rpattern='(\.svn|\.git|\.hg)';
+rpattern='(\.svn|\.git|\.hg\private)';
 ii=cellfun(@isempty,regexp(s,rpattern,'match','once'));
 s=s(ii); %cell array without .git etc
 thePath=sprintf(['%s' pathsep],s{:}); %make string seperated by pathsep
