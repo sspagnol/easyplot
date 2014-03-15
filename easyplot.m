@@ -413,7 +413,7 @@ for ii=1:numel(handles.sample_data) % loop over files
         if handles.sample_data{ii}.variables{jj}.plotThisVar
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+            plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             hold(handles.axes1,'on');
             legendStr{end+1}=strrep(instStr,'_','\_');
             varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
