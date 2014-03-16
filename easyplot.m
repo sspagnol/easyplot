@@ -142,12 +142,17 @@ axesInfo.Linked = handles.axes1;
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 % where is this being stored
-handles.UserData.axesInfo = axesInfo;
-set(figH,'UserData',axesInfo)
-set(handles.axes1, 'UserData', axesInfo);
+%handles.UserData.axesInfo = axesInfo;
+handles.axesInfo=axesInfo;
 
-%updateDateLabel('', struct('Axes', handles.axes1), 0); % Call once to ensure proper formatting
-updateDateLabel(struct('Axes', handles.axes1), 0);
+% why does axes UserData get wiped somewhere later?
+ax1=handles.axes1;
+set(ax1, 'UserData', axesInfo);
+
+guidata(ancestor(hObject,'figure'), handles);
+
+% Call once to ensure proper formatting
+updateDateLabel(struct('Axes', ax1), 0);
 z = zoom(figH);
 p = pan(figH);
 set(z,'ActionPostCallback',@updateDateLabel);
@@ -388,7 +393,7 @@ end
 function plotData(hObject)
 
 hFig = ancestor(hObject,'figure');
-handles=guidata(ancestor(hObject,'figure'));
+handles=guidata(hFig);
 figure(hFig); %make figure current
 
 %Create a string for legend
@@ -728,9 +733,13 @@ if isfield(hSrc,'Axes')
     ax1 = hSrc.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(hSrc.Axes, 'UserData');
 else
-    ax1=evnt.AffectedObject;
-    hParent=get(ax1,'Parent');
-    axesInfo = get(hParent,'UserData');
+    handles=guidata(get(evnt.AffectedObject,'Parent'));
+    axesInfo = handles.axesInfo;
+    ax1 = handles.axes1;
+    aa=1;
+    %If I ever figure out why UserData wasn't being passed on
+    %ax1=get(hParent,'CurrentAxes');
+    %axesInfo = get(ax1,'UserData'); % 
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -745,7 +754,6 @@ end
 if nargin < 3
     datetick(ax1, 'x', 'keeplimits');
 end
-
 
 % Get the current axes ticks & labels
 ticks  = get(ax1, 'XTick');

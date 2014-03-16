@@ -10,10 +10,10 @@ imos_tb_home='C:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
 
 disp('Adding easyplot, please wait ...');
 disp(['Easyplot path : ' easyplotDir]);
-addpath(easyplotDir);
-gp=genpath_clean(fullfile(easyplotDir,'private'));
-addpath(gp);
 addpath(fullfile(easyplotDir,computer))
+addpath(easyplotDir);
+gp=genpath_clean(fullfile(easyplotDir,'functions'));
+addpath(gp);
 
 % add all folders and subfolders in imos_tb_home to the path
 disp('Adding IMOS-toolbox, please wait ...');
