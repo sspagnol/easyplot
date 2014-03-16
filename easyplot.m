@@ -142,8 +142,9 @@ axesInfo.Linked = handles.axes1;
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 % why does axes UserData get wiped somewhere later?
-ax1=handles.axes1;
+ax1=handle(handles.axes1);
 set(ax1, 'UserData', axesInfo);
+set(ax1, 'XLim', [floor(now) floor(now)+1]);
 % so until I understand what happens to UserData use guidata to store it
 handles.axesInfo=axesInfo;
 guidata(ancestor(hObject,'figure'), handles);
@@ -444,10 +445,12 @@ if handles.firstPlot
     handles.firstPlot=false;
 end
 
-if numel(varNames)>1
-    ylabel(handles.axes1,'Multiple Variables');
-else
+if isempty(varNames)
+    ylabel(handles.axes1,'No Variables');
+elseif numel(varNames)==1
     ylabel(handles.axes1,strrep(char(varNames{1}),'_','\_'));
+else
+    ylabel(handles.axes1,'Multiple Variables');
 end
 
 % make
@@ -738,7 +741,7 @@ if isfield(hSrc,'Axes')
 else
     handles=guidata(get(evnt.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
-    ax1 = handles.axes1;
+    ax1 = handle(handles.axes1);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); % 
@@ -800,4 +803,5 @@ for ii=1:numel(axesInfo.Linked)
         set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
     end
 end
+%guidata(ancestor(ax1,'figure'), handles);
 end
