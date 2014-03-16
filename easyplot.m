@@ -733,6 +733,7 @@ if isfield(hSrc,'Axes')
     ax1 = hSrc.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(hSrc.Axes, 'UserData');
 else
+    aa=1
     handles=guidata(get(evnt.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
     ax1 = handles.axes1;
