@@ -70,7 +70,10 @@ handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
 handles.yMax=NaN;
+% old path for easier importing
 handles.oldPathname='';
+
+% list of instruments and their parsers
 ii=1;
 theList.name{ii}='RBR (txt)';
 theList.wildcard{ii}='*.txt';
@@ -135,20 +138,14 @@ handles.theList=theList;
 
 handles.firstPlot = true;
 
-% Update handles structure
-%guidata(hObject, handles);
-
 axesInfo.Linked = handles.axes1;
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
-% where is this being stored
-%handles.UserData.axesInfo = axesInfo;
-handles.axesInfo=axesInfo;
-
 % why does axes UserData get wiped somewhere later?
 ax1=handles.axes1;
 set(ax1, 'UserData', axesInfo);
-
+% so until I understand what happens to UserData use guidata to store it
+handles.axesInfo=axesInfo;
 guidata(ancestor(hObject,'figure'), handles);
 
 % Call once to ensure proper formatting
@@ -165,7 +162,6 @@ xlabel(handles.axes1,'Time (UTC)');
 %hoverlines( handles.figure1 );
 
 dcm_h = datacursormode(handles.figure1);
-% %datacursormode on;
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
 guidata(ancestor(hObject,'figure'), handles);
@@ -188,6 +184,7 @@ end
 
 %% --- Executes on button press in pushbutton1.
 function import_Callback(hObject, eventdata, oldHandles)
+% select instrument files to import
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -220,16 +217,17 @@ else
     iFailed=0;
     notLoaded=false;
     for ii=1:length(FILENAME)
+        % skip any files the user has already imported
         notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
                 set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-                handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
+                handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
-                for jj=1:numel(handles.sample_data{1}.variables)
+                for jj=1:numel(handles.sample_data{end}.variables)
                     handles.sample_data{end}.variables{jj}.plotThisVar=false;
                 end
             catch
@@ -279,6 +277,7 @@ end
 
 %%
 function fileListNames = getFilelistNames(hObject)
+% make a list of filenames from sample_data structure
 handles=guidata(ancestor(hObject,'figure'));
 fileListNames={};
 for ii=1:numel(handles.sample_data)
@@ -289,13 +288,17 @@ end
 
 %%
 function plotVar = chooseVar(sample_data)
+% choose single variable to plot
 plotVar={};
+varList={};
 kk=1;
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if isvector(sample_data{ii}.variables{jj}.data)
-            varList{kk}=sample_data{ii}.variables{jj}.name;
-            kk=kk+1;
+        if isfield(sample_data{ii}.variables{jj},'data')
+            if isvector(sample_data{ii}.variables{jj}.data)
+                varList{kk}=sample_data{ii}.variables{jj}.name;
+                kk=kk+1;
+            end
         end
     end
 end
@@ -337,7 +340,7 @@ end
 
 %%
 function tableVisibilityCallback(hModel,hEvent, hObject)
-
+% callback for treeTable visibility column
 handles=guidata(ancestor(hObject,'figure'));
 
 % Get the modification data, zero indexed
@@ -391,7 +394,7 @@ end
 
 %%
 function plotData(hObject)
-
+% plot marked sample_data
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
 figure(hFig); %make figure current
@@ -733,11 +736,9 @@ if isfield(hSrc,'Axes')
     ax1 = hSrc.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(hSrc.Axes, 'UserData');
 else
-    aa=1
     handles=guidata(get(evnt.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
     ax1 = handles.axes1;
-    aa=1;
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); % 
