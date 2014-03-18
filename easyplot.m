@@ -135,11 +135,11 @@ handles.firstPlot = true;
 
 % Update handles structure
 %guidata(hObject, handles);
-
+set(handles.axes1,'XLim',[floor(now) floor(now)+1]);
 dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
 xlabel(handles.axes1,'Time (UTC)');
 
-hoverlines( handles.figure1 );
+%hoverlines( handles.figure1 );
 
 dcm_h = datacursormode(handles.figure1);
 % %datacursormode on;
@@ -220,7 +220,7 @@ else
         end
     end
     
-    set(handles.listbox1,'String', getFilelistNames(hObject,handles),'Value',1);
+    set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
     guidata(hObject, handles);
     
     set(handles.progress,'String','Finished importing.');
@@ -236,13 +236,14 @@ end
 end
 
 %%
-function fileListNames = getFilelistNames(hObject,handles)
+function fileListNames = getFilelistNames(sample_data)
 fileListNames={};
-for ii=1:numel(handles.sample_data)
-    [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
-    fileListNames{end+1}=[NAME EXT];
+if ~isempty(sample_data)
+    for ii=1:numel(sample_data)
+        [PATHSTR,NAME,EXT] = fileparts(sample_data{ii}.toolbox_input_file);
+        fileListNames{end+1}=[NAME EXT];
+    end
 end
-
 end
 
 %%
@@ -438,6 +439,7 @@ function replot_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if isfield(handles, 'sample_data')
     [handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
+    handles.firstPlot=true;
     guidata(hObject,handles);
     handles = plotData(hObject,handles);
     guidata(hObject, handles);
@@ -468,7 +470,7 @@ if strcmp(selectionType,'open')
         handles.sample_data(iFile)=[];
         guidata(hObject,handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
-        set(handles.listbox1,'String', getFilelistNames(hObject,handles));
+        set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
         handles.firstPlot=true;
         handles = plotData(hObject,handles);
         %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
@@ -570,16 +572,19 @@ dataLimits.xMax = NaN;
 dataLimits.yMin = NaN;
 dataLimits.yMax = NaN;
 
-allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
-
-for ii=1:numel(allVarInd) % loop over files
-    varInd=allVarInd{ii};
-    for jj=1:numel(varInd)
-        idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
-        dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-        dataLimits.yMin=min(min(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMin);
-        dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-        dataLimits.yMax=max(max(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMax);
+if ~isempty(sample_data)
+    allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
+    for ii=1:numel(allVarInd) % loop over files
+        varInd=allVarInd{ii};
+        for jj=1:numel(varInd)
+            if varInd{jj} > 0
+                idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+                dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
+                dataLimits.yMin=min(min(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMin);
+                dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
+                dataLimits.yMax=max(max(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMax);
+            end
+        end
     end
 end
 
