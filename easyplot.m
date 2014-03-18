@@ -150,12 +150,12 @@ handles.axesInfo=axesInfo;
 guidata(figH, handles);
 
 % Call once to ensure proper formatting
-updateDateLabel(struct('Axes', ax1), 0);
+updateDateLabel(figH,struct('Axes', ax1), true);
 z = zoom(figH);
 p = pan(figH);
 set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
-addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
+%addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 %dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
 
 xlabel(handles.axes1,'Time (UTC)');
@@ -196,6 +196,10 @@ handles=guidata(figH);
 theList=handles.theList;
 
 iParse=menu('Choose instrument type',theList.name);
+if iParse < 1
+    return;
+end
+
 fhandle = str2func(theList.parser{iParse});
 
 if ~exist(handles.oldPathname,'dir')
@@ -429,8 +433,8 @@ for ii=1:numel(handles.sample_data) % loop over files
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             try
-                %plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
-                line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+                plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+                %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
             end
@@ -752,13 +756,31 @@ end
 end
 
 %%
-function updateDateLabel(source, eventData)
+function updateDateLabel(source, eventData, varargin)
 firstTime=false;
-if isfield(source,'Axes')
+if isfield(source,'Axes') %called as initialize axes
+    disp('updateDateLabel init')
     ax1 = source.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(source.Axes, 'UserData');
     firstTime=true;
-else
+elseif isfield(eventData,'Axes') %called as callback from zoom/pan
+    try
+        source, eventData, varargin
+        %    aa=input('updateDateLabel callback');
+        disp('updateDateLabel callback')
+        ax1 = eventData.Axes; % On which axes has the zoom/pan occurred
+        handles=guidata(source)
+        axesInfo = handles.axesInfo
+        set(source,'Interruptible','off');
+    catch
+        source, eventData, varargin
+        get(source)
+        get(eventData)
+    end
+else %called as a listener XLim event
+    source, eventData, varargin
+    %    aa=input('updateDateLabel listener');
+    disp('updateDateLabel listener');
     handles=guidata(get(eventData.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
     ax1 = handle(handles.axes1);
