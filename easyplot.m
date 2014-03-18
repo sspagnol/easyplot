@@ -145,9 +145,9 @@ axesInfo.Type = 'dateaxes';
 ax1=handle(handles.axes1);
 set(ax1, 'UserData', axesInfo);
 set(ax1, 'XLim', [floor(now) floor(now)+1]);
-% so until I understand what happens to UserData use guidata to store it
+% until I understand what happens to UserData use guidata to store it
 handles.axesInfo=axesInfo;
-guidata(ancestor(hObject,'figure'), handles);
+guidata(figH, handles);
 
 % Call once to ensure proper formatting
 updateDateLabel(struct('Axes', ax1), 0);
@@ -165,7 +165,7 @@ xlabel(handles.axes1,'Time (UTC)');
 dcm_h = datacursormode(handles.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-guidata(ancestor(hObject,'figure'), handles);
+guidata(figH, handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -190,7 +190,8 @@ function import_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles=guidata(ancestor(hObject,'figure'));
+figH=ancestor(hObject,'figure');
+handles=guidata(figH);
 
 theList=handles.theList;
 
@@ -236,7 +237,7 @@ else
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
-                guidata(ancestor(hObject,'figure'), handles);
+                guidata(figH, handles);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
             end
@@ -248,11 +249,11 @@ else
     end
     guidata(ancestor(hObject,'figure'), handles);
     
-    set(handles.listbox1,'String', getFilelistNames(hObject),'Value',1);
-    guidata(ancestor(hObject,'figure'), handles);
+    set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
+    guidata(figH, handles);
     
     set(handles.progress,'String','Finished importing.');
-    guidata(ancestor(hObject,'figure'), handles);
+    guidata(figH, handles);
     drawnow;
     if numel(FILENAME)~=iFailed
         plotVar=chooseVar(handles.sample_data);
@@ -268,28 +269,32 @@ else
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
         set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         warning(oldWarnState);
-        plotData(ancestor(hObject,'figure'));
+        plotData(figH);
     end
-    guidata(ancestor(hObject,'figure'), handles);
+    guidata(figH, handles);
 end
 
 end
 
 
 %%
-function fileListNames = getFilelistNames(hObject)
+function fileListNames = getFilelistNames(sample_data)
 % make a list of filenames from sample_data structure
-handles=guidata(ancestor(hObject,'figure'));
 fileListNames={};
-for ii=1:numel(handles.sample_data)
-    [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
-    fileListNames{end+1}=[NAME EXT];
+if ~isempty(sample_data)
+    for ii=1:numel(sample_data)
+        [PATHSTR,NAME,EXT] = fileparts(sample_data{ii}.toolbox_input_file);
+        fileListNames{end+1}=[NAME EXT];
+    end
 end
 end
 
 %%
 function plotVar = chooseVar(sample_data)
 % choose single variable to plot
+if isempty(sample_data)
+    error('CHOOSEVAR: empty sample_data');
+end
 plotVar={};
 varList={};
 kk=1;
@@ -399,6 +404,7 @@ function plotData(hObject)
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
 figure(hFig); %make figure current
+axH=handle(handles.axes1);
 
 %Create a string for legend
 legendStr={};
@@ -422,8 +428,13 @@ for ii=1:numel(handles.sample_data) % loop over files
         if handles.sample_data{ii}.variables{jj}.plotThisVar
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
-            hold(handles.axes1,'on');
+            try
+                %plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+                line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+            catch
+                error('PLOTDATA: plot failed.');
+            end
+            hold(axH,'on');
             legendStr{end+1}=strrep(instStr,'_','\_');
             varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
             set(handles.progress,'String',strcat('Plot : ', instStr));
@@ -440,21 +451,21 @@ handles.yMin = dataLimits.yMin;
 handles.yMax = dataLimits.yMax;
 guidata(ancestor(hObject,'figure'), handles);
 if handles.firstPlot
-    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
-    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    set(axH,'XLim',[handles.xMin handles.xMax]);
+    set(axH,'YLim',[handles.yMin handles.yMax]);
     handles.firstPlot=false;
 end
 
 if isempty(varNames)
-    ylabel(handles.axes1,'No Variables');
+    ylabel(axH,'No Variables');
 elseif numel(varNames)==1
-    ylabel(handles.axes1,strrep(char(varNames{1}),'_','\_'));
+    ylabel(axH,strrep(char(varNames{1}),'_','\_'));
 else
-    ylabel(handles.axes1,'Multiple Variables');
+    ylabel(axH,'Multiple Variables');
 end
 
 % make
-h = findobj(handles.axes1,'Type','line');
+h = findobj(axH,'Type','line');
 
 % mapping = round(linspace(1,64,length(h)))';
 % colors = colormap('jet');
@@ -473,7 +484,7 @@ for jj = 1:length(h)
     end
 end
 
-lh=legend(handles.axes1,legendStr);
+lh=legend(axH,legendStr);
 set(handles.progress,'String','Done');
 guidata(ancestor(hObject,'figure'), handles);
 drawnow;
@@ -585,7 +596,7 @@ if strcmp(selectionType,'open')
         handles.sample_data(iFile)=[];
         guidata(ancestor(hObject,'figure'),handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
-        set(handles.listbox1,'String', getFilelistNames(hObject));
+        set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
         [treePanelData, sample_data] = markPlotVar(handles.sample_data, handles.plotVar);
         guidata(ancestor(hObject,'figure'), handles);
         % surely I don't have to delete and recreate jtable
@@ -710,23 +721,30 @@ end
 
 %%
 function dataLimits=findVarExtents(sample_data)
-dataLimits.xMin = NaN;
-dataLimits.xMax = NaN;
-dataLimits.yMin = NaN;
-dataLimits.yMax = NaN;
-
-%allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
-% for ii=1:numel(allVarInd) % loop over files
-%     varInd=allVarInd{ii};
-%     for jj=1:numel(varInd)
-for ii=1:numel(sample_data) % loop over files
-    for jj=1:numel(sample_data{ii}.variables)
-        if sample_data{ii}.variables{jj}.plotThisVar
-            idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
-            dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-            dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
-            dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-            dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+% find time and data extents of marked sample_data variables
+if isempty(sample_data)
+    dataLimits.xMin = floor(now);
+    dataLimits.xMax = floor(now)+1;
+    dataLimits.yMin = 0;
+    dataLimits.yMax = 1;
+else
+    dataLimits.xMin = NaN;
+    dataLimits.xMax = NaN;
+    dataLimits.yMin = NaN;
+    dataLimits.yMax = NaN;
+    %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
+    % for ii=1:numel(allVarInd) % loop over files
+    %     varInd=allVarInd{ii};
+    %     for jj=1:numel(varInd)
+    for ii=1:numel(sample_data) % loop over files
+        for jj=1:numel(sample_data{ii}.variables)
+            if sample_data{ii}.variables{jj}.plotThisVar
+                idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+                dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
+                dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
+                dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
+                dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+            end
         end
     end
 end
@@ -734,17 +752,19 @@ end
 end
 
 %%
-function updateDateLabel(hSrc, evnt)
-if isfield(hSrc,'Axes')
-    ax1 = hSrc.Axes; % On which axes has the zoom/pan occurred
-    axesInfo = get(hSrc.Axes, 'UserData');
+function updateDateLabel(source, eventData)
+firstTime=false;
+if isfield(source,'Axes')
+    ax1 = source.Axes; % On which axes has the zoom/pan occurred
+    axesInfo = get(source.Axes, 'UserData');
+    firstTime=true;
 else
-    handles=guidata(get(evnt.AffectedObject,'Parent'));
+    handles=guidata(get(eventData.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
     ax1 = handle(handles.axes1);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
-    %axesInfo = get(ax1,'UserData'); % 
+    %axesInfo = get(ax1,'UserData'); %
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -756,8 +776,14 @@ catch
 end
 
 % Re-apply date ticks, but keep limits (unless called the first time)
-if nargin < 3
+% if nargin < 3
+%     datetick(ax1, 'x', 'keeplimits');
+% end
+
+if firstTime
     datetick(ax1, 'x', 'keeplimits');
+else
+    datetick(ax1, 'x');
 end
 
 % Get the current axes ticks & labels
