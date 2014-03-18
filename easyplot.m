@@ -149,14 +149,19 @@ set(ax1, 'XLim', [floor(now) floor(now)+1]);
 handles.axesInfo=axesInfo;
 guidata(figH, handles);
 
+% Couldn't get easyplot to function correctly so pulled in code from
+% dynamicDateTick into easyplot and modified as required.
+%dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+
 % Call once to ensure proper formatting
 updateDateLabel(figH,struct('Axes', ax1), true);
+% Tried a callback on zoom/pan and XLim listener but that just cause
+% massive confusion. Using XLim listener only seem to work ok.
 %z = zoom(figH);
 %p = pan(figH);
 %set(z,'ActionPostCallback',@updateDateLabel);
 %set(p,'ActionPostCallback',@updateDateLabel);
-handles.lh=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
-%dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 xlabel(handles.axes1,'Time (UTC)');
 
@@ -196,7 +201,7 @@ handles=guidata(figH);
 theList=handles.theList;
 
 iParse=menu('Choose instrument type',theList.name);
-if iParse < 1
+if iParse < 1 % no instrument chosen
     return;
 end
 
@@ -296,6 +301,8 @@ end
 %%
 function plotVar = chooseVar(sample_data)
 % choose single variable to plot
+% chooseVar is always called after and data import so if this function ends
+% up with no data then abort.
 if isempty(sample_data)
     error('CHOOSEVAR: empty sample_data');
 end
@@ -406,7 +413,7 @@ end
 
 %%
 function plotData(hObject)
-% plot marked sample_data
+% plot marked variables in sample_data
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
 figure(hFig); %make figure current
@@ -529,6 +536,7 @@ if isfield(handles, 'sample_data')
     delete(children);
     legend(handles.axes1,'off')
     handles.sample_data={};
+    % how do I reset contents of handles.jtable?
     delete(handles.jtable);
     set(handles.listbox1,'String', '');
     
@@ -549,7 +557,7 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
-delete(handles.lh);
+delete(handles.lisH);
 delete(handles.figure1);
 end
 
