@@ -151,11 +151,11 @@ guidata(figH, handles);
 
 % Call once to ensure proper formatting
 updateDateLabel(figH,struct('Axes', ax1), true);
-z = zoom(figH);
-p = pan(figH);
-set(z,'ActionPostCallback',@updateDateLabel);
-set(p,'ActionPostCallback',@updateDateLabel);
-%addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
+%z = zoom(figH);
+%p = pan(figH);
+%set(z,'ActionPostCallback',@updateDateLabel);
+%set(p,'ActionPostCallback',@updateDateLabel);
+handles.lh=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 %dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
 
 xlabel(handles.axes1,'Time (UTC)');
@@ -332,17 +332,19 @@ treePanelData={};
 kk=1;
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
-        if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
-            sample_data{ii}.variables{jj}.plotThisVar=true;
-        else
-            sample_data{ii}.variables{jj}.plotThisVar=false;
+        if isvector(sample_data{ii}.variables{jj}.data)
+            if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
+                sample_data{ii}.variables{jj}.plotThisVar=true;
+            else
+                sample_data{ii}.variables{jj}.plotThisVar=false;
+            end
+            %  group, variable, visible
+            treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
+            treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
+            treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
+            treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
+            kk=kk+1;
         end
-        %  group, variable, visible
-        treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
-        treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
-        treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
-        treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
-        kk=kk+1;
     end
 end
 end
@@ -547,6 +549,7 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+delete(handles.lh);
 delete(handles.figure1);
 end
 
@@ -765,8 +768,6 @@ if isfield(source,'Axes') %called as initialize axes
     firstTime=true;
 elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
-        source, eventData, varargin
-        %    aa=input('updateDateLabel callback');
         disp('updateDateLabel callback')
         ax1 = eventData.Axes; % On which axes has the zoom/pan occurred
         handles=guidata(source)
@@ -778,8 +779,6 @@ elseif isfield(eventData,'Axes') %called as callback from zoom/pan
         get(eventData)
     end
 else %called as a listener XLim event
-    source, eventData, varargin
-    %    aa=input('updateDateLabel listener');
     disp('updateDateLabel listener');
     handles=guidata(get(eventData.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
@@ -787,6 +786,7 @@ else %called as a listener XLim event
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
+    firstTime=true;
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -802,11 +802,11 @@ end
 %     datetick(ax1, 'x', 'keeplimits');
 % end
 
-if firstTime
+%if firstTime
     datetick(ax1, 'x', 'keeplimits');
-else
-    datetick(ax1, 'x');
-end
+%else
+%    datetick(ax1, 'x');
+%end
 
 % Get the current axes ticks & labels
 ticks  = get(ax1, 'XTick');
