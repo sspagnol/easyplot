@@ -141,6 +141,7 @@ handles.firstPlot = true;
 axesInfo.Linked = handles.axes1;
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
+axesInfo.XLabel = 'Time (UTC)';
 % why does axes UserData get wiped somewhere later?
 ax1=handle(handles.axes1);
 set(ax1, 'UserData', axesInfo);
@@ -267,7 +268,8 @@ else
     if numel(FILENAME)~=iFailed
         plotVar=chooseVar(handles.sample_data);
         %guidata(hObject,handles);
-        [handles.treePanelData, handles.sample_data] = markPlotVar(handles.sample_data, plotVar);
+        handles.sample_data = markPlotVar(handles.sample_data, plotVar);
+        handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'),handles);
         handles.jtable = treeTable(handles.treePanel, ...
             {'','Instrument','Variable','Visible'},...
@@ -333,10 +335,8 @@ end
 end
 
 %%
-function [treePanelData, sample_data] = markPlotVar(sample_data, plotVar)
+function [sample_data] = markPlotVar(sample_data, plotVar)
 % create cell array for treeTable data
-treePanelData={};
-kk=1;
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
         if isvector(sample_data{ii}.variables{jj}.data)
@@ -345,6 +345,20 @@ for ii=1:numel(sample_data) % loop over files
             else
                 sample_data{ii}.variables{jj}.plotThisVar=false;
             end
+        end
+    end
+end
+end
+
+
+%%
+function [treePanelData] = generateTreeData(sample_data)
+% create cell array for treeTable data
+treePanelData={};
+kk=1;
+for ii=1:numel(sample_data) % loop over files
+    for jj=1:numel(sample_data{ii}.variables)
+        if isvector(sample_data{ii}.variables{jj}.data)
             %  group, variable, visible
             treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
             treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
@@ -355,7 +369,6 @@ for ii=1:numel(sample_data) % loop over files
     end
 end
 end
-
 
 %%
 function tableVisibilityCallback(hModel,hEvent, hObject)
@@ -570,7 +583,8 @@ function replot_Callback(hObject, eventdata, oldHandles)
 handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles, 'sample_data')
     plotVar = chooseVar(handles.sample_data);
-    [treePanelData, sample_data] = markPlotVar(handles.sample_data, plotVar);
+    handles.sample_data = markPlotVar(handles.sample_data, plotVar);
+    handles.treePanelData = generateTreeData(handles.sample_data);
     guidata(ancestor(hObject,'figure'),handles);
     % surely I don't have to delete and recreate jtable
     delete(handles.jtable);
@@ -599,6 +613,7 @@ handles=guidata(ancestor(hObject,'figure'));
 selectionType=get(handles.figure1,'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
+    
     if numel(handles.sample_data) == 1
         % removing last plot
         clearPlot_Callback(hObject, eventdata, handles);
@@ -612,7 +627,7 @@ if strcmp(selectionType,'open')
         guidata(ancestor(hObject,'figure'),handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
         set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
-        [treePanelData, sample_data] = markPlotVar(handles.sample_data, handles.plotVar);
+        handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'), handles);
         % surely I don't have to delete and recreate jtable
         delete(handles.jtable);
@@ -768,33 +783,38 @@ end
 
 %%
 function updateDateLabel(source, eventData, varargin)
-firstTime=false;
+keepLimits=false;
+% The following is mess of code but was of a result of trying to use the
+% call function for setup, callback and listener. Since I'm only doing
+% setup and listener could probably clean up, but keeping it around for
+% reference.
 if isfield(source,'Axes') %called as initialize axes
-    disp('updateDateLabel init')
+    %disp('updateDateLabel init')
     ax1 = source.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(source.Axes, 'UserData');
-    firstTime=true;
+    keepLimits=true;
 elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
         disp('updateDateLabel callback')
         ax1 = eventData.Axes; % On which axes has the zoom/pan occurred
-        handles=guidata(source)
-        axesInfo = handles.axesInfo
-        set(source,'Interruptible','off');
+        handles=guidata(source);
+        axesInfo = handles.axesInfo;
+        keepLimits=true;
+        %set(source,'Interruptible','off');
     catch
         source, eventData, varargin
         get(source)
         get(eventData)
     end
 else %called as a listener XLim event
-    disp('updateDateLabel listener');
+    %disp('updateDateLabel listener');
     handles=guidata(get(eventData.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
     ax1 = handle(handles.axes1);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
-    firstTime=true;
+    keepLimits=true;
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -810,8 +830,8 @@ end
 %     datetick(ax1, 'x', 'keeplimits');
 % end
 
-%if firstTime
-    datetick(ax1, 'x', 'keeplimits');
+%if keepLimits
+datetick(ax1, 'x', 'keeplimits');
 %else
 %    datetick(ax1, 'x');
 %end
@@ -859,5 +879,6 @@ for ii=1:numel(axesInfo.Linked)
         set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
     end
 end
+xlabel(ax1,axesInfo.XLabel);
 %guidata(ancestor(ax1,'figure'), handles);
 end
