@@ -173,7 +173,7 @@ set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
 guidata(figH, handles);
 
-% UIWAIT makes easyplot wait for user response (see UIRESUME)
+% UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
 % uiwait(handles.figure1);
 end
 
@@ -510,7 +510,8 @@ for jj = 1:length(h)
     end
 end
 
-lh=legend(axH,legendStr);
+%legh=legend(axH,legendStr);
+legH=legendflex(axH,legendStr, 'xscale',0.5, 'FontSize',6);
 set(handles.progress,'String','Done');
 guidata(ancestor(hObject,'figure'), handles);
 drawnow;
@@ -531,7 +532,7 @@ if isfield(handles,'sample_data') && numel(handles.sample_data) > 0
         %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
         export_fig(fullfile(PATHNAME,FILENAME),'-png',handles.axes1);
     end
-    uiresume(handles.figure1);
+    %uiresume(handles.figure1);
 end
 
 end
