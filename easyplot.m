@@ -162,7 +162,7 @@ updateDateLabel(figH,struct('Axes', ax1), true);
 %p = pan(figH);
 %set(z,'ActionPostCallback',@updateDateLabel);
 %set(p,'ActionPostCallback',@updateDateLabel);
-handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
+%handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 xlabel(handles.axes1,'Time (UTC)');
 
@@ -239,6 +239,14 @@ else
                 handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
+                % create new time difference variable to check to sampling errors
+                idTime  = getVar(handles.sample_data{end}.dimensions, 'TIME');
+                handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
+                handles.sample_data{end}.variables{end}.name = 'TIMEDIFF';
+                theData=handles.sample_data{end}.variables{end}.data;
+                theData = [NaN; diff(theData)*86400.0];
+                handles.sample_data{end}.variables{end}.data = theData;
+                
                 for jj=1:numel(handles.sample_data{end}.variables)
                     handles.sample_data{end}.variables{jj}.plotThisVar=false;
                 end
@@ -257,6 +265,8 @@ else
             drawnow;
         end
     end
+    
+
     guidata(ancestor(hObject,'figure'), handles);
     
     set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
@@ -452,11 +462,16 @@ varNames={};
 
 for ii=1:numel(handles.sample_data) % loop over files
     for jj=1:numel(handles.sample_data{ii}.variables)
+        if strcmp(handles.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
+            lineStyle='.';
+        else
+            lineStyle='-';
+        end
         if handles.sample_data{ii}.variables{jj}.plotThisVar
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             try
-                plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+                plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr);
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
@@ -510,6 +525,8 @@ for jj = 1:length(h)
         disp(e.message);
     end
 end
+
+updateDateLabel(hFig,struct('Axes', axH), true);
 
 %legh=legend(axH,legendStr);
 legH=legendflex(axH,legendStr, 'xscale',0.5, 'FontSize',6);
@@ -572,7 +589,7 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
-delete(handles.lisH);
+%delete(handles.lisH);
 delete(handles.figure1);
 end
 
@@ -760,6 +777,7 @@ if isempty(sample_data)
     dataLimits.yMin = 0;
     dataLimits.yMax = 1;
 else
+    eps=1e-1;
     dataLimits.xMin = NaN;
     dataLimits.xMax = NaN;
     dataLimits.yMin = NaN;
@@ -779,6 +797,20 @@ else
             end
         end
     end
+    % if ylimits are small, make them a bit bigger for nice visuals
+    if dataLimits.yMax-dataLimits.yMin < eps
+        dataLimits.yMax=dataLimits.yMax*1.05;
+        dataLimits.yMin=dataLimits.yMin*0.95;
+    end
+    if dataLimits.xMax-dataLimits.xMin < eps
+        dataLimits.xMin = floor(now);
+        dataLimits.xMax = floor(now)+1;
+    end
+    % paranoid now
+    if ~isfinite(dataLimits.xMin) dataLimits.xMin=floor(now); end
+    if ~isfinite(dataLimits.xMax) dataLimits.xMax=floor(now)+1; end
+    if ~isfinite(dataLimits.yMin) dataLimits.yMin=0; end
+    if ~isfinite(dataLimits.yMax) dataLimits.yMax=1; end
 end
 
 end
