@@ -433,6 +433,7 @@ figure(hFig); %make figure current
 axH=handle(handles.axes1);
 
 %Create a string for legend
+%legendStr={'Plots'};
 legendStr={};
 
 % set(handles.figure1,'Color',[1 1 1]);
@@ -784,6 +785,9 @@ end
 
 %%
 function updateDateLabel(source, eventData, varargin)
+
+if isMultipleCall();  return;  end
+
 keepLimits=false;
 % The following is mess of code but was of a result of trying to use the
 % call function for setup, callback and listener. Since I'm only doing
@@ -816,6 +820,10 @@ else %called as a listener XLim event
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
     keepLimits=true;
+end
+
+if all(get(ax1,'xlim') == [0 1])
+   set(ax1, 'XLim', [floor(now) floor(now)+1]);
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -882,4 +890,24 @@ for ii=1:numel(axesInfo.Linked)
 end
 xlabel(ax1,axesInfo.XLabel);
 %guidata(ancestor(ax1,'figure'), handles);
+end
+
+%%
+function flag=isMultipleCall()
+  flag = false; 
+  % Get the stack
+  s = dbstack();
+  if numel(s) <= 2
+    % Stack too short for a multiple call
+    return
+  end
+ 
+  % How many calls to the calling function are in the stack?
+  names = {s(:).name};
+  TF = strcmp(s(2).name,names);
+  count = sum(TF);
+  if count>1
+    % More than 1
+    flag = true; 
+  end
 end

@@ -211,7 +211,8 @@ islegin = false(size(varargin));
 
 % Look for handle array
 
-handlepassed = isnumeric(varargin{1}) & all(ishandle(varargin{1}));
+%handlepassed = isnumeric(varargin{1}) & all(ishandle(varargin{1}));
+handlepassed = all(ishandle(varargin{1}));
 
 if handlepassed
     legin = varargin(1:2);
