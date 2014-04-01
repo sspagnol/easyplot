@@ -274,7 +274,7 @@ varList=unique(varList);
 varList{end+1}='ALLVARS';
 disp(sprintf('%s ','Variable list = ',varList{:}));
 
-ii=menu('Varialbe to plot?',varList);
+ii=menu('Variable to plot?',varList);
 if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
     plotAllVars=1;
@@ -287,6 +287,12 @@ end
 
 %%
 function handles = plotData(hObject,handles)
+% PLOTDATA plot selected variable
+% Inputs:
+%   hObject - handle to figure
+%   handles - user data handles
+% Outputs:
+%   handles - user data handles
 
 figure(handles.figure1); %make figure current
 
@@ -326,13 +332,8 @@ for ii=1:numel(allVarInd) % loop over files
                 ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
             end
             legendStr{end+1}=strrep(instStr,'_','\_');
-            %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
             drawnow;
-            %             handles.xMin=min(handles.sample_data{ii}.dimensions{idTime}.data(1), handles.xMin);
-            %             handles.yMin=min(min(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMin);
-            %             handles.xMax=max(handles.sample_data{ii}.dimensions{idTime}.data(end), handles.xMax);
-            %             handles.yMax=max(max(handles.sample_data{ii}.variables{varInd{jj}}.data), handles.yMax);
             guidata(hObject, handles);
         end
     end
@@ -532,7 +533,7 @@ end
 
 %%
 function datacursorText = customDatacursorText(hObject, eventdata)
-% Display the position of the data cursor
+% DATACURSORTEXT Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
 % output_txt   Data cursor text string (string or cell array of strings).
@@ -558,6 +559,7 @@ end
 %%
 % --- Executes on button press in zoomYextent.
 function zoomYextent_Callback(hObject, eventdata, handles)
+% ZOOMYEXTENT Set YLim of axes to data limits
 % hObject    handle to zoomYextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -571,6 +573,7 @@ end
 %%
 % --- Executes on button press in zoomXextent.
 function zoomXextent_Callback(hObject, eventdata, handles)
+% ZOOMXEXTENT Set XLim of axes to data limits
 % hObject    handle to zoomXextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -583,6 +586,13 @@ end
 
 %%
 function dataLimits=findVarExtents(varName,sample_data)
+% FINDVAREXTENTS Find the x/y data limits for a particular variable
+% Inputs:
+% varName - variable to plot
+% sample_data - the data
+% Outputs:
+% dataLimits - structure with x/y min/max limits
+
 eps=1e-2;
 
 dataLimits.xMin = NaN;
@@ -606,6 +616,7 @@ if ~isempty(sample_data)
     end
 end
 
+% if ylimits are small, make them a bit bigger for nice visuals
 if dataLimits.yMax-dataLimits.yMin < eps
     dataLimits.yMax=dataLimits.yMax*1.05;
     dataLimits.yMin=dataLimits.yMin*0.95;
