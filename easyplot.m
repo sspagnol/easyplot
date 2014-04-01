@@ -220,8 +220,20 @@ else
         end
     end
     
+    % create new time difference variable to check to sampling errors
+    idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
+    handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
+    handles.sample_data{end}.variables{end}.name = 'TIMEDIFF';
+    theData=handles.sample_data{end}.variables{end}.data;
+    theData = [NaN; diff(theData)*86400.0];
+    handles.sample_data{end}.variables{end}.data = theData;
+    
     set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
     guidata(hObject, handles);
+    
+    %handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{'TIME'}
+    %handles.sample_data{end}.variables{end}.data = [NaN
+    %diff(handles.sample_data{end}.variables{end}.data)*84600;
     
     set(handles.progress,'String','Finished importing.');
     drawnow;
@@ -308,7 +320,11 @@ for ii=1:numel(allVarInd) % loop over files
         if varInd{jj}~=0 %&& ~sample_data{ii}.isPlotted
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{varInd{jj}}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
+            if strcmp(handles.sample_data{ii}.variables{varInd{jj}}.name,'TIMEDIFF')
+                ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'.','DisplayName',instStr);
+            else
+                ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
+            end
             legendStr{end+1}=strrep(instStr,'_','\_');
             %handles.sample_data{ii}.isPlotted=1;
             set(handles.progress,'String',strcat('Plot : ', instStr));
@@ -567,6 +583,8 @@ end
 
 %%
 function dataLimits=findVarExtents(varName,sample_data)
+eps=1e-2;
+
 dataLimits.xMin = NaN;
 dataLimits.xMax = NaN;
 dataLimits.yMin = NaN;
@@ -588,4 +606,8 @@ if ~isempty(sample_data)
     end
 end
 
+if dataLimits.yMax-dataLimits.yMin < eps
+    dataLimits.yMax=dataLimits.yMax*1.05;
+    dataLimits.yMin=dataLimits.yMin*0.95;
+end
 end
