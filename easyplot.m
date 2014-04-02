@@ -55,8 +55,8 @@ function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to easyplot (see VARARGIN)
 
 % Choose default command line output for easyplot
-figH=ancestor(hObject,'figure');
-handles=guidata(figH);
+hFig=ancestor(hObject,'figure');
+handles=guidata(hFig);
 handles.output = hObject;
 
 set(handles.figure1,'Color',[1 1 1]);
@@ -143,23 +143,23 @@ axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 axesInfo.XLabel = 'Time (UTC)';
 % why does axes UserData get wiped somewhere later?
-ax1=handle(handles.axes1);
-set(ax1, 'UserData', axesInfo);
-set(ax1, 'XLim', [floor(now) floor(now)+1]);
+axH=handle(handles.axes1);
+set(axH, 'UserData', axesInfo);
+set(axH, 'XLim', [floor(now) floor(now)+1]);
 % until I understand what happens to UserData use guidata to store it
 handles.axesInfo=axesInfo;
-guidata(figH, handles);
+guidata(hFig, handles);
 
 % Couldn't get easyplot to function correctly so pulled in code from
 % dynamicDateTick into easyplot and modified as required.
 %dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
 
 % Call once to ensure proper formatting
-updateDateLabel(figH,struct('Axes', ax1), true);
+updateDateLabel(hFig,struct('Axes', axH), true);
 % Tried a callback on zoom/pan and XLim listener but that just cause
 % massive confusion. Using XLim listener only seem to work ok.
-z = zoom(figH);
-p = pan(figH);
+z = zoom(hFig);
+p = pan(hFig);
 set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
@@ -171,7 +171,7 @@ xlabel(handles.axes1,'Time (UTC)');
 dcm_h = datacursormode(handles.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-guidata(figH, handles);
+guidata(hFig, handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
 % uiwait(handles.figure1);
@@ -196,8 +196,8 @@ function import_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figH=ancestor(hObject,'figure');
-handles=guidata(figH);
+hFig=ancestor(hObject,'figure');
+handles=guidata(hFig);
 
 theList=handles.theList;
 
@@ -255,7 +255,7 @@ else
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
-                guidata(figH, handles);
+                guidata(hFig, handles);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
             end
@@ -269,10 +269,10 @@ else
     guidata(ancestor(hObject,'figure'), handles);
     
     set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
-    guidata(figH, handles);
+    guidata(hFig, handles);
     
     set(handles.progress,'String','Finished importing.');
-    guidata(figH, handles);
+    guidata(hFig, handles);
     drawnow;
     if numel(FILENAME)~=iFailed
         plotVar=chooseVar(handles.sample_data);
@@ -289,9 +289,9 @@ else
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
         set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         warning(oldWarnState);
-        plotData(figH);
+        plotData(hFig);
     end
-    guidata(figH, handles);
+    guidata(hFig, handles);
 end
 
 end
@@ -382,7 +382,15 @@ end
 %%
 function tableVisibilityCallback(hModel,hEvent, hObject)
 % callback for treeTable visibility column
-handles=guidata(ancestor(hObject,'figure'));
+% hModel - javahandle_withcallbacks.MultiClassTableModel
+% hEvent - javax.swing.event.TableModelEvent
+% hObject - hopefully the handle to figure
+if ishghandle(hObject)
+    handles=guidata(ancestor(hObject,'figure'));
+else
+    disp('I am stuck in tableVisibilityCallback');
+    pause;
+end
 
 % Get the modification data, zero indexed
 modifiedRow = get(hEvent,'FirstRow');
@@ -439,7 +447,7 @@ function plotData(hObject)
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
 figure(hFig); %make figure current
-axH=handle(handles.axes1);
+hAx=handles.axes1;
 
 %Create a string for legend
 %legendStr={'Plots'};
@@ -449,14 +457,14 @@ legendStr={};
 %hold('on');
 
 % clear plot
+legend(hAx,'off');
+% if isfield(handles,'legend_h')
+%     delete(handles.legend_h);
+% end
 %children = get(handles.axes1, 'Children');
 children = findobj(handles.axes1,'Type','line');
 if ~isempty(children)
     delete(children);
-end
-%legend(handles.axes1,'off');
-if isfield(handles,'legH')
-    delete(handles.legH);
 end
 
 varNames={};
@@ -473,12 +481,12 @@ for ii=1:numel(handles.sample_data) % loop over files
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             try
-                plot(axH,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr);
+                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr);
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
             end
-            hold(axH,'on');
+            hold(hAx,'on');
             legendStr{end+1}=strrep(instStr,'_','\_');
             varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
             set(handles.progress,'String',strcat('Plot : ', instStr));
@@ -495,21 +503,21 @@ handles.yMin = dataLimits.yMin;
 handles.yMax = dataLimits.yMax;
 guidata(ancestor(hObject,'figure'), handles);
 if handles.firstPlot
-    set(axH,'XLim',[handles.xMin handles.xMax]);
-    set(axH,'YLim',[handles.yMin handles.yMax]);
+    set(hAx,'XLim',[handles.xMin handles.xMax]);
+    set(hAx,'YLim',[handles.yMin handles.yMax]);
     handles.firstPlot=false;
 end
 
 if isempty(varNames)
-    ylabel(axH,'No Variables');
+    ylabel(hAx,'No Variables');
 elseif numel(varNames)==1
-    ylabel(axH,strrep(char(varNames{1}),'_','\_'));
+    ylabel(hAx,strrep(char(varNames{1}),'_','\_'));
 else
-    ylabel(axH,'Multiple Variables');
+    ylabel(hAx,'Multiple Variables');
 end
 
 % make
-h = findobj(axH,'Type','line');
+h = findobj(hAx,'Type','line');
 
 % mapping = round(linspace(1,64,length(h)))';
 % colors = colormap('jet');
@@ -528,10 +536,11 @@ for jj = 1:length(h)
     end
 end
 
-updateDateLabel(hFig,struct('Axes', axH), true);
+updateDateLabel(hFig,struct('Axes', hAx), true);
 
-%legh=legend(axH,legendStr);
-handles.legH=legendflex(axH,legendStr, 'xscale',0.5, 'FontSize',6);
+legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
+%[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 6)
+handles.legend_h=legend_h;
 set(handles.progress,'String','Done');
 guidata(ancestor(hObject,'figure'), handles);
 drawnow;
@@ -614,7 +623,7 @@ if isfield(handles, 'sample_data')
         handles.treePanelData,...
         'ColumnTypes',{'','char','char','logical'},...
         'ColumnEditable',{false, false, true});
-    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
+    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
     guidata(ancestor(hObject,'figure'), handles);
     plotData(ancestor(hObject,'figure'));
 end
@@ -657,7 +666,7 @@ if strcmp(selectionType,'open')
             handles.treePanelData,...
             'ColumnTypes',{'','char','char','logical'},...
             'ColumnEditable',{false, false, true});
-        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, handles.jtable, handles, hObject});
+        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         handles.firstPlot=true;
         guidata(ancestor(hObject,'figure'), handles);
         plotData(ancestor(hObject,'figure'));
@@ -763,7 +772,6 @@ if isfield(handles,'sample_data')
     handles.xMax = dataLimits.xMax;
     handles.yMin = dataLimits.yMin;
     handles.yMax = dataLimits.yMax;
-    
     if ~isnan(handles.xMin) || ~isnan(handles.xMax)
         set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
     end
@@ -822,7 +830,8 @@ end
 
 %%
 function updateDateLabel(source, eventData, varargin)
-
+% UPDATEDATELABEL
+% code from dynamicDateTicks
 %if isMultipleCall();  return;  end
 
 keepLimits=false;
@@ -896,29 +905,23 @@ end
 newlabels = cell(size(labels,1), 1); % Initialize cell array of new tick label information
 
 if regexpi(labels(1,:), '[a-z]{3}', 'once') % Tick format is mmm
-    
     % Add year information to first tick & ticks where the year changes
     ind = [1 find(diff(yr))+1];
     newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
     labels = strcat(labels, newlabels);
-    
 elseif regexpi(labels(1,:), '\d\d/\d\d', 'once') % Tick format is mm/dd
-    
     % Change mm/dd to dd/mm if necessary
     labels = datestr(ticks, axesInfo.mdformat);
     % Add year information to first tick & ticks where the year changes
     ind = [1 find(diff(yr))+1];
     newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
     labels = strcat(labels, newlabels);
-    
 elseif any(labels(1,:) == ':') % Tick format is HH:MM
-    
     % Add month/day/year information to the first tick and month/day to other ticks where the day changes
     ind = find(diff(da))+1;
     newlabels{1}   = datestr(ticks(1), [axesInfo.mdformat '-yyyy-']); % Add month/day/year to first tick
     newlabels(ind) = cellstr(datestr(ticks(ind), [axesInfo.mdformat '-'])); % Add month/day to ticks where day changes
     labels = strcat(newlabels, labels);
-    
 end
 for ii=1:numel(axesInfo.Linked)
     if ishghandle(axesInfo.Linked(ii))

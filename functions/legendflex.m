@@ -588,7 +588,7 @@ else
     pos = getpos(href, bufunit);
 end
 
-htmp = axes('units', 'pixels', 'position', [0 0 w h], 'visible','off');
+htmp = axes('Position', [0 0 w h], 'Units', 'pixels', 'Visible','off');
 lpos = getpos(htmp, bufunit);
 delete(htmp);
 w = lpos(3);
@@ -622,7 +622,7 @@ shift = [...
 
 corner = refxy(anchor(1),:) + buffer + shift(anchor(2),:);
 legpos = [corner w h];
-
+end
 
 %------------------------
 % Resize function
@@ -718,7 +718,7 @@ for ia = 1:length(ax)
         
 end
 
+end
 
-
-    
+end  
 
