@@ -158,10 +158,10 @@ guidata(figH, handles);
 updateDateLabel(figH,struct('Axes', ax1), true);
 % Tried a callback on zoom/pan and XLim listener but that just cause
 % massive confusion. Using XLim listener only seem to work ok.
-%z = zoom(figH);
-%p = pan(figH);
-%set(z,'ActionPostCallback',@updateDateLabel);
-%set(p,'ActionPostCallback',@updateDateLabel);
+z = zoom(figH);
+p = pan(figH);
+set(z,'ActionPostCallback',@updateDateLabel);
+set(p,'ActionPostCallback',@updateDateLabel);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 xlabel(handles.axes1,'Time (UTC)');
@@ -244,7 +244,7 @@ else
                 handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
                 handles.sample_data{end}.variables{end}.name = 'TIMEDIFF';
                 theData=handles.sample_data{end}.variables{end}.data;
-                theData = [NaN; diff(theData)*86400.0];
+                theData = [NaN; diff(theData*86400.0)];
                 handles.sample_data{end}.variables{end}.data = theData;
                 
                 for jj=1:numel(handles.sample_data{end}.variables)
@@ -265,7 +265,6 @@ else
             drawnow;
         end
     end
-    
 
     guidata(ancestor(hObject,'figure'), handles);
     
@@ -455,7 +454,10 @@ children = findobj(handles.axes1,'Type','line');
 if ~isempty(children)
     delete(children);
 end
-legend(handles.axes1,'off');
+%legend(handles.axes1,'off');
+if isfield(handles,'legH')
+    delete(handles.legH);
+end
 
 varNames={};
 %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
@@ -529,7 +531,7 @@ end
 updateDateLabel(hFig,struct('Axes', axH), true);
 
 %legh=legend(axH,legendStr);
-legH=legendflex(axH,legendStr, 'xscale',0.5, 'FontSize',6);
+handles.legH=legendflex(axH,legendStr, 'xscale',0.5, 'FontSize',6);
 set(handles.progress,'String','Done');
 guidata(ancestor(hObject,'figure'), handles);
 drawnow;
@@ -733,16 +735,17 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
-dataLimits=findVarExtents(handles.sample_data);
-handles.xMin = dataLimits.xMin;
-handles.xMax = dataLimits.xMax;
-handles.yMin = dataLimits.yMin;
-handles.yMax = dataLimits.yMax;
 if isfield(handles,'sample_data')
+    dataLimits=findVarExtents(handles.sample_data);
+    handles.xMin = dataLimits.xMin;
+    handles.xMax = dataLimits.xMax;
+    handles.yMin = dataLimits.yMin;
+    handles.yMax = dataLimits.yMax;
     if ~isnan(handles.yMin) || ~isnan(handles.yMax)
         set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     end
     guidata(ancestor(hObject,'figure'), handles);
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
 end
 end
 
@@ -754,16 +757,18 @@ function zoomXextent_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
-dataLimits=findVarExtents(handles.sample_data);
-handles.xMin = dataLimits.xMin;
-handles.xMax = dataLimits.xMax;
-handles.yMin = dataLimits.yMin;
-handles.yMax = dataLimits.yMax;
 if isfield(handles,'sample_data')
+    dataLimits=findVarExtents(handles.sample_data);
+    handles.xMin = dataLimits.xMin;
+    handles.xMax = dataLimits.xMax;
+    handles.yMin = dataLimits.yMin;
+    handles.yMax = dataLimits.yMax;
+    
     if ~isnan(handles.xMin) || ~isnan(handles.xMax)
         set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
     end
     guidata(ancestor(hObject,'figure'), handles);
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
 end
 end
 
@@ -818,7 +823,7 @@ end
 %%
 function updateDateLabel(source, eventData, varargin)
 
-if isMultipleCall();  return;  end
+%if isMultipleCall();  return;  end
 
 keepLimits=false;
 % The following is mess of code but was of a result of trying to use the
@@ -832,7 +837,7 @@ if isfield(source,'Axes') %called as initialize axes
     keepLimits=true;
 elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
-        disp('updateDateLabel callback')
+        %disp('updateDateLabel callback')
         ax1 = eventData.Axes; % On which axes has the zoom/pan occurred
         handles=guidata(source);
         axesInfo = handles.axesInfo;
