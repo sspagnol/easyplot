@@ -281,10 +281,18 @@ else
         handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'),handles);
         handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Visible'},...
+            {'','Instrument','Variable','Show'},...
             handles.treePanelData,...
             'ColumnTypes',{'','char','char','logical'},...
             'ColumnEditable',{false, false, true});
+        % Make 'Visible' column width small as practible
+        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+        % right-align second column
+        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+        %renderer = javax.swing.table.DefaultTableCellRenderer;
+        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        
         guidata(ancestor(hObject,'figure'),handles);
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
         set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
@@ -332,7 +340,7 @@ for ii=1:numel(sample_data)
 end
 varList=unique(varList);
 varList{end+1}='ALLVARS';
-disp(sprintf('%s ','Variable list = ',varList{:}));
+%disp(sprintf('%s ','Variable list = ',varList{:}));
 
 ii=menu('Variable to plot?',varList);
 pause(0.1);
@@ -619,10 +627,18 @@ if isfield(handles, 'sample_data')
     % surely I don't have to delete and recreate jtable
     delete(handles.jtable);
     handles.jtable = treeTable(handles.treePanel, ...
-        {'','Instrument','Variable','Visible'},...
+        {'','Instrument','Variable','Show'},...
         handles.treePanelData,...
         'ColumnTypes',{'','char','char','logical'},...
         'ColumnEditable',{false, false, true});
+    % Make 'Visible' column width small as practible
+    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50); 
+    % right-align second column
+    renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+    %renderer = javax.swing.table.DefaultTableCellRenderer;
+    renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);  
+
     set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
     guidata(ancestor(hObject,'figure'), handles);
     plotData(ancestor(hObject,'figure'));
@@ -662,10 +678,18 @@ if strcmp(selectionType,'open')
         % surely I don't have to delete and recreate jtable
         delete(handles.jtable);
         handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Visible'},...
+            {'','Instrument','Variable','Show'},...
             handles.treePanelData,...
             'ColumnTypes',{'','char','char','logical'},...
             'ColumnEditable',{false, false, true});
+        % Make 'Visible' column width small as practible
+        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+        % right-align second column
+        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+        %renderer = javax.swing.table.DefaultTableCellRenderer;
+        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        
         set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         handles.firstPlot=true;
         guidata(ancestor(hObject,'figure'), handles);
@@ -687,6 +711,7 @@ if strcmp(selectionType,'normal')
     %xlim(handles.axes1, newXLimits);
     zoom(handles.axes1,'reset');
     set(handles.axes1,'XLim',newXLimits);
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
     %    if handles.plotAllVars==1
     %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     %    end
