@@ -156,8 +156,12 @@ guidata(hFig, handles);
 
 % Call once to ensure proper formatting
 updateDateLabel(hFig,struct('Axes', axH), true);
+
 % Tried a callback on zoom/pan and XLim listener but that just cause
-% massive confusion. Using XLim listener only seem to work ok.
+% massive confusion. At the moment just call updateDateLabel as required, 
+% if I look into this again think I will create seperate callbacks 
+% for ActionPostCallback and PostSet XLim listener, which would then 
+% call common updateDateLabel
 z = zoom(hFig);
 p = pan(hFig);
 set(z,'ActionPostCallback',@updateDateLabel);
@@ -168,6 +172,7 @@ xlabel(handles.axes1,'Time (UTC)');
 
 %hoverlines( handles.figure1 );
 
+% custome data tip with nicely formatted date
 dcm_h = datacursormode(handles.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
@@ -176,6 +181,7 @@ guidata(hFig, handles);
 % UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
 % uiwait(handles.figure1);
 end
+
 
 %% --- Outputs from this function are returned to the command line.
 function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
@@ -246,7 +252,6 @@ else
                 theData=handles.sample_data{end}.variables{end}.data;
                 theData = [NaN; diff(theData*86400.0)];
                 handles.sample_data{end}.variables{end}.data = theData;
-                
                 for jj=1:numel(handles.sample_data{end}.variables)
                     handles.sample_data{end}.variables{jj}.plotThisVar=false;
                 end
@@ -265,7 +270,7 @@ else
             drawnow;
         end
     end
-
+    
     guidata(ancestor(hObject,'figure'), handles);
     
     set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
@@ -316,6 +321,7 @@ if ~isempty(sample_data)
     end
 end
 end
+
 
 %%
 function plotVar = chooseVar(sample_data)
@@ -451,7 +457,10 @@ end
 
 %%
 function plotData(hObject)
-% plot marked variables in sample_data
+% PLOTDATA plot marked variables in sample_data
+% Inputs:
+%   hObject - handle to figure
+
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
 figure(hFig); %make figure current
@@ -534,7 +543,7 @@ h = findobj(hAx,'Type','line');
 cfunc = @(x) colorspace('RGB->Lab',x);
 colors = distinguishable_colors(length(h),'white',cfunc);
 for jj = 1:length(h)
-    dstrings{jj} = get(h(jj),'DisplayName');
+    %dstrings{jj} = get(h(jj),'DisplayName');
     try
         %set(h(jj),'Color',colors( mapping(j),: ));
         set(h(jj),'Color',colors(jj,:));
@@ -632,13 +641,13 @@ if isfield(handles, 'sample_data')
         'ColumnTypes',{'','char','char','logical'},...
         'ColumnEditable',{false, false, true});
     % Make 'Visible' column width small as practible
-    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50); 
+    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
     % right-align second column
     renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
     %renderer = javax.swing.table.DefaultTableCellRenderer;
     renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);  
-
+    handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+    
     set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
     guidata(ancestor(hObject,'figure'), handles);
     plotData(ancestor(hObject,'figure'));
@@ -857,6 +866,7 @@ end
 function updateDateLabel(source, eventData, varargin)
 % UPDATEDATELABEL
 % code from dynamicDateTicks
+
 %if isMultipleCall();  return;  end
 
 keepLimits=false;
@@ -866,13 +876,13 @@ keepLimits=false;
 % reference.
 if isfield(source,'Axes') %called as initialize axes
     %disp('updateDateLabel init')
-    ax1 = source.Axes; % On which axes has the zoom/pan occurred
+    axH = source.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(source.Axes, 'UserData');
     keepLimits=true;
 elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
         %disp('updateDateLabel callback')
-        ax1 = eventData.Axes; % On which axes has the zoom/pan occurred
+        axH = eventData.Axes; % On which axes has the zoom/pan occurred
         handles=guidata(source);
         axesInfo = handles.axesInfo;
         keepLimits=true;
@@ -886,15 +896,15 @@ else %called as a listener XLim event
     %disp('updateDateLabel listener');
     handles=guidata(get(eventData.AffectedObject,'Parent'));
     axesInfo = handles.axesInfo;
-    ax1 = handle(handles.axes1);
+    axH = handle(handles.axes1);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
     keepLimits=true;
 end
 
-if all(get(ax1,'xlim') == [0 1])
-   set(ax1, 'XLim', [floor(now) floor(now)+1]);
+if all(get(axH,'xlim') == [0 1])
+    set(axH, 'XLim', [floor(now) floor(now)+1]);
 end
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
@@ -911,17 +921,17 @@ end
 % end
 
 %if keepLimits
-datetick(ax1, 'x', 'keeplimits');
+datetick(axH, 'x', 'keeplimits');
 %else
 %    datetick(ax1, 'x');
 %end
 
 % Get the current axes ticks & labels
-ticks  = get(ax1, 'XTick');
-labels = get(ax1, 'XTickLabel');
+ticks  = get(axH, 'XTick');
+labels = get(axH, 'XTickLabel');
 
 % Sometimes the first tick can be outside axes limits. If so, remove it & its label
-if all(ticks(1) < get(ax1,'xlim'))
+if all(ticks(1) < get(axH,'xlim'))
     ticks(1) = [];
     labels(1,:) = [];
 end
@@ -953,26 +963,26 @@ for ii=1:numel(axesInfo.Linked)
         set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
     end
 end
-xlabel(ax1,axesInfo.XLabel);
-%guidata(ancestor(ax1,'figure'), handles);
+xlabel(axH,axesInfo.XLabel);
 end
+
 
 %%
 function flag=isMultipleCall()
-  flag = false; 
-  % Get the stack
-  s = dbstack();
-  if numel(s) <= 2
+flag = false;
+% Get the stack
+s = dbstack();
+if numel(s) <= 2
     % Stack too short for a multiple call
     return
-  end
- 
-  % How many calls to the calling function are in the stack?
-  names = {s(:).name};
-  TF = strcmp(s(2).name,names);
-  count = sum(TF);
-  if count>1
+end
+
+% How many calls to the calling function are in the stack?
+names = {s(:).name};
+TF = strcmp(s(2).name,names);
+count = sum(TF);
+if count>1
     % More than 1
-    flag = true; 
-  end
+    flag = true;
+end
 end

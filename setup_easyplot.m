@@ -18,8 +18,8 @@ addpath(gp);
 % add all folders and subfolders in imos_tb_home to the path
 disp('Adding IMOS-toolbox, please wait ...');
 disp(['IMOS-toolbox path : ' imos_tb_home]);
-gp=genpath_clean(imos_tb_home);
-addpath(gp);
+%gp=genpath_clean(imos_tb_home);
+%addpath(gp);
 
 end
 
