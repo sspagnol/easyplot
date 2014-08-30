@@ -16,12 +16,14 @@ disp(['Easyplot path : ' easyplotDir]);
 gp=genpath_clean(easyplotDir);
 addpath(gp);
 
-% add all folders and subfolders in imos_tb_home to the path
-disp('Adding IMOS-toolbox, please wait ...');
-disp(['IMOS-toolbox path : ' imos_tb_home]);
-gp=genpath_clean(imos_tb_home);
-addpath(gp);
-
+% if can't find imosToolbox.m add all folders and subfolders
+% in imos_tb_home to the path
+if ~exist('imosToolbox','file')
+    disp('Adding IMOS-toolbox, please wait ...');
+    disp(['IMOS-toolbox path : ' imos_tb_home]);
+    gp=genpath_clean(imos_tb_home);
+    addpath(gp);
+end
 end
 
 %%
