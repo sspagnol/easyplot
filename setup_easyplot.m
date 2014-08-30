@@ -1,10 +1,11 @@
 function setup_easyplot
 
 % path to easyplot dir
-easyplotDir='D:\Projects\aims-gitlab\easyplot';
+[easyplotDir, name, ext] = fileparts(mfilename('fullpath'));
+%easyplotDir='D:\Projects\aims-gitlab\easyplot';
 
 % location of the users toolbox installation
-imos_tb_home='D:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
+imos_tb_home='c:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
 
 % user should not need to edit anything further
 
@@ -18,8 +19,8 @@ addpath(gp);
 % add all folders and subfolders in imos_tb_home to the path
 disp('Adding IMOS-toolbox, please wait ...');
 disp(['IMOS-toolbox path : ' imos_tb_home]);
-%gp=genpath_clean(imos_tb_home);
-%addpath(gp);
+gp=genpath_clean(imos_tb_home);
+addpath(gp);
 
 end
 

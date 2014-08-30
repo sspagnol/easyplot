@@ -75,8 +75,8 @@ handles.oldPathname='';
 
 % list of instruments and their parsers
 ii=1;
-theList.name{ii}='RBR (txt)';
-theList.wildcard{ii}='*.txt';
+theList.name{ii}='RBR (txt,dat)';
+theList.wildcard{ii}={'*.txt', '*.dat'};
 theList.message{ii}='Choose TR1060/TDR2050 files:';
 theList.parser{ii}='XRParse';
 
@@ -215,9 +215,9 @@ end
 fhandle = str2func(theList.parser{iParse});
 
 if ~exist(handles.oldPathname,'dir')
-    filterSpec=theList.wildcard{iParse};
+    filterSpec=strjoin({theList.wildcard{iParse}},';');
 else
-    filterSpec=[handles.oldPathname '/' theList.wildcard{iParse}];
+    filterSpec=strjoin({strcat(handles.oldPathname, '/', theList.wildcard{iParse})},';');
 end
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
