@@ -134,6 +134,30 @@ theList.wildcard{ii}='*.csv';
 theList.message{ii}='Choose VML2T *.csv files:';
 theList.parser{ii}='VemcoParse';
 
+ii=ii+1;
+theList.name{ii}='Nortek AWAC (wpr)';
+theList.wildcard{ii}='*.wpr';
+theList.message{ii}='Choose Nortek *.wpr files:';
+theList.parser{ii}='awacParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Continental (wpr)';
+theList.wildcard{ii}='*.wpr';
+theList.message{ii}='Choose Nortek *.wpr files:';
+theList.parser{ii}='continentalParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
+theList.wildcard{ii}='*.aqd';
+theList.message{ii}='Choose Nortek *.aqd files:';
+theList.parser{ii}='aquadoppVelocityParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Profiler (prf)';
+theList.wildcard{ii}='*.prf';
+theList.message{ii}='Choose Nortek *.prf files:';
+theList.parser{ii}='aquadoppProfilerParse';
+
 handles.theList=theList;
 
 handles.firstPlot = true;
