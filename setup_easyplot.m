@@ -23,13 +23,29 @@ function reAddPaths(topDir,messageStr,atBeginning)
 disp(['Adding paths for ' messageStr ', please wait...']);
 gp=genpath_clean(topDir);
 disp('  Removing any existing paths.')
-rmpath(gp);
+rempath(gp);
 disp('  Adding new paths');
 if atBeginning
     addpath(gp,'-begin');
 else
     addpath(gp);
 end
+
+end
+
+%%
+function rempath(gp)
+% from a genpath path string, remove on paths that are currently in the
+% matlab path
+
+ss=strsplit(gp,';');
+ii=arrayfun(@(x) ~isempty(strfind(x,path)),ss);
+ss=ss(ii); %list with only directories that are currently on matlab path
+thePath=sprintf(['%s' pathsep],ss{:}); %make string seperated by pathsep
+if thePath(end)==pathsep % remove last not needed pathsep
+    thePath(end)=[];
+end
+rmpath(thePath);
 
 end
 
