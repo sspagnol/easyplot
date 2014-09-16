@@ -71,7 +71,29 @@ handles.xMax=NaN;
 handles.yMin=NaN;
 handles.yMax=NaN;
 % old path for easier importing
-handles.oldPathname='';
+[handles.EPdir, name, ext] = fileparts(mfilename('fullpath'));
+handles.oldPathname=handles.EPdir;
+handles.ini = ini2struct(fullfile(handles.EPdir,'easyplot.ini'));
+% if isfield(handles.ini,'startDialog')
+%     if isfield(handles.ini.startDialog,'dataDir')
+%         if exist(handles.ini.startDialog.dataDir,'dir')
+%             if isempty(handles.ini.startDialog.dataDir)
+%                 handles.ini.startDialog.dataDir=handles.EPdir;
+%             else
+%                 handles.oldPathname=handles.ini.startDialog.dataDir;
+%             end
+%         end
+%     end
+% else
+%     handles.ini.startDialog.dataDir=handles.EPdir;
+% end
+
+try
+    thePath=handles.ini.startDialog.dataDir;
+    if exist(thePath)
+        handles.oldPathname=thePath;
+    end
+end
 
 % list of instruments and their parsers
 ii=1;
@@ -241,7 +263,7 @@ fhandle = str2func(theList.parser{iParse});
 if ~exist(handles.oldPathname,'dir')
     filterSpec=strjoin(theList.wildcard{iParse},';');
 else
-    filterSpec=strjoin({strcat(handles.oldPathname, '/', theList.wildcard{iParse})},';');
+    filterSpec=strjoin({strcat(handles.oldPathname, filesep, theList.wildcard{iParse})},';');
 end
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
@@ -641,6 +663,9 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+handles.ini.startDialog.dataDir=handles.oldPathname;
+struct2ini(fullfile(handles.EPdir,'easyplot.ini'),handles.ini);
+
 %delete(handles.lisH);
 delete(handles.figure1);
 end
