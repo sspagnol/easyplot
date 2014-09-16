@@ -239,7 +239,7 @@ end
 fhandle = str2func(theList.parser{iParse});
 
 if ~exist(handles.oldPathname,'dir')
-    filterSpec=strjoin({theList.wildcard{iParse}},';');
+    filterSpec=strjoin(theList.wildcard{iParse},';');
 else
     filterSpec=strjoin({strcat(handles.oldPathname, '/', theList.wildcard{iParse})},';');
 end

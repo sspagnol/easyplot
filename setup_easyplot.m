@@ -1,7 +1,7 @@
 function setup_easyplot
 
 % path to easyplot dir
-[easyplotDir, name, ext] = fileparts(mfilename('fullpath'));
+[EPdir, name, ext] = fileparts(mfilename('fullpath'));
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 
 % location of the users toolbox installation
@@ -9,21 +9,28 @@ imos_tb_home='c:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
 
 % user should not need to edit anything further
 
-disp('Adding easyplot, please wait ...');
-disp(['Easyplot path : ' easyplotDir]);
-%addpath(fullfile(easyplotDir,computer))
-%addpath(easyplotDir);
-gp=genpath_clean(easyplotDir);
-addpath(gp);
+%%
+reAddPaths(EPdir,'AIMS easyplot',true);
 
-% if can't find imosToolbox.m add all folders and subfolders
-% in imos_tb_home to the path
-if ~exist('imosToolbox','file')
-    disp('Adding IMOS-toolbox, please wait ...');
-    disp(['IMOS-toolbox path : ' imos_tb_home]);
-    gp=genpath_clean(imos_tb_home);
+%% add IMOS Toolbox paths
+reAddPaths(imos_tb_home,'IMOS toolbox',true);
+
+end
+
+%%
+function reAddPaths(topDir,messageStr,atBeginning)
+
+disp(['Adding paths for ' messageStr ', please wait...']);
+gp=genpath_clean(topDir);
+disp('  Removing any existing paths.')
+rmpath(gp);
+disp('  Adding new paths');
+if atBeginning
+    addpath(gp,'-begin');
+else
     addpath(gp);
 end
+
 end
 
 %%
