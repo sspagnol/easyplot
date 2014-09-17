@@ -64,8 +64,6 @@ set(handles.figure1,'Toolbar','figure');
 % create easyplot toolbar
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
-%set(handles.plotVar,'String','');
-%handles.plotVar='';
 handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
@@ -74,20 +72,6 @@ handles.yMax=NaN;
 [handles.EPdir, name, ext] = fileparts(mfilename('fullpath'));
 handles.oldPathname=handles.EPdir;
 handles.ini = ini2struct(fullfile(handles.EPdir,'easyplot.ini'));
-% if isfield(handles.ini,'startDialog')
-%     if isfield(handles.ini.startDialog,'dataDir')
-%         if exist(handles.ini.startDialog.dataDir,'dir')
-%             if isempty(handles.ini.startDialog.dataDir)
-%                 handles.ini.startDialog.dataDir=handles.EPdir;
-%             else
-%                 handles.oldPathname=handles.ini.startDialog.dataDir;
-%             end
-%         end
-%     end
-% else
-%     handles.ini.startDialog.dataDir=handles.EPdir;
-% end
-
 try
     thePath=handles.ini.startDialog.dataDir;
     if exist(thePath)
@@ -204,9 +188,9 @@ guidata(hFig, handles);
 updateDateLabel(hFig,struct('Axes', axH), true);
 
 % Tried a callback on zoom/pan and XLim listener but that just cause
-% massive confusion. At the moment just call updateDateLabel as required, 
-% if I look into this again think I will create seperate callbacks 
-% for ActionPostCallback and PostSet XLim listener, which would then 
+% massive confusion. At the moment just call updateDateLabel as required,
+% if I look into this again think I will create seperate callbacks
+% for ActionPostCallback and PostSet XLim listener, which would then
 % call common updateDateLabel
 z = zoom(hFig);
 p = pan(hFig);
@@ -260,11 +244,8 @@ end
 
 fhandle = str2func(theList.parser{iParse});
 
-if ~exist(handles.oldPathname,'dir')
-    filterSpec=strjoin(theList.wildcard{iParse},';');
-else
-    filterSpec=strjoin({strcat(handles.oldPathname, filesep, theList.wildcard{iParse})},';');
-end
+filterSpec=fullfile(handles.oldPathname,strjoin(theList.wildcard{iParse},';'));
+    
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
