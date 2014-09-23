@@ -64,14 +64,20 @@ set(handles.figure1,'Toolbar','figure');
 % create easyplot toolbar
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
-%set(handles.plotVar,'String','');
-%handles.plotVar='';
 handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
 handles.yMax=NaN;
 % old path for easier importing
-handles.oldPathname='';
+[handles.EPdir, name, ext] = fileparts(mfilename('fullpath'));
+handles.oldPathname=handles.EPdir;
+handles.ini = ini2struct(fullfile(handles.EPdir,'easyplot.ini'));
+try
+    thePath=handles.ini.startDialog.dataDir;
+    if exist(thePath)
+        handles.oldPathname=thePath;
+    end
+end
 
 % list of instruments and their parsers
 ii=1;
@@ -82,79 +88,79 @@ theList.parser{ii}='XRParse';
 
 ii=ii+1;
 theList.name{ii}='WQM (dat)';
-theList.wildcard{ii}='*.dat';
+theList.wildcard{ii}={'*.dat'};
 theList.message{ii}='Choose WQM files:';
 theList.parser{ii}='WQMParse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37SMParse';
 
 ii=ii+1;
 theList.name{ii}='SBE39 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE39 asc files:';
 theList.parser{ii}='SBE39Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE56 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE56 cnv files:';
 theList.parser{ii}='SBE56Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE CTD (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose CTD cnv files:';
 theList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
 theList.name{ii}='RDI (000)';
-theList.wildcard{ii}='*.000';
+theList.wildcard{ii}={'*.000'};
 theList.message{ii}='Choose RDI 000 files:';
 theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
 theList.name{ii}='Wetlabs FLNTU (raw)';
-theList.wildcard{ii}='*.raw';
+theList.wildcard{ii}={'*.raw'};
 theList.message{ii}='Choose FLNTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
 theList.name{ii}='Vemco Minilog-II-T (csv)';
-theList.wildcard{ii}='*.csv';
+theList.wildcard{ii}={'*.csv'};
 theList.message{ii}='Choose VML2T *.csv files:';
 theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek AWAC (wpr)';
-theList.wildcard{ii}='*.wpr';
+theList.wildcard{ii}={'*.wpr'};
 theList.message{ii}='Choose Nortek *.wpr files:';
 theList.parser{ii}='awacParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Continental (wpr)';
-theList.wildcard{ii}='*.wpr';
+theList.wildcard{ii}={'*.wpr'};
 theList.message{ii}='Choose Nortek *.wpr files:';
 theList.parser{ii}='continentalParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
-theList.wildcard{ii}='*.aqd';
+theList.wildcard{ii}={'*.aqd'};
 theList.message{ii}='Choose Nortek *.aqd files:';
 theList.parser{ii}='aquadoppVelocityParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Aquadopp Profiler (prf)';
-theList.wildcard{ii}='*.prf';
+theList.wildcard{ii}={'*.prf'};
 theList.message{ii}='Choose Nortek *.prf files:';
 theList.parser{ii}='aquadoppProfilerParse';
 
@@ -182,9 +188,9 @@ guidata(hFig, handles);
 updateDateLabel(hFig,struct('Axes', axH), true);
 
 % Tried a callback on zoom/pan and XLim listener but that just cause
-% massive confusion. At the moment just call updateDateLabel as required, 
-% if I look into this again think I will create seperate callbacks 
-% for ActionPostCallback and PostSet XLim listener, which would then 
+% massive confusion. At the moment just call updateDateLabel as required,
+% if I look into this again think I will create seperate callbacks
+% for ActionPostCallback and PostSet XLim listener, which would then
 % call common updateDateLabel
 z = zoom(hFig);
 p = pan(hFig);
@@ -238,11 +244,8 @@ end
 
 fhandle = str2func(theList.parser{iParse});
 
-if ~exist(handles.oldPathname,'dir')
-    filterSpec=strjoin(theList.wildcard{iParse},';');
-else
-    filterSpec=strjoin({strcat(handles.oldPathname, '/', theList.wildcard{iParse})},';');
-end
+filterSpec=fullfile(handles.oldPathname,strjoin(theList.wildcard{iParse},';'));
+    
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
@@ -641,6 +644,9 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+handles.ini.startDialog.dataDir=handles.oldPathname;
+struct2ini(fullfile(handles.EPdir,'easyplot.ini'),handles.ini);
+
 %delete(handles.lisH);
 delete(handles.figure1);
 end

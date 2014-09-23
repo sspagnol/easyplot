@@ -5,7 +5,7 @@ function setup_easyplot
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 
 % location of the users toolbox installation
-imos_tb_home='c:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
+imos_tb_home='D:\Projects\aims-gitlab\imos-toolbox-2.3b-sbs';
 
 % user should not need to edit anything further
 
@@ -39,13 +39,16 @@ function rempath(gp)
 % matlab path
 
 ss=strsplit(gp,';');
-ii=arrayfun(@(x) ~isempty(strfind(x,path)),ss);
+pp=strsplit(path,';');
+ii=ismember(ss,pp);
 ss=ss(ii); %list with only directories that are currently on matlab path
-thePath=sprintf(['%s' pathsep],ss{:}); %make string seperated by pathsep
-if thePath(end)==pathsep % remove last not needed pathsep
-    thePath(end)=[];
+if ~isempty(ss)
+    thePath=sprintf(['%s' pathsep],ss{:}); %make string seperated by pathsep
+    if thePath(end)==pathsep % remove last not needed pathsep
+        thePath(end)=[];
+    end
+    rmpath(thePath);
 end
-rmpath(thePath);
 
 end
 
