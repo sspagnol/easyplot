@@ -88,79 +88,79 @@ theList.parser{ii}='XRParse';
 
 ii=ii+1;
 theList.name{ii}='WQM (dat)';
-theList.wildcard{ii}='*.dat';
+theList.wildcard{ii}={'*.dat'};
 theList.message{ii}='Choose WQM files:';
 theList.parser{ii}='WQMParse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37SMParse';
 
 ii=ii+1;
 theList.name{ii}='SBE39 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE39 asc files:';
 theList.parser{ii}='SBE39Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE56 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE56 cnv files:';
 theList.parser{ii}='SBE56Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE CTD (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose CTD cnv files:';
 theList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
 theList.name{ii}='RDI (000)';
-theList.wildcard{ii}='*.000';
+theList.wildcard{ii}={'*.000'};
 theList.message{ii}='Choose RDI 000 files:';
 theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
 theList.name{ii}='Wetlabs FLNTU (raw)';
-theList.wildcard{ii}='*.raw';
+theList.wildcard{ii}={'*.raw'};
 theList.message{ii}='Choose FLNTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
 theList.name{ii}='Vemco Minilog-II-T (csv)';
-theList.wildcard{ii}='*.csv';
+theList.wildcard{ii}={'*.csv'};
 theList.message{ii}='Choose VML2T *.csv files:';
 theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek AWAC (wpr)';
-theList.wildcard{ii}='*.wpr';
+theList.wildcard{ii}={'*.wpr'};
 theList.message{ii}='Choose Nortek *.wpr files:';
 theList.parser{ii}='awacParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Continental (wpr)';
-theList.wildcard{ii}='*.wpr';
+theList.wildcard{ii}={'*.wpr'};
 theList.message{ii}='Choose Nortek *.wpr files:';
 theList.parser{ii}='continentalParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
-theList.wildcard{ii}='*.aqd';
+theList.wildcard{ii}={'*.aqd'};
 theList.message{ii}='Choose Nortek *.aqd files:';
 theList.parser{ii}='aquadoppVelocityParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek Aquadopp Profiler (prf)';
-theList.wildcard{ii}='*.prf';
+theList.wildcard{ii}={'*.prf'};
 theList.message{ii}='Choose Nortek *.prf files:';
 theList.parser{ii}='aquadoppProfilerParse';
 
@@ -269,21 +269,28 @@ else
                 set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-                handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
+                atemp = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
+                iiLoaded = numel(atemp);
+                for jj=1:numel(atemp)
+                    handles.sample_data{end+1} = atemp{jj};
+                end
+                clear('atemp');
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
-                % create new time difference variable to check to sampling errors
-                idTime  = getVar(handles.sample_data{end}.dimensions, 'TIME');
-                handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
-                handles.sample_data{end}.variables{end}.name = 'TIMEDIFF';
-                theData=handles.sample_data{end}.variables{end}.data;
-                theData = [NaN; diff(theData*86400.0)];
-                handles.sample_data{end}.variables{end}.data = theData;
-                for jj=1:numel(handles.sample_data{end}.variables)
-                    handles.sample_data{end}.variables{jj}.plotThisVar=false;
+                % create new time difference variable to check for sampling errors
+                for jj=numel(handles.sample_data)-iiLoaded+1:numel(handles.sample_data)
+                    idTime  = getVar(handles.sample_data{jj}.dimensions, 'TIME');
+                    handles.sample_data{jj}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
+                    handles.sample_data{jj}.variables{end}.name = 'TIMEDIFF';
+                    theData=handles.sample_data{jj}.variables{end}.data;
+                    theData = [NaN; diff(theData*86400.0)];
+                    handles.sample_data{jj}.variables{end}.data = theData;
+                    for kk=1:numel(handles.sample_data{jj}.variables)
+                        handles.sample_data{jj}.variables{kk}.plotThisVar=false;
+                    end
                 end
             catch
-                astr=['Importing file ', char(FILENAME{ii}), ' failed. Not an IMOS toolbox parseable file.'];
+                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue.'];
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
