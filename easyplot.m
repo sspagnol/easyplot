@@ -129,9 +129,9 @@ theList.message{ii}='Choose RDI 000 files:';
 theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
-theList.name{ii}='Wetlabs FLNTU (raw)';
+theList.name{ii}='Wetlabs (FL)NTU (raw)';
 theList.wildcard{ii}={'*.raw'};
-theList.message{ii}='Choose FLNTU *.raw files:';
+theList.message{ii}='Choose (FL)NTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
@@ -269,26 +269,26 @@ else
                 set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-                atemp = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
-                iiLoaded = numel(atemp);
-                for jj=1:numel(atemp)
-                    handles.sample_data{end+1} = atemp{jj};
-                end
-                clear('atemp');
-                set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
-                drawnow;
-                % create new time difference variable to check for sampling errors
-                for jj=numel(handles.sample_data)-iiLoaded+1:numel(handles.sample_data)
-                    idTime  = getVar(handles.sample_data{jj}.dimensions, 'TIME');
-                    handles.sample_data{jj}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
-                    handles.sample_data{jj}.variables{end}.name = 'TIMEDIFF';
-                    theData=handles.sample_data{jj}.variables{end}.data;
-                    theData = [NaN; diff(theData*86400.0)];
-                    handles.sample_data{jj}.variables{end}.data = theData;
-                    for kk=1:numel(handles.sample_data{jj}.variables)
-                        handles.sample_data{jj}.variables{kk}.plotThisVar=false;
+                % adopt similar code layout as imos-toolbox importManager
+                structs = {fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
+                for k = 1:length(structs)
+                    if iscell(structs{k})
+                        % one data set may have generated more than one sample_data struct
+                        % eg AWAC .wpr with waves in .wap etc 
+                        iiLoaded = length(structs{k});
+                        for m = 1:length(structs{k})
+                            handles.sample_data{end+1} = finaliseData(structs{k}{m});
+                        end
+                    else
+                        % only one struct generated for one raw data file
+                        iiLoaded = 1;
+                        handles.sample_data{end+1} = finaliseData(structs{k});
                     end
                 end
+                
+                clear('structs');
+                set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
+                drawnow;
             catch
                 astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue.'];
                 disp(astr);
@@ -343,6 +343,21 @@ end
 
 end
 
+%%
+function sam = finaliseData(sam)
+%FINALISEDATA Adds new TIMEDIFF var
+
+idTime  = getVar(sam.dimensions, 'TIME');
+sam.variables{end+1} = sam.dimensions{idTime};
+sam.variables{end}.name = 'TIMEDIFF';
+theData=sam.variables{end}.data;
+theData = [NaN; diff(theData*86400.0)];
+sam.variables{end}.data = theData;
+for kk=1:numel(sam.variables)
+    sam.variables{kk}.plotThisVar=false;
+end
+
+end
 
 %%
 function fileListNames = getFilelistNames(sample_data)
