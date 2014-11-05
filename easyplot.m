@@ -1,5 +1,6 @@
 function varargout = easyplot(varargin)
-% EASYPLOT MATLAB code for easyplot.fig
+%EASYPLOT MATLAB code for oceanographic field data viewing using
+%imos-toolbox parser routines.
 %      EASYPLOT, by itself, creates a new EASYPLOT or raises the existing
 %      singleton*.
 %
@@ -79,6 +80,17 @@ try
     end
 end
 
+% this is what I am working toward, parsers can be 'queried' for some info
+% and file extensions supported
+% parsers=listParsers;
+% structs={};
+% for ii=1:numel(parsers)
+%     parser=getParser(parsers{ii});
+%     structs{end+1}=parser('info');
+% end
+% aStr=cellfun(@(x) x.short_message, structs, 'UniformOutput', false);
+% [choice, idx]=optionDialog('Choose instument type','Choose instument type',aStr,1);
+% but for the moment have this
 % list of instruments and their parsers
 ii=1;
 theList.name{ii}='RBR (txt,dat)';
@@ -227,7 +239,7 @@ end
 
 %% --- Executes on button press in pushbutton1.
 function import_Callback(hObject, eventdata, oldHandles)
-% select instrument files to import
+%IMPORT_CALLBACk select instrument files to import
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -242,10 +254,11 @@ if iParse < 1 % no instrument chosen
     return;
 end
 
-fhandle = str2func(theList.parser{iParse});
+% get parser for the filetype
+parser = str2func(theList.parser{iParse});
 
 filterSpec=fullfile(handles.oldPathname,strjoin(theList.wildcard{iParse},';'));
-    
+
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
@@ -270,11 +283,17 @@ else
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
                 % adopt similar code layout as imos-toolbox importManager
-                structs = {fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
+                try
+                    % old style
+                    structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
+                catch
+                    % new style
+                    structs = {parser( 'TimeSeries', {fullfile(PATHNAME,FILENAME{ii})})};
+                end
                 for k = 1:length(structs)
                     if iscell(structs{k})
                         % one data set may have generated more than one sample_data struct
-                        % eg AWAC .wpr with waves in .wap etc 
+                        % eg AWAC .wpr with waves in .wap etc
                         iiLoaded = length(structs{k});
                         for m = 1:length(structs{k})
                             handles.sample_data{end+1} = finaliseData(structs{k}{m});
@@ -346,6 +365,12 @@ end
 %%
 function sam = finaliseData(sam)
 %FINALISEDATA Adds new TIMEDIFF var
+%
+% Inputs:
+%   sam             - a struct containing sample data.
+%
+% Outputs:
+%   sample_data - same as input, with fields added/modified
 
 idTime  = getVar(sam.dimensions, 'TIME');
 sam.variables{end+1} = sam.dimensions{idTime};
@@ -361,7 +386,8 @@ end
 
 %%
 function fileListNames = getFilelistNames(sample_data)
-% make a list of filenames from sample_data structure
+%GETFILELISTNAMES make a list of filenames from sample_data structure
+
 fileListNames={};
 if ~isempty(sample_data)
     for ii=1:numel(sample_data)
@@ -369,14 +395,16 @@ if ~isempty(sample_data)
         fileListNames{end+1}=[NAME EXT];
     end
 end
-end
 
+end
 
 %%
 function plotVar = chooseVar(sample_data)
-% choose single variable to plot
+% CHOOSEVAR Choose single variable to plot
+%
 % chooseVar is always called after and data import so if this function ends
 % up with no data then abort.
+
 if isempty(sample_data)
     error('CHOOSEVAR: empty sample_data');
 end
@@ -408,7 +436,8 @@ end
 
 %%
 function [sample_data] = markPlotVar(sample_data, plotVar)
-% create cell array for treeTable data
+%MARKPLOTVAR Create cell array of plotted data for treeTable data
+
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
         if isvector(sample_data{ii}.variables{jj}.data)
@@ -425,7 +454,7 @@ end
 
 %%
 function [treePanelData] = generateTreeData(sample_data)
-% create cell array for treeTable data
+%GENERATETREEDATA Create cell array for treeTable data
 treePanelData={};
 kk=1;
 for ii=1:numel(sample_data) % loop over files
@@ -444,10 +473,13 @@ end
 
 %%
 function tableVisibilityCallback(hModel,hEvent, hObject)
-% callback for treeTable visibility column
+% TABLEVISIBILITYCALLBACK callback for treeTable visibility column
+%
+% Inputs:
 % hModel - javahandle_withcallbacks.MultiClassTableModel
 % hEvent - javax.swing.event.TableModelEvent
 % hObject - hopefully the handle to figure
+
 if ishghandle(hObject)
     handles=guidata(ancestor(hObject,'figure'));
 else
@@ -483,6 +515,7 @@ end  % tableChangedCallback
 
 %%
 function originalModel = getOriginalModel(jtable)
+%GETORIGINALMODEL Get original jtable model
 originalModel = jtable.getModel;
 try
     while(true)
@@ -496,8 +529,11 @@ end  % getOriginalModel
 
 %%
 function fig = getParentFigure(fig)
-% if the object is a figure or figure descendent, return the
+%GETPARENTFIGURE Get the parent figure of an object
+%
+% If the object is a figure or figure descendent, return the
 % figure. Otherwise return [].
+
 while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
     fig = get(fig,'parent');
 end
@@ -506,7 +542,8 @@ end
 
 %%
 function plotData(hObject)
-% PLOTDATA plot marked variables in sample_data
+%PLOTDATA plot marked variables in sample_data
+%
 % Inputs:
 %   hObject - handle to figure
 
@@ -615,6 +652,7 @@ end
 
 %% --- Executes on button press in saveImage.
 function saveImage_Callback(hObject, eventdata, oldHandles)
+%SAVEIMAGE_CALLBACK Easyplot save image
 % hObject    handle to saveImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -635,6 +673,8 @@ end
 
 %% --- Executes on button press in clearPlot.
 function clearPlot_Callback(hObject, eventdata, oldHandles)
+%CLEARPLOT_CALLBACK Clear easyplot plot window
+%
 % hObject    handle to clearPlot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -662,6 +702,8 @@ end
 
 %% --- Executes on button press in exit.
 function exit_Callback(hObject, eventdata, oldHandles)
+%EXIT_CALLBACK Easyplot exit
+%
 % hObject    handle to exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -869,7 +911,8 @@ end
 
 %%
 function dataLimits=findVarExtents(sample_data)
-% find time and data extents of marked sample_data variables
+%FINDVAREXTENTS Find time and data extents of marked sample_data variables
+
 if isempty(sample_data)
     dataLimits.xMin = floor(now);
     dataLimits.xMax = floor(now)+1;
@@ -914,10 +957,12 @@ end
 
 end
 
+
 %%
 function updateDateLabel(source, eventData, varargin)
-% UPDATEDATELABEL
-% code from dynamicDateTicks
+% UPDATEDATELABEL Update dateticks on zoom/pan.
+%
+% Code from dynamicDateTicks
 
 %if isMultipleCall();  return;  end
 
