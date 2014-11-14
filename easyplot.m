@@ -620,16 +620,17 @@ for ii=1:numel(handles.sample_data) % loop over files
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
+            [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
             try
                 if isvector(handles.sample_data{ii}.variables{jj}.data)
                     plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, ...
                         handles.sample_data{ii}.variables{jj}.data, ...
-                        lineStyle, 'DisplayName', instStr);
+                        lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
                 else
                     iSlice = handles.sample_data{ii}.variables{jj}.iSlice;
                     plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, ...
                         handles.sample_data{ii}.variables{jj}.data(:,iSlice), ...
-                        lineStyle, 'DisplayName', instStr);
+                        lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
                 end
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
@@ -906,6 +907,7 @@ end
 try
     p=get(eventdata,'Target');
     datacursorText{end+1} = ['DisplayName: ',get(p,'DisplayName')];
+    datacursorText{end+1} = ['FileName: ',get(p,'Tag')];
 end
 
 end
