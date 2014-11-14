@@ -153,15 +153,15 @@ theList.message{ii}='Choose VML2T *.csv files:';
 theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek AWAC (wpr)';
-theList.wildcard{ii}={'*.wpr'};
-theList.message{ii}='Choose Nortek *.wpr files:';
+theList.name{ii}='Nortek AWAC (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
 theList.parser{ii}='awacParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek Continental (wpr)';
-theList.wildcard{ii}={'*.wpr'};
-theList.message{ii}='Choose Nortek *.wpr files:';
+theList.name{ii}='Nortek Continental (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
 theList.parser{ii}='continentalParse';
 
 ii=ii+1;
@@ -339,10 +339,10 @@ else
         handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'),handles);
         handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Show'},...
+            {'','Instrument','Variable','Show','Slice'},...
             handles.treePanelData,...
-            'ColumnTypes',{'','char','char','logical'},...
-            'ColumnEditable',{false, false, true});
+            'ColumnTypes',{'','char','char','logical','char'},...
+            'ColumnEditable',{false, false, false, true, true});
         % Make 'Visible' column width small as practible
         handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
         % right-align second column
@@ -378,6 +378,7 @@ sam.variables{end}.name = 'TIMEDIFF';
 theData=sam.variables{end}.data;
 theData = [NaN; diff(theData*86400.0)];
 sam.variables{end}.data = theData;
+sam.variables{end}.iSlice = 1;
 for kk=1:numel(sam.variables)
     sam.variables{kk}.plotThisVar=false;
 end
@@ -414,10 +415,10 @@ kk=1;
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
         if isfield(sample_data{ii}.variables{jj},'data')
-            if isvector(sample_data{ii}.variables{jj}.data)
+%            if isvector(sample_data{ii}.variables{jj}.data)
                 varList{kk}=sample_data{ii}.variables{jj}.name;
                 kk=kk+1;
-            end
+%            end
         end
     end
 end
@@ -440,13 +441,26 @@ function [sample_data] = markPlotVar(sample_data, plotVar)
 
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
-        if isvector(sample_data{ii}.variables{jj}.data)
+%         if isvector(sample_data{ii}.variables{jj}.data)
+%             if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
+%                 sample_data{ii}.variables{jj}.plotThisVar=true;
+%             else
+%                 sample_data{ii}.variables{jj}.plotThisVar=false;
+%             end
+%         end
+
             if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
                 sample_data{ii}.variables{jj}.plotThisVar=true;
+                sample_data{ii}.variables{jj}.iSlice=1;
+                        if ~isvector(sample_data{ii}.variables{jj}.data)
+                            [d1,d2] = size(sample_data{ii}.variables{jj}.data);
+                            sample_data{ii}.variables{jj}.iSlice=floor(d2/2);
+                        end
             else
                 sample_data{ii}.variables{jj}.plotThisVar=false;
+                sample_data{ii}.variables{jj}.iSlice=1;
             end
-        end
+
     end
 end
 end
@@ -459,14 +473,15 @@ treePanelData={};
 kk=1;
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
-        if isvector(sample_data{ii}.variables{jj}.data)
+%        if isvector(sample_data{ii}.variables{jj}.data)
             %  group, variable, visible
             treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
             treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
             treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
             treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
+            treePanelData{kk,5}=num2str(sample_data{ii}.variables{jj}.iSlice,3);
             kk=kk+1;
-        end
+%        end
     end
 end
 end
@@ -493,7 +508,8 @@ modifiedCol = get(hEvent,'Column');
 theModel   = hModel.getValueAt(modifiedRow,0);
 theSerial   = hModel.getValueAt(modifiedRow,1);
 theVariable   = hModel.getValueAt(modifiedRow,2);
-newData = hModel.getValueAt(modifiedRow,modifiedCol);
+plotTheVar = hModel.getValueAt(modifiedRow,3);
+iSlice = str2num(hModel.getValueAt(modifiedRow,4));
 
 % Now do something useful with this info
 %fprintf('You modified cell %d,%d to: %s\n', modifiedRow+1, modifiedCol+1, num2str(newData));%% Get the basic JTable data model
@@ -503,7 +519,17 @@ for ii=1:numel(handles.sample_data) % loop over files
         if strcmp(handles.sample_data{ii}.meta.instrument_model, theModel) && ...
                 strcmp(handles.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(handles.sample_data{ii}.variables{jj}.name, theVariable)
-            handles.sample_data{ii}.variables{jj}.plotThisVar = newData;
+            handles.sample_data{ii}.variables{jj}.plotThisVar = plotTheVar;
+            if isvector(handles.sample_data{ii}.variables{jj}.data)
+                handles.sample_data{ii}.variables{jj}.iSlice = 1;
+            else
+               [d1,d2] = size(handles.sample_data{ii}.variables{jj}.data);
+               if iSlice>d1 && iSlice<d2
+                   handles.sample_data{ii}.variables{jj}.iSlice = iSlice;
+               else
+                   handles.sample_data{ii}.variables{jj}.iSlice = floor(d2/2);
+               end
+            end
         end
     end
 end
@@ -583,8 +609,13 @@ for ii=1:numel(handles.sample_data) % loop over files
         if handles.sample_data{ii}.variables{jj}.plotThisVar
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
+            %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
             try
-                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr);
+                if isvector(handles.sample_data{ii}.variables{jj}.data)
+                    plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr);
+                else
+                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data(:,handles.sample_data{ii}.variables{jj}.iSlice),lineStyle,'DisplayName',instStr);
+                end
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
@@ -730,12 +761,12 @@ if isfield(handles, 'sample_data')
     % surely I don't have to delete and recreate jtable
     delete(handles.jtable);
     handles.jtable = treeTable(handles.treePanel, ...
-        {'','Instrument','Variable','Show'},...
+        {'','Instrument','Variable','Show','Slice'},...
         handles.treePanelData,...
-        'ColumnTypes',{'','char','char','logical'},...
-        'ColumnEditable',{false, false, true});
+        'ColumnTypes',{'','char','char','logical','char'},...
+        'ColumnEditable',{false, false, false, true, true});
     % Make 'Visible' column width small as practible
-    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
     % right-align second column
     renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
     %renderer = javax.swing.table.DefaultTableCellRenderer;
@@ -781,10 +812,10 @@ if strcmp(selectionType,'open')
         % surely I don't have to delete and recreate jtable
         delete(handles.jtable);
         handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Show'},...
+            {'','Instrument','Variable','Show','Slice'},...
             handles.treePanelData,...
-            'ColumnTypes',{'','char','char','logical'},...
-            'ColumnEditable',{false, false, true});
+            'ColumnTypes',{'','char','char','logical','char'},...
+            'ColumnEditable',{false, false, false, true, true});
         % Make 'Visible' column width small as practible
         handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
         % right-align second column
@@ -933,9 +964,15 @@ else
             if sample_data{ii}.variables{jj}.plotThisVar
                 idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
                 dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-                dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
                 dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-                dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+                if isvector(sample_data{ii}.variables{jj}.data)
+                    dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
+                    dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+                else
+                    iSlice=sample_data{ii}.variables{jj}.iSlice;
+                    dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data(:,iSlice)), dataLimits.yMin);
+                    dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data(:,iSlice)), dataLimits.yMax);
+                end
             end
         end
     end
