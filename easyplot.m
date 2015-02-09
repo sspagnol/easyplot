@@ -136,8 +136,8 @@ theList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
 theList.name{ii}='RDI (000)';
-theList.wildcard{ii}={'*.000'};
-theList.message{ii}='Choose RDI 000 files:';
+theList.wildcard{ii}={'*.000', '*.PD0'};
+theList.message{ii}='Choose RDI 000/PD0 files:';
 theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
@@ -286,9 +286,10 @@ else
                 try
                     % old style
                     structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
-                catch
+                catch ME
+                    errorMsg = ME.message;
                     % new style
-                    structs = {parser( 'TimeSeries', {fullfile(PATHNAME,FILENAME{ii})})};
+                    %structs = {parser( 'TimeSeries', {fullfile(PATHNAME,FILENAME{ii})})};
                 end
                 for k = 1:length(structs)
                     if iscell(structs{k})
@@ -296,12 +297,27 @@ else
                         % eg AWAC .wpr with waves in .wap etc
                         iiLoaded = length(structs{k});
                         for m = 1:length(structs{k})
-                            handles.sample_data{end+1} = finaliseData(structs{k}{m});
+                            tmpStruct = finaliseDataEasyplot(structs{k}{m});
+%%
+%     goodVar=false(1,numel(tmpStruct.variables));
+%     for jj=1:numel(tmpStruct.variables)
+%         goodVar{jj}=isPlottableData(tmpStruct.variables{jj});
+%     end
+                            handles.sample_data{end+1} = tmpStruct;
+                            clear('tmpStruct');
                         end
                     else
                         % only one struct generated for one raw data file
                         iiLoaded = 1;
-                        handles.sample_data{end+1} = finaliseData(structs{k});
+                        tmpStruct = finaliseDataEasyplot(structs{k});
+%%                        
+%     goodVar=false(1,numel(tmpStruct.variables));
+%     for jj=1:numel(tmpStruct.variables)
+%         goodVar(jj)=isPlottableData(tmpStruct.variables{jj});
+%     end
+
+                        handles.sample_data{end+1} = tmpStruct;
+                        clear('tmpStruct');
                     end
                 end
                 
@@ -363,7 +379,7 @@ end
 end
 
 %%
-function sam = finaliseData(sam)
+function sam = finaliseDataEasyplot(sam)
 %FINALISEDATA Adds new TIMEDIFF var
 %
 % Inputs:
