@@ -92,17 +92,55 @@ end
 % [choice, idx]=optionDialog('Choose instument type','Choose instument type',aStr,1);
 % but for the moment have this
 % list of instruments and their parsers
-ii=1;
+ii=0;
+
+ii=ii+1;
+theList.name{ii}='Citadel CTD (csv)';
+theList.wildcard{ii}={'*.csv'};
+theList.message{ii}='Choose Citadel CTD csv files:';
+theList.parser{ii}='citadelParse';
+
+ii=ii+1;
+theList.name{ii}='ECO (raw - needs dev)';
+theList.wildcard{ii}={'*.raw'};
+theList.message{ii}='Choose ECO raw files:';
+theList.parser{ii}='ECOTripletParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek AWAC (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+theList.parser{ii}='awacParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Continental (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+theList.parser{ii}='continentalParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
+theList.wildcard{ii}={'*.aqd'};
+theList.message{ii}='Choose Nortek *.aqd files:';
+theList.parser{ii}='aquadoppVelocityParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Profiler (prf)';
+theList.wildcard{ii}={'*.prf'};
+theList.message{ii}='Choose Nortek *.prf files:';
+theList.parser{ii}='aquadoppProfilerParse';
+
+ii=ii+1;
 theList.name{ii}='RBR (txt,dat)';
 theList.wildcard{ii}={'*.txt', '*.dat'};
 theList.message{ii}='Choose TR1060/TDR2050 files:';
 theList.parser{ii}='XRParse';
 
 ii=ii+1;
-theList.name{ii}='WQM (dat)';
-theList.wildcard{ii}={'*.dat'};
-theList.message{ii}='Choose WQM files:';
-theList.parser{ii}='WQMParse';
+theList.name{ii}='RDI (000,PD0)';
+theList.wildcard{ii}={'*.000', '*.PD0'};
+theList.message{ii}='Choose RDI 000/PD0 files:';
+theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (asc)';
@@ -135,10 +173,10 @@ theList.message{ii}='Choose CTD cnv files:';
 theList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
-theList.name{ii}='RDI (000)';
-theList.wildcard{ii}={'*.000', '*.PD0'};
-theList.message{ii}='Choose RDI 000/PD0 files:';
-theList.parser{ii}='workhorseParse';
+theList.name{ii}='Vemco Minilog-II-T (csv)';
+theList.wildcard{ii}={'*.csv'};
+theList.message{ii}='Choose VML2T *.csv files:';
+theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
 theList.name{ii}='Wetlabs (FL)NTU (raw)';
@@ -147,34 +185,10 @@ theList.message{ii}='Choose (FL)NTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
-theList.name{ii}='Vemco Minilog-II-T (csv)';
-theList.wildcard{ii}={'*.csv'};
-theList.message{ii}='Choose VML2T *.csv files:';
-theList.parser{ii}='VemcoParse';
-
-ii=ii+1;
-theList.name{ii}='Nortek AWAC (wpr,wpb)';
-theList.wildcard{ii}={'*.wpr', '*.wpb'};
-theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
-theList.parser{ii}='awacParse';
-
-ii=ii+1;
-theList.name{ii}='Nortek Continental (wpr,wpb)';
-theList.wildcard{ii}={'*.wpr', '*.wpb'};
-theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
-theList.parser{ii}='continentalParse';
-
-ii=ii+1;
-theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
-theList.wildcard{ii}={'*.aqd'};
-theList.message{ii}='Choose Nortek *.aqd files:';
-theList.parser{ii}='aquadoppVelocityParse';
-
-ii=ii+1;
-theList.name{ii}='Nortek Aquadopp Profiler (prf)';
-theList.wildcard{ii}={'*.prf'};
-theList.message{ii}='Choose Nortek *.prf files:';
-theList.parser{ii}='aquadoppProfilerParse';
+theList.name{ii}='WQM (dat)';
+theList.wildcard{ii}={'*.dat'};
+theList.message{ii}='Choose WQM files:';
+theList.parser{ii}='WQMParse';
 
 handles.theList=theList;
 
@@ -217,6 +231,26 @@ xlabel(handles.axes1,'Time (UTC)');
 % custome data tip with nicely formatted date
 dcm_h = datacursormode(handles.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
+
+handles.treePanelData{1,1}='None';
+handles.treePanelData{1,2}='';
+handles.treePanelData{1,3}='';
+handles.treePanelData{1,4}=false;
+handles.treePanelData{1,5}=0;
+
+handles.jtable = treeTable(handles.treePanel, ...
+    {'','Instrument','Variable','Show','Slice'},...
+    handles.treePanelData,...
+    'ColumnTypes',{'','char','char','logical','integer'},...
+    'ColumnEditable',{false, false, true, true});
+% Make 'Visible' column width small as practible
+handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
+% right-align second column
+renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+%renderer = javax.swing.table.DefaultTableCellRenderer;
+renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
 
 guidata(hFig, handles);
 
@@ -283,49 +317,26 @@ else
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
                 % adopt similar code layout as imos-toolbox importManager
-                try
-                    % old style
-                    structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
-                catch ME
-                    errorMsg = ME.message;
-                    % new style
-                    %structs = {parser( 'TimeSeries', {fullfile(PATHNAME,FILENAME{ii})})};
-                end
-                for k = 1:length(structs)
-                    if iscell(structs{k})
-                        % one data set may have generated more than one sample_data struct
-                        % eg AWAC .wpr with waves in .wap etc
-                        iiLoaded = length(structs{k});
-                        for m = 1:length(structs{k})
-                            tmpStruct = finaliseDataEasyplot(structs{k}{m});
-%%
-%     goodVar=false(1,numel(tmpStruct.variables));
-%     for jj=1:numel(tmpStruct.variables)
-%         goodVar{jj}=isPlottableData(tmpStruct.variables{jj});
-%     end
-                            handles.sample_data{end+1} = tmpStruct;
-                            clear('tmpStruct');
-                        end
-                    else
-                        % only one struct generated for one raw data file
-                        iiLoaded = 1;
+                structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
+                if numel(structs) == 1
+                    % only one struct generated for one raw data file
+                    tmpStruct = finaliseDataEasyplot(structs{1});
+                    handles.sample_data{end+1} = tmpStruct;
+                    clear('tmpStruct');
+                else
+                    % one data set may have generated more than one sample_data struct
+                    % eg AWAC .wpr with waves in .wap etc
+                    for k = 1:length(structs)
                         tmpStruct = finaliseDataEasyplot(structs{k});
-%%                        
-%     goodVar=false(1,numel(tmpStruct.variables));
-%     for jj=1:numel(tmpStruct.variables)
-%         goodVar(jj)=isPlottableData(tmpStruct.variables{jj});
-%     end
-
                         handles.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                     end
                 end
-                
                 clear('structs');
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
-            catch
-                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue.'];
+            catch ME
+                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
@@ -354,18 +365,25 @@ else
         handles.sample_data = markPlotVar(handles.sample_data, plotVar);
         handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'),handles);
-        handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Show','Slice'},...
-            handles.treePanelData,...
-            'ColumnTypes',{'','char','char','logical','integer'},...
-            'ColumnEditable',{false, false, true, true});
-        % Make 'Visible' column width small as practible
-        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
-        % right-align second column
-        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-        %renderer = javax.swing.table.DefaultTableCellRenderer;
-        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        %         handles.jtable = treeTable(handles.treePanel, ...
+        %             {'','Instrument','Variable','Show','Slice'},...
+        %             handles.treePanelData,...
+        %             'ColumnTypes',{'','char','char','logical','integer'},...
+        %             'ColumnEditable',{false, false, true, true});
+        [data,headers] = getTableData(handles.jtable);
+        setTableData(jtable,handles.treePanelData,headers);
+        
+        model = handles.jtable.getModel.getActualModel;
+        model.groupAndRefresh;
+        handles.jtable.repaint;
+        
+%         % Make 'Visible' column width small as practible
+%         handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+%         % right-align second column
+%         renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+%         %renderer = javax.swing.table.DefaultTableCellRenderer;
+%         renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+%         handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
         
         guidata(ancestor(hObject,'figure'),handles);
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
@@ -389,14 +407,32 @@ function sam = finaliseDataEasyplot(sam)
 %   sample_data - same as input, with fields added/modified
 
 idTime  = getVar(sam.dimensions, 'TIME');
-sam.variables{end+1} = sam.dimensions{idTime};
-sam.variables{end}.name = 'TIMEDIFF';
-theData=sam.variables{end}.data;
+tmpStruct = struct();
+tmpStruct.dimensions = idTime;
+tmpStruct.name = 'TIMEDIFF';
+theData=sam.dimensions{idTime}.data;
 theData = [NaN; diff(theData*86400.0)];
-sam.variables{end}.data = theData;
-sam.variables{end}.iSlice = 1;
+tmpStruct.data = theData;
+tmpStruct.iSlice = 1;
+tmpStruct.typeCastFunc = sam.dimensions{idTime}.typeCastFunc;
+sam.variables{end+1} = tmpStruct;
+clear('tmpStruct');
+
+[PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
+sam.inputFilePath = PATHSTR;
+sam.inputFile = NAME;
+sam.inputFileExt = EXT;
+
+sam.isPlottableVar = false(1,numel(sam.variables));
+sam.plotThisVar = false(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
-    sam.variables{kk}.plotThisVar=false;
+    isEmptyDim = isempty(sam.variables{kk}.dimensions);
+    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data));
+    if ~isEmptyDim && isData
+        sam.isPlottableVar(kk) = true;
+        sam.plotThisVar(kk) = false;
+        sam.variables{kk}.plotThisVar=false;
+    end
 end
 
 end
@@ -408,8 +444,7 @@ function fileListNames = getFilelistNames(sample_data)
 fileListNames={};
 if ~isempty(sample_data)
     for ii=1:numel(sample_data)
-        [PATHSTR,NAME,EXT] = fileparts(sample_data{ii}.toolbox_input_file);
-        fileListNames{end+1}=[NAME EXT];
+        fileListNames{end+1}=[sample_data{ii}.inputFile sample_data{ii}.inputFileExt];
     end
 end
 
@@ -425,14 +460,12 @@ function plotVar = chooseVar(sample_data)
 if isempty(sample_data)
     error('CHOOSEVAR: empty sample_data');
 end
-plotVar={};
-varList={};
-kk=1;
+
+varList= {};
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if isPlottableData(sample_data{ii}.variables{jj})
-                varList{kk}=sample_data{ii}.variables{jj}.name;
-                kk=kk+1;
+        if sample_data{ii}.isPlottableVar(jj)
+            varList{end + 1}=sample_data{ii}.variables{jj}.name;
         end
     end
 end
@@ -463,30 +496,27 @@ end
 function [sample_data] = markPlotVar(sample_data, plotVar)
 %MARKPLOTVAR Create cell array of plotted data for treeTable data
 
-for ii=1:numel(sample_data) % loop over files
+for ii=1:numel(sample_data)
+    sample_data{ii}.plotThisVar = cellfun(@(x) strcmp(x.name,plotVar), sample_data{ii}.variables);
     for jj=1:numel(sample_data{ii}.variables)
-        %         if isvector(sample_data{ii}.variables{jj}.data)
-        %             if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
-        %                 sample_data{ii}.variables{jj}.plotThisVar=true;
-        %             else
-        %                 sample_data{ii}.variables{jj}.plotThisVar=false;
-        %             end
-        %         end
-        
-        if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
+        if sample_data{ii}.plotThisVar(jj)
             sample_data{ii}.variables{jj}.plotThisVar=true;
             sample_data{ii}.variables{jj}.iSlice=1;
             if ~isvector(sample_data{ii}.variables{jj}.data)
                 [d1,d2] = size(sample_data{ii}.variables{jj}.data);
                 sample_data{ii}.variables{jj}.iSlice=floor(d2/2);
+                sample_data{ii}.variables{jj}.minSlice=1;
+                sample_data{ii}.variables{jj}.maxSlice=d2;
             end
         else
             sample_data{ii}.variables{jj}.plotThisVar=false;
             sample_data{ii}.variables{jj}.iSlice=1;
+            sample_data{ii}.variables{jj}.minSlice=1;
+            sample_data{ii}.variables{jj}.maxSlice=1;
         end
-        
     end
 end
+
 end
 
 
@@ -495,14 +525,14 @@ function [treePanelData] = generateTreeData(sample_data)
 %GENERATETREEDATA Create cell array for treeTable data
 treePanelData={};
 kk=1;
-for ii=1:numel(sample_data) % loop over files
+for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if isPlottableData(sample_data{ii}.variables{jj})
+        if sample_data{ii}.isPlottableVar(jj)
             %  group, variable, visible
             treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
             treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
             treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
-            treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
+            treePanelData{kk,4}=sample_data{ii}.plotThisVar(jj);
             treePanelData{kk,5}=sample_data{ii}.variables{jj}.iSlice;
             kk=kk+1;
         end
@@ -540,7 +570,7 @@ for ii=1:numel(handles.sample_data) % loop over files
         if strcmp(handles.sample_data{ii}.meta.instrument_model, theModel) && ...
                 strcmp(handles.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(handles.sample_data{ii}.variables{jj}.name, theVariable)
-            handles.sample_data{ii}.variables{jj}.plotThisVar = plotTheVar;
+            handles.sample_data{ii}.plotThisVar(jj) = plotTheVar;
             if isvector(handles.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,4);
                 handles.sample_data{ii}.variables{jj}.iSlice = 1;
@@ -632,7 +662,7 @@ for ii=1:numel(handles.sample_data) % loop over files
         else
             lineStyle='-';
         end
-        if handles.sample_data{ii}.variables{jj}.plotThisVar
+        if handles.sample_data{ii}.plotThisVar(jj)
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
             %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
@@ -749,7 +779,16 @@ if isfield(handles, 'sample_data')
     legend(handles.axes1,'off')
     handles.sample_data={};
     % how do I reset contents of handles.jtable?
-    delete(handles.jtable);
+    %delete(handles.jtable);
+    handles.treePanelData{1,1}='None';
+    handles.treePanelData{1,2}='';
+    handles.treePanelData{1,3}='';
+    handles.treePanelData{1,4}=false;
+    handles.treePanelData{1,5}=0;
+    model = handles.jtable.getModel.getActualModel;
+    model.groupAndRefresh;
+    handles.jtable.repaint;
+    
     set(handles.listbox1,'String', '');
     
     handles.firstPlot=true;
@@ -788,27 +827,34 @@ handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles, 'sample_data')
     plotVar = chooseVar(handles.sample_data);
     handles.sample_data = markPlotVar(handles.sample_data, plotVar);
+    
     handles.treePanelData = generateTreeData(handles.sample_data);
     guidata(ancestor(hObject,'figure'),handles);
-    % surely I don't have to delete and recreate jtable
-    delete(handles.jtable);
-    handles.jtable = treeTable(handles.treePanel, ...
-        {'','Instrument','Variable','Show','Slice'},...
-        handles.treePanelData,...
-        'ColumnTypes',{'','char','char','logical','integer'},...
-        'ColumnEditable',{false, false, true, true});
-    % Make 'Visible' column width small as practible
-    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
-    % right-align second column
-    renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-    %renderer = javax.swing.table.DefaultTableCellRenderer;
-    renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
     
-    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+    model = handles.jtable.getModel.getActualModel;
+    model.groupAndRefresh;
+    handles.jtable.repaint;
+    
+    % surely I don't have to delete and recreate jtable
+%     delete(handles.jtable);
+%     handles.jtable = treeTable(handles.treePanel, ...
+%         {'','Instrument','Variable','Show','Slice'},...
+%         handles.treePanelData,...
+%         'ColumnTypes',{'','char','char','logical','integer'},...
+%         'ColumnEditable',{false, false, true, true});
+%     % Make 'Visible' column width small as practible
+%     handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
+%     % right-align second column
+%     renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+%     %renderer = javax.swing.table.DefaultTableCellRenderer;
+%     renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+%     handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+%    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+
     guidata(ancestor(hObject,'figure'), handles);
     plotData(ancestor(hObject,'figure'));
 end
+
 end
 
 
@@ -994,7 +1040,7 @@ else
     %     for jj=1:numel(varInd)
     for ii=1:numel(sample_data) % loop over files
         for jj=1:numel(sample_data{ii}.variables)
-            if sample_data{ii}.variables{jj}.plotThisVar
+            if sample_data{ii}.plotThisVar(jj)
                 idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
                 dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
                 dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
@@ -1014,10 +1060,10 @@ else
         dataLimits.yMax=dataLimits.yMax*1.05;
         dataLimits.yMin=dataLimits.yMin*0.95;
     end
-    if dataLimits.xMax-dataLimits.xMin < eps
-        dataLimits.xMin = floor(now);
-        dataLimits.xMax = floor(now)+1;
-    end
+%     if dataLimits.xMax-dataLimits.xMin < eps
+%         dataLimits.xMin = floor(now);
+%         dataLimits.xMax = floor(now)+1;
+%     end
     % paranoid now
     if ~isfinite(dataLimits.xMin) dataLimits.xMin=floor(now); end
     if ~isfinite(dataLimits.xMax) dataLimits.xMax=floor(now)+1; end
