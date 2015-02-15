@@ -305,7 +305,7 @@ else
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
             catch ME
-                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message];
+                astr={['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message] ME.cause};
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
@@ -401,7 +401,7 @@ end
 varList= {};
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if sample_data{ii}.isPlotableVar(jj)
+        if sample_data{ii}.isValidVar(jj)
             varList{end + 1}=sample_data{ii}.variables{jj}.name;
         end
     end
@@ -425,11 +425,11 @@ function [sample_data] = markPlotVar(sample_data, plotVar)
 % create cell array for treeTable data
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
-        if isvector(sample_data{ii}.variables{jj}.data)
+        if isvector(sample_data{ii}.variables{jj}.data) || ismatrix(sample_data{ii}.variables{jj}.data)
             if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
-                sample_data{ii}.variables{jj}.plotThisVar=true;
+                sample_data{ii}.plotThisVar(jj)=true;
             else
-                sample_data{ii}.variables{jj}.plotThisVar=false;
+                sample_data{ii}.plotThisVar(jj)=false;
             end
         end
     end
@@ -446,15 +446,15 @@ treePanelData={};
 kk=1;
 for ii=1:numel(sample_data) % loop over files
     for jj=1:numel(sample_data{ii}.variables)
-        if ~isempty(sample_data{ii}.variables{jj}.dimensions)
-            if isvector(sample_data{ii}.variables{jj}.data)
+        if sample_data{ii}.isValidVar(jj)
+%            if isvector(sample_data{ii}.variables{jj}.data)
                 %  group, variable, visible
                 treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
                 treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
                 treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
-                treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
+                treePanelData{kk,4}=sample_data{ii}.plotThisVar(jj);
                 kk=kk+1;
-            end
+%            end
         end
     end
 end
@@ -489,7 +489,7 @@ for ii=1:numel(handles.sample_data) % loop over files
         if strcmp(handles.sample_data{ii}.meta.instrument_model, theModel) && ...
                 strcmp(handles.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(handles.sample_data{ii}.variables{jj}.name, theVariable)
-            handles.sample_data{ii}.variables{jj}.plotThisVar = newData;
+            handles.sample_data{ii}.plotThisVar(jj) = newData;
         end
     end
 end
@@ -561,12 +561,13 @@ for ii=1:numel(handles.sample_data) % loop over files
         else
             lineStyle='-';
         end
-        if handles.sample_data{ii}.variables{jj}.plotThisVar
+        if handles.sample_data{ii}.plotThisVar(jj)
+            iSlice=handles.sample_data{ii}.variables{jj}.iSlice;
             idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
+%            [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
             try
-                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr, 'Tag', [NAME EXT]);
+                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data(:,iSlice),lineStyle,'DisplayName',instStr, 'Tag', [handles.sample_data{ii}.inputFile handles.sample_data{ii}.inputFileExt]);
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
@@ -912,12 +913,13 @@ else
     %     for jj=1:numel(varInd)
     for ii=1:numel(sample_data) % loop over files
         for jj=1:numel(sample_data{ii}.variables)
-            if sample_data{ii}.variables{jj}.plotThisVar
+            if sample_data{ii}.plotThisVar(jj)
                 idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
+                iSlice = sample_data{ii}.variables{jj}.iSlice;
                 dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-                dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
                 dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-                dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
+                dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data(:,iSlice)), dataLimits.yMin);
+                dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data(:,iSlice)), dataLimits.yMax);
             end
         end
     end
@@ -1086,18 +1088,18 @@ sam.inputFilePath = PATHSTR;
 sam.inputFile = NAME;
 sam.inputFileExt = EXT;
 
-sam.isPlotableVar = false(1,numel(sam.variables));
+sam.isValidVar = false(1,numel(sam.variables));
 sam.plotThisVar = false(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
+    sam.variables{kk}.iSlice = 1;
     isEmptyDim = isempty(sam.variables{kk}.dimensions);
-    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data));
+    isData = isfield(sam.variables{kk},'data') && any(~isnan(sam.variables{kk}.data(:,sam.variables{kk}.iSlice)));
     if ~isEmptyDim && isData
-        sam.isPlotableVar(kk) = true;
+        sam.isValidVar(kk) = true;
         sam.plotThisVar(kk) = false;
-        sam.variables{kk}.plotThisVar=false;
     end
 end
 
-sam
+%sam
 
 end
