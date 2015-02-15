@@ -45,6 +45,7 @@ end
 
 end
 
+
 %% --- Executes just before easyplot is made visible.
 function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -54,6 +55,8 @@ function easyplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to easyplot (see VARARGIN)
 
 % Choose default command line output for easyplot
+hFig=ancestor(hObject,'figure');
+handles=guidata(hFig);
 handles.output = hObject;
 
 set(handles.figure1,'Color',[1 1 1]);
@@ -61,95 +64,168 @@ set(handles.figure1,'Toolbar','figure');
 % create easyplot toolbar
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
-%set(handles.plotVar,'String','');
-handles.plotVar='';
 handles.xMin=NaN;
 handles.xMax=NaN;
 handles.yMin=NaN;
 handles.yMax=NaN;
-handles.plotAllVars=0;
-handles.oldPathname='';
-ii=1;
-theList.name{ii}='RBR (txt)';
-theList.wildcard{ii}='*.txt';
+% old path for easier importing
+[handles.EPdir, name, ext] = fileparts(mfilename('fullpath'));
+handles.oldPathname=handles.EPdir;
+handles.ini = ini2struct(fullfile(handles.EPdir,'easyplot.ini'));
+try
+    thePath=handles.ini.startDialog.dataDir;
+    if exist(thePath)
+        handles.oldPathname=thePath;
+    end
+end
+
+% list of instruments and their parsers
+ii=0;
+
+ii=ii+1;
+theList.name{ii}='Citadel CTD (csv)';
+theList.wildcard{ii}={'*.csv'};
+theList.message{ii}='Choose Citadel CTD csv files:';
+theList.parser{ii}='citadelParse';
+
+ii=ii+1;
+theList.name{ii}='ECO (raw - needs dev)';
+theList.wildcard{ii}={'*.raw'};
+theList.message{ii}='Choose ECO raw files:';
+theList.parser{ii}='ECOTripletParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek AWAC (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+theList.parser{ii}='awacParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Continental (wpr,wpb)';
+theList.wildcard{ii}={'*.wpr', '*.wpb'};
+theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+theList.parser{ii}='continentalParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
+theList.wildcard{ii}={'*.aqd'};
+theList.message{ii}='Choose Nortek *.aqd files:';
+theList.parser{ii}='aquadoppVelocityParse';
+
+ii=ii+1;
+theList.name{ii}='Nortek Aquadopp Profiler (prf)';
+theList.wildcard{ii}={'*.prf'};
+theList.message{ii}='Choose Nortek *.prf files:';
+theList.parser{ii}='aquadoppProfilerParse';
+
+ii=ii+1;
+theList.name{ii}='RBR (txt,dat)';
+theList.wildcard{ii}={'*.txt', '*.dat'};
 theList.message{ii}='Choose TR1060/TDR2050 files:';
 theList.parser{ii}='XRParse';
 
 ii=ii+1;
-theList.name{ii}='WQM (dat)';
-theList.wildcard{ii}='*.dat';
-theList.message{ii}='Choose WQM files:';
-theList.parser{ii}='WQMParse';
+theList.name{ii}='RDI (000,PD0)';
+theList.wildcard{ii}={'*.000', '*.PD0'};
+theList.message{ii}='Choose RDI 000/PD0 files:';
+theList.parser{ii}='workhorseParse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE37 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE37 files:';
 theList.parser{ii}='SBE37SMParse';
 
 ii=ii+1;
 theList.name{ii}='SBE39 (asc)';
-theList.wildcard{ii}='*.asc';
+theList.wildcard{ii}={'*.asc'};
 theList.message{ii}='Choose SBE39 asc files:';
 theList.parser{ii}='SBE39Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE56 (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose SBE56 cnv files:';
 theList.parser{ii}='SBE56Parse';
 
 ii=ii+1;
 theList.name{ii}='SBE CTD (cnv)';
-theList.wildcard{ii}='*.cnv';
+theList.wildcard{ii}={'*.cnv'};
 theList.message{ii}='Choose CTD cnv files:';
 theList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
-theList.name{ii}='RDI (000)';
-theList.wildcard{ii}='*.000';
-theList.message{ii}='Choose RDI 000 files:';
-theList.parser{ii}='workhorseParse';
+theList.name{ii}='Vemco Minilog-II-T (csv)';
+theList.wildcard{ii}={'*.csv'};
+theList.message{ii}='Choose VML2T *.csv files:';
+theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
-theList.name{ii}='Wetlabs FLNTU (raw)';
-theList.wildcard{ii}='*.raw';
-theList.message{ii}='Choose FLNTU *.raw files:';
+theList.name{ii}='Wetlabs (FL)NTU (raw)';
+theList.wildcard{ii}={'*.raw'};
+theList.message{ii}='Choose (FL)NTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
-theList.name{ii}='Vemco Minilog-II-T (csv)';
-theList.wildcard{ii}='*.csv';
-theList.message{ii}='Choose VML2T *.csv files:';
-theList.parser{ii}='VemcoParse';
+theList.name{ii}='WQM (dat)';
+theList.wildcard{ii}={'*.dat'};
+theList.message{ii}='Choose WQM files:';
+theList.parser{ii}='WQMParse';
 
 handles.theList=theList;
 
 handles.firstPlot = true;
 
-% Update handles structure
-%guidata(hObject, handles);
-set(handles.axes1,'XLim',[floor(now) floor(now)+1]);
-dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+axesInfo.Linked = handles.axes1;
+axesInfo.mdformat = 'dd-mmm';
+axesInfo.Type = 'dateaxes';
+axesInfo.XLabel = 'Time (UTC)';
+% why does axes UserData get wiped somewhere later?
+axH=handle(handles.axes1);
+set(axH, 'UserData', axesInfo);
+set(axH, 'XLim', [floor(now) floor(now)+1]);
+% until I understand what happens to UserData use guidata to store it
+handles.axesInfo=axesInfo;
+guidata(hFig, handles);
+
+% Couldn't get easyplot to function correctly so pulled in code from
+% dynamicDateTick into easyplot and modified as required.
+%dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
+
+% Call once to ensure proper formatting
+updateDateLabel(hFig,struct('Axes', axH), true);
+
+% Tried a callback on zoom/pan and XLim listener but that just cause
+% massive confusion. At the moment just call updateDateLabel as required,
+% if I look into this again think I will create seperate callbacks
+% for ActionPostCallback and PostSet XLim listener, which would then
+% call common updateDateLabel
+z = zoom(hFig);
+p = pan(hFig);
+set(z,'ActionPostCallback',@updateDateLabel);
+set(p,'ActionPostCallback',@updateDateLabel);
+%handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
+
 xlabel(handles.axes1,'Time (UTC)');
 
 %hoverlines( handles.figure1 );
 
+% custome data tip with nicely formatted date
 dcm_h = datacursormode(handles.figure1);
-% %datacursormode on;
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-guidata(hObject, handles);
+guidata(hFig, handles);
 
-% UIWAIT makes easyplot wait for user response (see UIRESUME)
+% UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
 % uiwait(handles.figure1);
 end
+
 
 %% --- Outputs from this function are returned to the command line.
 function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
@@ -162,22 +238,28 @@ function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 end
 
+
 %% --- Executes on button press in pushbutton1.
-function import_Callback(hObject, eventdata, handles)
+function import_Callback(hObject, eventdata, oldHandles)
+%IMPORT_CALLBACk select instrument files to import
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+hFig=ancestor(hObject,'figure');
+handles=guidata(hFig);
+
 theList=handles.theList;
 
 iParse=menu('Choose instrument type',theList.name);
+if iParse < 1 % no instrument chosen
+    return;
+end
+
 fhandle = str2func(theList.parser{iParse});
 
-if ~exist(handles.oldPathname,'dir')
-    filterSpec=theList.wildcard{iParse};
-else
-    filterSpec=[handles.oldPathname '/' theList.wildcard{iParse}];
-end
+filterSpec=fullfile(handles.oldPathname,strjoin(theList.wildcard{iParse},';'));
+    
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
@@ -194,22 +276,40 @@ else
     iFailed=0;
     notLoaded=false;
     for ii=1:length(FILENAME)
+        % skip any files the user has already imported
         notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), handles.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
                 set(handles.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
-                handles.sample_data{end+1} = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'timeseries' );
+                structs = fhandle( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' );
+                if numel(structs) == 1
+                    % only one struct generated for one raw data file
+                    iiLoaded = 1;
+                    tmpStruct = finaliseDataEasyplot(structs);
+                    handles.sample_data{end+1} = tmpStruct;
+                    clear('tmpStruct');
+                else
+                    for k = 1:length(structs)
+                        % one data set may have generated more than one sample_data struct
+                        % eg AWAC .wpr with waves in .wap etc
+                        tmpStruct = finaliseDataEasyplot(structs{k});
+                        handles.sample_data{end+1} = tmpStruct;
+                        clear('tmpStruct');
+                        
+                    end
+                end
+                clear('structs');
+                
                 set(handles.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
-                handles.sample_data{end}.isPlotted=0;
-            catch
-                astr=['Importing file ', char(FILENAME{ii}), ' failed. Not an IMOS toolbox parseable file.'];
+            catch ME
+                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
                 set(handles.progress,'String',astr);
                 drawnow;
-                guidata(hObject, handles);
+                guidata(hFig, handles);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
             end
@@ -220,35 +320,48 @@ else
         end
     end
     
-    % create new time difference variable to check to sampling errors
-    idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
-    handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{idTime};
-    handles.sample_data{end}.variables{end}.name = 'TIMEDIFF';
-    theData=handles.sample_data{end}.variables{end}.data;
-    theData = [NaN; diff(theData)*86400.0];
-    handles.sample_data{end}.variables{end}.data = theData;
+    guidata(ancestor(hObject,'figure'), handles);
     
     set(handles.listbox1,'String', getFilelistNames(handles.sample_data),'Value',1);
-    guidata(hObject, handles);
-    
-    %handles.sample_data{end}.variables{end+1} = handles.sample_data{end}.dimensions{'TIME'}
-    %handles.sample_data{end}.variables{end}.data = [NaN
-    %diff(handles.sample_data{end}.variables{end}.data)*84600;
+    guidata(hFig, handles);
     
     set(handles.progress,'String','Finished importing.');
+    guidata(hFig, handles);
     drawnow;
     if numel(FILENAME)~=iFailed
-        handles.plotVar=chooseVar(hObject,handles);
-        guidata(hObject,handles);
-        handles = plotData(hObject,handles);
+        plotVar=chooseVar(handles.sample_data);
+        %guidata(hObject,handles);
+        handles.sample_data = markPlotVar(handles.sample_data, plotVar);
+        handles.treePanelData = generateTreeData(handles.sample_data);
+        guidata(ancestor(hObject,'figure'),handles);
+        handles.jtable = treeTable(handles.treePanel, ...
+            {'','Instrument','Variable','Show'},...
+            handles.treePanelData,...
+            'ColumnTypes',{'','char','char','logical'},...
+            'ColumnEditable',{false, false, true});
+        % Make 'Visible' column width small as practible
+        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+        % right-align second column
+        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+        %renderer = javax.swing.table.DefaultTableCellRenderer;
+        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        
+        guidata(ancestor(hObject,'figure'),handles);
+        oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
+        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+        warning(oldWarnState);
+        plotData(hFig);
     end
-    guidata(hObject, handles);
+    guidata(hFig, handles);
 end
 
 end
+
 
 %%
 function fileListNames = getFilelistNames(sample_data)
+% make a list of filenames from sample_data structure
 fileListNames={};
 if ~isempty(sample_data)
     for ii=1:numel(sample_data)
@@ -258,108 +371,238 @@ if ~isempty(sample_data)
 end
 end
 
-%%
-function [plotVar, plotAllVars] = chooseVar(hObject,handles)
 
-kk=1;
-for ii=1:length(handles.sample_data)
-    for jj=1:length(handles.sample_data{ii}.variables)
-        if isvector(handles.sample_data{ii}.variables{jj}.data)
-            varList{kk}=handles.sample_data{ii}.variables{jj}.name;
-            kk=kk+1;
+%%
+function plotVar = chooseVar(sample_data)
+% choose single variable to plot
+% chooseVar is always called after and data import so if this function ends
+% up with no data then abort.
+if isempty(sample_data)
+    warning('CHOOSEVAR: empty sample_data');
+    plotVar = {};
+    return;
+end
+%plotVar={};
+%varList={};
+%kk=1;
+% for ii=1:numel(sample_data)
+%     for jj=1:numel(sample_data{ii}.variables)
+%         if ~isempty(sample_data{ii}.variables{jj}.dimensions)
+%             if isfield(sample_data{ii}.variables{jj},'data')
+%                 if isvector(sample_data{ii}.variables{jj}.data)
+%                     varList{kk}=sample_data{ii}.variables{jj}.name;
+%                     kk=kk+1;
+%                 end
+%             end
+%         end
+%     end
+% end
+
+varList= {};
+for ii=1:numel(sample_data)
+    for jj=1:numel(sample_data{ii}.variables)
+        if sample_data{ii}.isPlotableVar(jj)
+            varList{end + 1}=sample_data{ii}.variables{jj}.name;
         end
     end
 end
+
 varList=unique(varList);
 varList{end+1}='ALLVARS';
-disp(sprintf('%s ','Variable list = ',varList{:}));
+%disp(sprintf('%s ','Variable list = ',varList{:}));
 
 ii=menu('Variable to plot?',varList);
+pause(0.1);
 if ii==numel(varList) %choosen plot all variables
     plotVar=varList(1:end-1);
-    plotAllVars=1;
 else
     plotVar={varList{ii}};
-    plotAllVars=0;
 end
-
 end
 
 %%
-function handles = plotData(hObject,handles)
-% PLOTDATA plot selected variable
-% Inputs:
-%   hObject - handle to figure
-%   handles - user data handles
-% Outputs:
-%   handles - user data handles
-
-figure(handles.figure1); %make figure current
-
-%Create a string for legend
-legendStr={};
-
-% mp = get(0, 'MonitorPositions');
-% screen_size = mp(1,:);
-% screen_size = [0 0 mp(1,3) mp(1,4) ] .* 0.80 + 50;
-% %create a toolbar and a toggle button to display or not the legend
-% %toggleLegend(hFigure);
-% %fh_overlay=figure('Position',screen_size, 'Visible','off');
-% fh_overlay=figure('Position',screen_size,'Visible','off','ToolBar','figure');
-%figure(fh_overlay);
-%set(fh_overlay, 'Visible', 'off');
-set(handles.figure1,'Color',[1 1 1]);
-hold('on');
-
-% clear plot
-children = get(handles.axes1, 'Children');
-delete(children);
-legend(handles.axes1,'off');
-
-varName=handles.plotVar;
-%varInd=cellfun(@(x) getVar(x.variables, varName), handles.sample_data);
-allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
-
-for ii=1:numel(allVarInd) % loop over files
-    varInd=allVarInd{ii};
-    for jj=1:numel(varInd)
-        if varInd{jj}~=0 %&& ~sample_data{ii}.isPlotted
-            idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
-            instStr=strcat(handles.sample_data{ii}.variables{varInd{jj}}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
-            if strcmp(handles.sample_data{ii}.variables{varInd{jj}}.name,'TIMEDIFF')
-                ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'.','DisplayName',instStr);
+function [sample_data] = markPlotVar(sample_data, plotVar)
+% create cell array for treeTable data
+for ii=1:numel(sample_data) % loop over files
+    for jj=1:numel(sample_data{ii}.variables)
+        if isvector(sample_data{ii}.variables{jj}.data)
+            if any(ismember(sample_data{ii}.variables{jj}.name, plotVar))
+                sample_data{ii}.variables{jj}.plotThisVar=true;
             else
-                ph=plot(handles.axes1,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{varInd{jj}}.data,'DisplayName',instStr);
+                sample_data{ii}.variables{jj}.plotThisVar=false;
             end
-            legendStr{end+1}=strrep(instStr,'_','\_');
-            set(handles.progress,'String',strcat('Plot : ', instStr));
-            drawnow;
-            guidata(hObject, handles);
         end
     end
 end
 
-dataLimits=findVarExtents(varName,handles.sample_data);
+
+end
+
+
+%%
+function [treePanelData] = generateTreeData(sample_data)
+% create cell array for treeTable data
+treePanelData={};
+kk=1;
+for ii=1:numel(sample_data) % loop over files
+    for jj=1:numel(sample_data{ii}.variables)
+        if ~isempty(sample_data{ii}.variables{jj}.dimensions)
+            if isvector(sample_data{ii}.variables{jj}.data)
+                %  group, variable, visible
+                treePanelData{kk,1}=sample_data{ii}.meta.instrument_model;
+                treePanelData{kk,2}=sample_data{ii}.meta.instrument_serial_no;
+                treePanelData{kk,3}=sample_data{ii}.variables{jj}.name;
+                treePanelData{kk,4}=sample_data{ii}.variables{jj}.plotThisVar;
+                kk=kk+1;
+            end
+        end
+    end
+end
+end
+
+%%
+function tableVisibilityCallback(hModel,hEvent, hObject)
+% callback for treeTable visibility column
+% hModel - javahandle_withcallbacks.MultiClassTableModel
+% hEvent - javax.swing.event.TableModelEvent
+% hObject - hopefully the handle to figure
+if ishghandle(hObject)
+    handles=guidata(ancestor(hObject,'figure'));
+else
+    disp('I am stuck in tableVisibilityCallback');
+    pause;
+end
+
+% Get the modification data, zero indexed
+modifiedRow = get(hEvent,'FirstRow');
+modifiedCol = get(hEvent,'Column');
+theModel   = hModel.getValueAt(modifiedRow,0);
+theSerial   = hModel.getValueAt(modifiedRow,1);
+theVariable   = hModel.getValueAt(modifiedRow,2);
+newData = hModel.getValueAt(modifiedRow,modifiedCol);
+
+% Now do something useful with this info
+%fprintf('You modified cell %d,%d to: %s\n', modifiedRow+1, modifiedCol+1, num2str(newData));%% Get the basic JTable data model
+%fprintf('%s %s variable : %s\n', theModel, theSerial, theVariable);
+for ii=1:numel(handles.sample_data) % loop over files
+    for jj=1:numel(handles.sample_data{ii}.variables)
+        if strcmp(handles.sample_data{ii}.meta.instrument_model, theModel) && ...
+                strcmp(handles.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
+                strcmp(handles.sample_data{ii}.variables{jj}.name, theVariable)
+            handles.sample_data{ii}.variables{jj}.plotThisVar = newData;
+        end
+    end
+end
+guidata(ancestor(hObject,'figure'), handles);
+plotData(ancestor(hObject,'figure'));
+
+end  % tableChangedCallback
+
+
+%%
+function originalModel = getOriginalModel(jtable)
+originalModel = jtable.getModel;
+try
+    while(true)
+        originalModel = originalModel.getActualModel;
+    end;
+catch
+    a=1;  % never mind - bail out...
+end
+end  % getOriginalModel
+
+
+%%
+function fig = getParentFigure(fig)
+% if the object is a figure or figure descendent, return the
+% figure. Otherwise return [].
+while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
+    fig = get(fig,'parent');
+end
+end
+
+
+%%
+function plotData(hObject)
+% PLOTDATA plot marked variables in sample_data
+% Inputs:
+%   hObject - handle to figure
+
+hFig = ancestor(hObject,'figure');
+handles=guidata(hFig);
+figure(hFig); %make figure current
+hAx=handles.axes1;
+
+%Create a string for legend
+%legendStr={'Plots'};
+legendStr={};
+
+% set(handles.figure1,'Color',[1 1 1]);
+%hold('on');
+
+% clear plot
+legend(hAx,'off');
+% if isfield(handles,'legend_h')
+%     delete(handles.legend_h);
+% end
+%children = get(handles.axes1, 'Children');
+children = findobj(handles.axes1,'Type','line');
+if ~isempty(children)
+    delete(children);
+end
+
+varNames={};
+%allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
+
+for ii=1:numel(handles.sample_data) % loop over files
+    for jj=1:numel(handles.sample_data{ii}.variables)
+        if strcmp(handles.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
+            lineStyle='.';
+        else
+            lineStyle='-';
+        end
+        if handles.sample_data{ii}.variables{jj}.plotThisVar
+            idTime  = getVar(handles.sample_data{ii}.dimensions, 'TIME');
+            instStr=strcat(handles.sample_data{ii}.variables{jj}.name, '-',handles.sample_data{ii}.meta.instrument_model,'-',handles.sample_data{ii}.meta.instrument_serial_no);
+            [PATHSTR,NAME,EXT] = fileparts(handles.sample_data{ii}.toolbox_input_file);
+            try
+                plot(hAx,handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,lineStyle,'DisplayName',instStr, 'Tag', [NAME EXT]);
+                %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
+            catch
+                error('PLOTDATA: plot failed.');
+            end
+            hold(hAx,'on');
+            legendStr{end+1}=strrep(instStr,'_','\_');
+            varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
+            set(handles.progress,'String',strcat('Plot : ', instStr));
+            guidata(ancestor(hObject,'figure'), handles);
+            drawnow;
+        end
+    end
+end
+varNames=unique(varNames);
+dataLimits=findVarExtents(handles.sample_data);
 handles.xMin = dataLimits.xMin;
 handles.xMax = dataLimits.xMax;
 handles.yMin = dataLimits.yMin;
 handles.yMax = dataLimits.yMax;
-guidata(hObject, handles);
-
+guidata(ancestor(hObject,'figure'), handles);
 if handles.firstPlot
-    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
-    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    set(hAx,'XLim',[handles.xMin handles.xMax]);
+    set(hAx,'YLim',[handles.yMin handles.yMax]);
     handles.firstPlot=false;
 end
 
-if numel(varInd)>1
-    ylabel('All Variables');
+if isempty(varNames)
+    ylabel(hAx,'No Variables');
+elseif numel(varNames)==1
+    ylabel(hAx,strrep(char(varNames{1}),'_','\_'));
 else
-    ylabel(strrep(char(varName{1}),'_','\_'));
+    ylabel(hAx,'Multiple Variables');
 end
 
 % make
-h = findobj(handles.axes1,'Type','line');
+h = findobj(hAx,'Type','line');
 
 % mapping = round(linspace(1,64,length(h)))';
 % colors = colormap('jet');
@@ -368,7 +611,7 @@ h = findobj(handles.axes1,'Type','line');
 cfunc = @(x) colorspace('RGB->Lab',x);
 colors = distinguishable_colors(length(h),'white',cfunc);
 for jj = 1:length(h)
-    dstrings{jj} = get(h(jj),'DisplayName');
+    %dstrings{jj} = get(h(jj),'DisplayName');
     try
         %set(h(jj),'Color',colors( mapping(j),: ));
         set(h(jj),'Color',colors(jj,:));
@@ -378,28 +621,24 @@ for jj = 1:length(h)
     end
 end
 
-%datetick('x','dd-mmm-yyyy');
-%dynamicDateTicks(handles.axes1, [], 'dd-mmm');
-%xlabel(handles.axes1,'Time (UTC)');
+updateDateLabel(hFig,struct('Axes', hAx), true);
 
-%setDate4zoom;
-%set(fh_overlay,'Visible','on');
-%set(hLegend,'Interpreter','none');
-lh=legend(legendStr);
-%axc= findobj(get(gca,'Children'),'Type','line');
-%lh=legend(axc,dstrings,'Location','Best','FontSize',6);
+legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
+%[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 6)
+handles.legend_h=legend_h;
 set(handles.progress,'String','Done');
+guidata(ancestor(hObject,'figure'), handles);
 drawnow;
-guidata(hObject, handles);
-
 end
 
+
 %% --- Executes on button press in saveImage.
-function saveImage_Callback(hObject, eventdata, handles)
+function saveImage_Callback(hObject, eventdata, oldHandles)
+%SAVEIMAGE_CALLBACK Easyplot save image
 % hObject    handle to saveImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles,'sample_data') && numel(handles.sample_data) > 0
     [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
     if isequal(FILENAME,0) || isequal(PATHNAME,0)
@@ -408,24 +647,28 @@ if isfield(handles,'sample_data') && numel(handles.sample_data) > 0
         %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
         export_fig(fullfile(PATHNAME,FILENAME),'-png',handles.axes1);
     end
-    uiresume(handles.figure1);
+    %uiresume(handles.figure1);
 end
 
 end
 
 
 %% --- Executes on button press in clearPlot.
-function clearPlot_Callback(hObject, eventdata, handles)
+function clearPlot_Callback(hObject, eventdata, oldHandles)
+%CLEARPLOT_CALLBACK Clear easyplot plot window
+%
 % hObject    handle to clearPlot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles=guidata(ancestor(hObject,'figure'));
 % clear plot
 if isfield(handles, 'sample_data')
     children = get(handles.axes1, 'Children');
     delete(children);
     legend(handles.axes1,'off')
     handles.sample_data={};
+    % how do I reset contents of handles.jtable?
+    delete(handles.jtable);
     set(handles.listbox1,'String', '');
     
     handles.firstPlot=true;
@@ -434,47 +677,74 @@ if isfield(handles, 'sample_data')
     handles.yMin=NaN;
     handles.yMax=NaN;
     
-    guidata(hObject, handles);
+    guidata(ancestor(hObject,'figure'), handles);
 end
 end
 
 
 %% --- Executes on button press in exit.
-function exit_Callback(hObject, eventdata, handles)
+function exit_Callback(hObject, eventdata, oldHandles)
+%EXIT_CALLBACK Easyplot exit
+%
 % hObject    handle to exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%hobj=guidata(hObject);
+handles=guidata(ancestor(hObject,'figure'));
+handles.ini.startDialog.dataDir=handles.oldPathname;
+struct2ini(fullfile(handles.EPdir,'easyplot.ini'),handles.ini);
+
+%delete(handles.lisH);
 delete(handles.figure1);
 end
 
 
 %% --- Executes on button press in replot.
-function replot_Callback(hObject, eventdata, handles)
+function replot_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles, 'sample_data')
-    [handles.plotVar, handles.plotAllVars]=chooseVar(hObject,handles);
-    handles.firstPlot=true;
-    guidata(hObject,handles);
-    handles = plotData(hObject,handles);
-    guidata(hObject, handles);
+    plotVar = chooseVar(handles.sample_data);
+    handles.sample_data = markPlotVar(handles.sample_data, plotVar);
+    handles.treePanelData = generateTreeData(handles.sample_data);
+    guidata(ancestor(hObject,'figure'),handles);
+    % surely I don't have to delete and recreate jtable
+    delete(handles.jtable);
+    handles.jtable = treeTable(handles.treePanel, ...
+        {'','Instrument','Variable','Show'},...
+        handles.treePanelData,...
+        'ColumnTypes',{'','char','char','logical'},...
+        'ColumnEditable',{false, false, true});
+    % Make 'Visible' column width small as practible
+    handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+    % right-align second column
+    renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+    %renderer = javax.swing.table.DefaultTableCellRenderer;
+    renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+    
+    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+    guidata(ancestor(hObject,'figure'), handles);
+    plotData(ancestor(hObject,'figure'));
 end
 end
 
 
 %% --- Executes on selection change in listbox1.
-function listbox1_Callback(hObject, eventdata, handles)
+function listbox1_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to listbox1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+handles=guidata(ancestor(hObject,'figure'));
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
 selectionType=get(handles.figure1,'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
+    
     if numel(handles.sample_data) == 1
         % removing last plot
         clearPlot_Callback(hObject, eventdata, handles);
@@ -485,11 +755,30 @@ if strcmp(selectionType,'open')
         filename = file_list{index_selected};
         iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
         handles.sample_data(iFile)=[];
-        guidata(hObject,handles);
+        guidata(ancestor(hObject,'figure'),handles);
         set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
         set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
+        handles.treePanelData = generateTreeData(handles.sample_data);
+        guidata(ancestor(hObject,'figure'), handles);
+        % surely I don't have to delete and recreate jtable
+        delete(handles.jtable);
+        handles.jtable = treeTable(handles.treePanel, ...
+            {'','Instrument','Variable','Show'},...
+            handles.treePanelData,...
+            'ColumnTypes',{'','char','char','logical'},...
+            'ColumnEditable',{false, false, true});
+        % Make 'Visible' column width small as practible
+        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
+        % right-align second column
+        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
+        %renderer = javax.swing.table.DefaultTableCellRenderer;
+        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        
+        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         handles.firstPlot=true;
-        handles = plotData(hObject,handles);
+        guidata(ancestor(hObject,'figure'), handles);
+        plotData(ancestor(hObject,'figure'));
         %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
         %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
         drawnow;
@@ -507,11 +796,12 @@ if strcmp(selectionType,'normal')
     %xlim(handles.axes1, newXLimits);
     zoom(handles.axes1,'reset');
     set(handles.axes1,'XLim',newXLimits);
-    if handles.plotAllVars==1
-        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
-    end
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
+    %    if handles.plotAllVars==1
+    %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    %    end
 end
-guidata(hObject, handles);
+guidata(ancestor(hObject,'figure'), handles);
 
 end
 
@@ -528,12 +818,12 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 end
+
 
 %%
 function datacursorText = customDatacursorText(hObject, eventdata)
-% DATACURSORTEXT Display the position of the data cursor
+% Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
 % output_txt   Data cursor text string (string or cell array of strings).
@@ -552,73 +842,262 @@ end
 try
     p=get(eventdata,'Target');
     datacursorText{end+1} = ['DisplayName: ',get(p,'DisplayName')];
+    datacursorText{end+1} = ['FileName: ',get(p,'Tag')];
 end
 
 end
+
 
 %%
 % --- Executes on button press in zoomYextent.
-function zoomYextent_Callback(hObject, eventdata, handles)
-% ZOOMYEXTENT Set YLim of axes to data limits
+function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomYextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-%[xMin xMax yMin yMax]=findVarExtents(hObject, eventdata, handles);
+handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles,'sample_data')
-    set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    dataLimits=findVarExtents(handles.sample_data);
+    handles.xMin = dataLimits.xMin;
+    handles.xMax = dataLimits.xMax;
+    handles.yMin = dataLimits.yMin;
+    handles.yMax = dataLimits.yMax;
+    if ~isnan(handles.yMin) || ~isnan(handles.yMax)
+        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+    end
+    guidata(ancestor(hObject,'figure'), handles);
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
 end
 end
+
 
 %%
 % --- Executes on button press in zoomXextent.
-function zoomXextent_Callback(hObject, eventdata, handles)
-% ZOOMXEXTENT Set XLim of axes to data limits
+function zoomXextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomXextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles=guidata(ancestor(hObject,'figure'));
 if isfield(handles,'sample_data')
-    set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+    dataLimits=findVarExtents(handles.sample_data);
+    handles.xMin = dataLimits.xMin;
+    handles.xMax = dataLimits.xMax;
+    handles.yMin = dataLimits.yMin;
+    handles.yMax = dataLimits.yMax;
+    if ~isnan(handles.xMin) || ~isnan(handles.xMax)
+        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+    end
+    guidata(ancestor(hObject,'figure'), handles);
+    updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
 end
 end
 
 
 %%
-function dataLimits=findVarExtents(varName,sample_data)
-% FINDVAREXTENTS Find the x/y data limits for a particular variable
-% Inputs:
-% varName - variable to plot
-% sample_data - the data
-% Outputs:
-% dataLimits - structure with x/y min/max limits
-
-eps=1e-2;
-
-dataLimits.xMin = NaN;
-dataLimits.xMax = NaN;
-dataLimits.yMin = NaN;
-dataLimits.yMax = NaN;
-
-if ~isempty(sample_data)
-    allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
-    for ii=1:numel(allVarInd) % loop over files
-        varInd=allVarInd{ii};
-        for jj=1:numel(varInd)
-            if varInd{jj} > 0
+function dataLimits=findVarExtents(sample_data)
+%FINDVAREXTENTS Find time and data extents of marked sample_data variables
+if isempty(sample_data)
+    dataLimits.xMin = floor(now);
+    dataLimits.xMax = floor(now)+1;
+    dataLimits.yMin = 0;
+    dataLimits.yMax = 1;
+else
+    eps=1e-1;
+    dataLimits.xMin = NaN;
+    dataLimits.xMax = NaN;
+    dataLimits.yMin = NaN;
+    dataLimits.yMax = NaN;
+    %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
+    % for ii=1:numel(allVarInd) % loop over files
+    %     varInd=allVarInd{ii};
+    %     for jj=1:numel(varInd)
+    for ii=1:numel(sample_data) % loop over files
+        for jj=1:numel(sample_data{ii}.variables)
+            if sample_data{ii}.variables{jj}.plotThisVar
                 idTime  = getVar(sample_data{ii}.dimensions, 'TIME');
                 dataLimits.xMin=min(sample_data{ii}.dimensions{idTime}.data(1), dataLimits.xMin);
-                dataLimits.yMin=min(min(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMin);
+                dataLimits.yMin=min(min(sample_data{ii}.variables{jj}.data), dataLimits.yMin);
                 dataLimits.xMax=max(sample_data{ii}.dimensions{idTime}.data(end), dataLimits.xMax);
-                dataLimits.yMax=max(max(sample_data{ii}.variables{varInd{jj}}.data), dataLimits.yMax);
+                dataLimits.yMax=max(max(sample_data{ii}.variables{jj}.data), dataLimits.yMax);
             end
         end
     end
+    % if ylimits are small, make them a bit bigger for nice visuals
+    if dataLimits.yMax-dataLimits.yMin < eps
+        dataLimits.yMax=dataLimits.yMax*1.05;
+        dataLimits.yMin=dataLimits.yMin*0.95;
+    end
+%     if dataLimits.xMax-dataLimits.xMin < eps
+%         dataLimits.xMin = floor(now);
+%         dataLimits.xMax = floor(now)+1;
+%     end
+    % paranoid now
+    if ~isfinite(dataLimits.xMin) dataLimits.xMin=floor(now); end
+    if ~isfinite(dataLimits.xMax) dataLimits.xMax=floor(now)+1; end
+    if ~isfinite(dataLimits.yMin) dataLimits.yMin=0; end
+    if ~isfinite(dataLimits.yMax) dataLimits.yMax=1; end
 end
 
-% if ylimits are small, make them a bit bigger for nice visuals
-if dataLimits.yMax-dataLimits.yMin < eps
-    dataLimits.yMax=dataLimits.yMax*1.05;
-    dataLimits.yMin=dataLimits.yMin*0.95;
 end
+
+%%
+function updateDateLabel(source, eventData, varargin)
+% UPDATEDATELABEL Update dateticks on zoom/pan.
+%
+% Code from dynamicDateTicks
+%if isMultipleCall();  return;  end
+
+keepLimits=false;
+% The following is mess of code but was of a result of trying to use the
+% call function for setup, callback and listener. Since I'm only doing
+% setup and listener could probably clean up, but keeping it around for
+% reference.
+if isfield(source,'Axes') %called as initialize axes
+    %disp('updateDateLabel init')
+    axH = source.Axes; % On which axes has the zoom/pan occurred
+    axesInfo = get(source.Axes, 'UserData');
+    keepLimits=true;
+elseif isfield(eventData,'Axes') %called as callback from zoom/pan
+    try
+        %disp('updateDateLabel callback')
+        axH = eventData.Axes; % On which axes has the zoom/pan occurred
+        handles=guidata(source);
+        axesInfo = handles.axesInfo;
+        keepLimits=true;
+        %set(source,'Interruptible','off');
+    catch
+        source, eventData, varargin
+        get(source)
+        get(eventData)
+    end
+else %called as a listener XLim event
+    %disp('updateDateLabel listener');
+    handles=guidata(get(eventData.AffectedObject,'Parent'));
+    axesInfo = handles.axesInfo;
+    axH = handle(handles.axes1);
+    %If I ever figure out why UserData wasn't being passed on
+    %ax1=get(hParent,'CurrentAxes');
+    %axesInfo = get(ax1,'UserData'); %
+    keepLimits=true;
+end
+
+if all(get(axH,'xlim') == [0 1])
+    set(axH, 'XLim', [floor(now) floor(now)+1]);
+end
+% Check if this axes is a date axes. If not, do nothing more (return)
+try
+    if ~strcmp(axesInfo.Type, 'dateaxes')
+        return;
+    end
+catch
+    return;
+end
+
+% Re-apply date ticks, but keep limits (unless called the first time)
+% if nargin < 3
+%     datetick(ax1, 'x', 'keeplimits');
+% end
+
+%if keepLimits
+datetick(axH, 'x', 'keeplimits');
+%else
+%    datetick(ax1, 'x');
+%end
+
+% Get the current axes ticks & labels
+ticks  = get(axH, 'XTick');
+labels = get(axH, 'XTickLabel');
+
+% Sometimes the first tick can be outside axes limits. If so, remove it & its label
+if all(ticks(1) < get(axH,'xlim'))
+    ticks(1) = [];
+    labels(1,:) = [];
+end
+
+[yr, mo, da] = datevec(ticks); % Extract year & day information (necessary for ticks on the boundary)
+newlabels = cell(size(labels,1), 1); % Initialize cell array of new tick label information
+
+if regexpi(labels(1,:), '[a-z]{3}', 'once') % Tick format is mmm
+    % Add year information to first tick & ticks where the year changes
+    ind = [1 find(diff(yr))+1];
+    newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
+    labels = strcat(labels, newlabels);
+elseif regexpi(labels(1,:), '\d\d/\d\d', 'once') % Tick format is mm/dd
+    % Change mm/dd to dd/mm if necessary
+    labels = datestr(ticks, axesInfo.mdformat);
+    % Add year information to first tick & ticks where the year changes
+    ind = [1 find(diff(yr))+1];
+    newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
+    labels = strcat(labels, newlabels);
+elseif any(labels(1,:) == ':') % Tick format is HH:MM
+    % Add month/day/year information to the first tick and month/day to other ticks where the day changes
+    ind = find(diff(da))+1;
+    newlabels{1}   = datestr(ticks(1), [axesInfo.mdformat '-yyyy-']); % Add month/day/year to first tick
+    newlabels(ind) = cellstr(datestr(ticks(ind), [axesInfo.mdformat '-'])); % Add month/day to ticks where day changes
+    labels = strcat(newlabels, labels);
+end
+for ii=1:numel(axesInfo.Linked)
+    if ishghandle(axesInfo.Linked(ii))
+        set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
+    end
+end
+xlabel(axH,axesInfo.XLabel);
+end
+
+
+%%
+function flag=isMultipleCall()
+flag = false;
+% Get the stack
+s = dbstack();
+if numel(s) <= 2
+    % Stack too short for a multiple call
+    return
+end
+
+% How many calls to the calling function are in the stack?
+names = {s(:).name};
+TF = strcmp(s(2).name,names);
+count = sum(TF);
+if count>1
+    % More than 1
+    flag = true;
+end
+end
+
+%%
+function sam = finaliseDataEasyplot(sam)
+%FINALISEDATA Adds new TIMEDIFF var
+%
+% Inputs:
+%   sam             - a struct containing sample data.
+%
+% Outputs:
+%   sample_data - same as input, with fields added/modified
+
+idTime  = getVar(sam.dimensions, 'TIME');
+sam.variables{end+1}.dimensions = idTime;
+sam.variables{end}.name = 'TIMEDIFF';
+theData=sam.dimensions{idTime}.data;
+theData = [NaN; diff(theData*86400.0)];
+sam.variables{end}.data = theData;
+
+[PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
+sam.inputFilePath = PATHSTR;
+sam.inputFile = NAME;
+sam.inputFileExt = EXT;
+
+sam.isPlotableVar = false(1,numel(sam.variables));
+sam.plotThisVar = false(1,numel(sam.variables));
+for kk=1:numel(sam.variables)
+    isEmptyDim = isempty(sam.variables{kk}.dimensions);
+    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data));
+    if ~isEmptyDim && isData
+        sam.isPlotableVar(kk) = true;
+        sam.plotThisVar(kk) = false;
+        sam.variables{kk}.plotThisVar=false;
+    end
+end
+
+sam
+
 end
