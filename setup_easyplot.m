@@ -1,10 +1,10 @@
 function setup_easyplot
 
 % path to easyplot dir
-easyplotDir='C:\AIMS\easyplot';
+easyplotDir='C:\Projects\aims-gitlab\easyplot';
 
 % location of the users toolbox installation
-imos_tb_home='C:\AIMS\imos-toolbox-2.4-aims';
+imos_tb_home='C:\Projects\aims-gitlab\imos-toolbox-2.4-aims';
 
 % user should not need to edit anything further
 

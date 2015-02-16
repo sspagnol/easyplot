@@ -89,12 +89,6 @@ theList.message{ii}='Choose Citadel CTD csv files:';
 theList.parser{ii}='citadelParse';
 
 ii=ii+1;
-theList.name{ii}='ECO (raw - needs dev)';
-theList.wildcard{ii}={'*.raw'};
-theList.message{ii}='Choose ECO raw files:';
-theList.parser{ii}='ECOTripletParse';
-
-ii=ii+1;
 theList.name{ii}='Nortek AWAC (wpr,wpb)';
 theList.wildcard{ii}={'*.wpr', '*.wpb'};
 theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
@@ -167,7 +161,7 @@ theList.message{ii}='Choose VML2T *.csv files:';
 theList.parser{ii}='VemcoParse';
 
 ii=ii+1;
-theList.name{ii}='Wetlabs (FL)NTU (raw)';
+theList.name{ii}='Wetlabs (FL)NTU (raw) [and dev]';
 theList.wildcard{ii}={'*.raw'};
 theList.message{ii}='Choose (FL)NTU *.raw files:';
 theList.parser{ii}='ECOTripletParse';
