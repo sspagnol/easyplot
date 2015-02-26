@@ -101,12 +101,6 @@ theList.message{ii}='Choose Citadel CTD csv files:';
 theList.parser{ii}='citadelParse';
 
 ii=ii+1;
-theList.name{ii}='ECO (raw - needs dev)';
-theList.wildcard{ii}={'*.raw'};
-theList.message{ii}='Choose ECO raw files:';
-theList.parser{ii}='ECOTripletParse';
-
-ii=ii+1;
 theList.name{ii}='Nortek AWAC (wpr,wpb)';
 theList.wildcard{ii}={'*.wpr', '*.wpb'};
 theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
@@ -237,21 +231,12 @@ handles.treePanelData{1,2}='';
 handles.treePanelData{1,3}='';
 handles.treePanelData{1,4}=false;
 handles.treePanelData{1,5}=0;
+handles.treePanelHeader = {'','Instrument','Variable','Show','Slice'};
+handles.treePanelColumnTypes = {'','char','char','logical','integer'};
+handles.treePanelColumnEditable = {false, false, true, true};
 
-handles.jtable = treeTable(handles.treePanel, ...
-    {'','Instrument','Variable','Show','Slice'},...
-    handles.treePanelData,...
-    'ColumnTypes',{'','char','char','logical','integer'},...
-    'ColumnEditable',{false, false, true, true});
-% Make 'Visible' column width small as practible
-handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
-% right-align second column
-renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-%renderer = javax.swing.table.DefaultTableCellRenderer;
-renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
-set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
-
+handles.jtable = createTreeTable(handles);
+setVisibilityCallback(hObject,true);
 guidata(hFig, handles);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
@@ -279,7 +264,9 @@ function import_Callback(hObject, eventdata, oldHandles)
 % handles    structure with handles and user data (see GUIDATA)
 
 hFig=ancestor(hObject,'figure');
+
 handles=guidata(hFig);
+setVisibilityCallback(hObject,false);
 
 theList=handles.theList;
 
@@ -287,6 +274,7 @@ iParse=menu('Choose instrument type',theList.name);
 if iParse < 1 % no instrument chosen
     return;
 end
+
 
 % get parser for the filetype
 parser = str2func(theList.parser{iParse});
@@ -365,34 +353,63 @@ else
         handles.sample_data = markPlotVar(handles.sample_data, plotVar);
         handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'),handles);
-        %         handles.jtable = treeTable(handles.treePanel, ...
-        %             {'','Instrument','Variable','Show','Slice'},...
-        %             handles.treePanelData,...
-        %             'ColumnTypes',{'','char','char','logical','integer'},...
-        %             'ColumnEditable',{false, false, true, true});
-        [data,headers] = getTableData(handles.jtable);
-        setTableData(jtable,handles.treePanelData,headers);
+        %         if isfield(handles,'jtable')
+        %             %delete(handles.jtable);
+        %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+        %         end
         
-        model = handles.jtable.getModel.getActualModel;
-        model.groupAndRefresh;
-        handles.jtable.repaint;
+        handles.jtable = createTreeTable(handles);
+        guidata(ancestor(hObject,'figure'), handles);
+        %% trying to just change the table data and redraw
+        % [data,headers] = getTableData(handles.jtable);
+        %  setTableData(jtable,handles.treePanelData,headers);
+        %       jt.setModel(javax.swing.table.DefaultTableModel(handles.treePanelData,{'','Instrument','Variable','Show','Slice'}));
+        %         model.setDataVector(tdc,num2cell(handles.treePanelHeader));
+        %         model.groupAndRefresh;
+        %         jt.repaint;
         
-%         % Make 'Visible' column width small as practible
-%         handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
-%         % right-align second column
-%         renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-%         %renderer = javax.swing.table.DefaultTableCellRenderer;
-%         renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-%         handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+        % model=handles.jtable.getModel.getActualModel.getActualModel;
+        %   td = model.getDataVector.toArray.cell;
+        %   tdc = cellfun(@(c)c.toArray.cell, td, 'uniform',false);
+        
+        % jData=java.util.Vector(size(handles.treePanelData,1));
+        % for ii = 1 : size(handles.treePanelData,1)
+        %         jVec = java.util.Vector(size(handles.treePanelData,2));
+        %         for jj = 1 : size(handles.treePanelData,2)
+        %             jVec.add(handles.treePanelData{ii,jj});
+        %         end
+        %         jData.addElement(jVec);
+        %         clear('jVec');
+        % end
+        %
+        % jHeader= java.util.Vector(numel(handles.treePanelHeader));
+        % for ii = 1 : numel(handles.treePanelHeader)
+        %   jHeader.add(handles.treePanelHeader{ii});
+        % end
+        %
+        % jt=handles.jtable;
+        % jt.setModel(javax.swing.table.DefaultTableModel(jData,jHeader));
+        % %jt.setModel(MultiClassTableModel(jData,jHeader));
+        % CustomizableCellRenderer
+        % javax.swing.table.DefaultTableCellRenderer
+        % % model=handles.jtable.getModel.getActualModel.getActualModel
+        % % model.groupAndRefresh;
+        % mmodel = jt.getModel
+        % jmodel = com.jidesoft.grid.DefaultGroupTableModel(mmodel)
+        % jmodel.groupAndRefresh;
+        % jt.repaint;
+        
         
         guidata(ancestor(hObject,'figure'),handles);
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
-        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
-        warning(oldWarnState);
+        %set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+        guidata(ancestor(hObject,'figure'), handles);
         plotData(hFig);
+        warning(oldWarnState);
     end
-    guidata(hFig, handles);
 end
+setVisibilityCallback(hObject,true);
+guidata(hFig, handles);
 
 end
 
@@ -427,7 +444,7 @@ sam.isPlottableVar = false(1,numel(sam.variables));
 sam.plotThisVar = false(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
     isEmptyDim = isempty(sam.variables{kk}.dimensions);
-    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data));
+    isData = isfield(sam.variables{kk},'data') & any(any(~isnan(sam.variables{kk}.data)));
     if ~isEmptyDim && isData
         sam.isPlottableVar(kk) = true;
         sam.plotThisVar(kk) = false;
@@ -549,11 +566,23 @@ function tableVisibilityCallback(hModel,hEvent, hObject)
 % hEvent - javax.swing.event.TableModelEvent
 % hObject - hopefully the handle to figure
 
+% cannot use the turn of the callback trick here
+% from "Undocumented Secrets of MATLAB-Java Programming" pg 167
+% prevent re-entry
+persistent hash;
+if isempty(hash)
+    hash = java.util.Hashtable; 
+end
+if ~isempty(hash.get(hObject))
+return;
+end
+hash.put(hObject,1);
+
 if ishghandle(hObject)
     handles=guidata(ancestor(hObject,'figure'));
 else
     disp('I am stuck in tableVisibilityCallback');
-    pause;
+    return;
 end
 
 % Get the modification data, zero indexed
@@ -589,8 +618,17 @@ for ii=1:numel(handles.sample_data) % loop over files
         end
     end
 end
+% model = getOriginalModel(handles.jtable);
+% model.groupAndRefresh;
+% handles.jtable.repaint;
+
 guidata(ancestor(hObject,'figure'), handles);
 plotData(ancestor(hObject,'figure'));
+
+guidata(ancestor(hObject,'figure'), handles);
+
+% release rentrancy flag
+hash.remove(hObject);
 
 end  % tableChangedCallback
 
@@ -598,14 +636,19 @@ end  % tableChangedCallback
 %%
 function originalModel = getOriginalModel(jtable)
 %GETORIGINALMODEL Get original jtable model
-originalModel = jtable.getModel;
-try
-    while(true)
-        originalModel = originalModel.getActualModel;
-    end;
-catch
-    a=1;  % never mind - bail out...
+
+originalModel = [];
+if ~isempty(jtable)
+    originalModel = jtable.getModel;
+    try
+        while(true)
+            originalModel = originalModel.getActualModel;
+        end;
+    catch
+        % never mind - bail out...
+    end
 end
+
 end  % getOriginalModel
 
 
@@ -628,9 +671,15 @@ function plotData(hObject)
 %
 % Inputs:
 %   hObject - handle to figure
+%dbstack
+if isempty(hObject), return; end
 
 hFig = ancestor(hObject,'figure');
 handles=guidata(hFig);
+
+if isempty(hFig), return; end
+if isempty(handles.sample_data), return; end
+
 figure(hFig); %make figure current
 hAx=handles.axes1;
 
@@ -687,7 +736,7 @@ for ii=1:numel(handles.sample_data) % loop over files
             varNames{end+1}=handles.sample_data{ii}.variables{jj}.name;
             set(handles.progress,'String',strcat('Plot : ', instStr));
             guidata(ancestor(hObject,'figure'), handles);
-            drawnow;
+            %drawnow;
         end
     end
 end
@@ -738,8 +787,9 @@ legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
 %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 6)
 handles.legend_h=legend_h;
 set(handles.progress,'String','Done');
-guidata(ancestor(hObject,'figure'), handles);
 drawnow;
+guidata(ancestor(hObject,'figure'), handles);
+%drawnow;
 end
 
 
@@ -779,15 +829,20 @@ if isfield(handles, 'sample_data')
     legend(handles.axes1,'off')
     handles.sample_data={};
     % how do I reset contents of handles.jtable?
-    %delete(handles.jtable);
+    %     if isfield(handles,'jtable')
+    %         %delete(handles.jtable);
+    %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+    %     end
+    
     handles.treePanelData{1,1}='None';
-    handles.treePanelData{1,2}='';
-    handles.treePanelData{1,3}='';
+    handles.treePanelData{1,2}='None';
+    handles.treePanelData{1,3}='None';
     handles.treePanelData{1,4}=false;
-    handles.treePanelData{1,5}=0;
-    model = handles.jtable.getModel.getActualModel;
-    model.groupAndRefresh;
-    handles.jtable.repaint;
+    handles.treePanelData{1,5}=1;
+    %     model = handles.jtable.getModel.getActualModel;
+    %     %model = getOriginalModel(jtable);
+    %     model.groupAndRefresh;
+    %     handles.jtable.repaint;
     
     set(handles.listbox1,'String', '');
     
@@ -824,36 +879,31 @@ function replot_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(ancestor(hObject,'figure'));
+setVisibilityCallback(hObject,false);
 if isfield(handles, 'sample_data')
+    
     plotVar = chooseVar(handles.sample_data);
     handles.sample_data = markPlotVar(handles.sample_data, plotVar);
     
     handles.treePanelData = generateTreeData(handles.sample_data);
     guidata(ancestor(hObject,'figure'),handles);
     
-    model = handles.jtable.getModel.getActualModel;
-    model.groupAndRefresh;
-    handles.jtable.repaint;
+    %     %model = handles.jtable.getModel.getActualModel;
+    %     model = getOriginalModel(handles.jtable);
+    %     model.groupAndRefresh;
+    %     handles.jtable.repaint;
     
     % surely I don't have to delete and recreate jtable
-%     delete(handles.jtable);
-%     handles.jtable = treeTable(handles.treePanel, ...
-%         {'','Instrument','Variable','Show','Slice'},...
-%         handles.treePanelData,...
-%         'ColumnTypes',{'','char','char','logical','integer'},...
-%         'ColumnEditable',{false, false, true, true});
-%     % Make 'Visible' column width small as practible
-%     handles.jtable.getColumnModel.getColumn(2).setMaxWidth(45);
-%     % right-align second column
-%     renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-%     %renderer = javax.swing.table.DefaultTableCellRenderer;
-%     renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-%     handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
-%    set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
-
+    %     if isfield(handles,'jtable')
+    %         %delete(handles.jtable);
+    %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+    %     end
+    handles.jtable = createTreeTable(handles);
     guidata(ancestor(hObject,'figure'), handles);
     plotData(ancestor(hObject,'figure'));
 end
+setVisibilityCallback(hObject,true);
+guidata(ancestor(hObject,'figure'), handles);
 
 end
 
@@ -865,6 +915,7 @@ function listbox1_Callback(hObject, eventdata, oldHandles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles=guidata(ancestor(hObject,'figure'));
+setVisibilityCallback(hObject,false);
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
@@ -888,26 +939,20 @@ if strcmp(selectionType,'open')
         handles.treePanelData = generateTreeData(handles.sample_data);
         guidata(ancestor(hObject,'figure'), handles);
         % surely I don't have to delete and recreate jtable
-        delete(handles.jtable);
-        handles.jtable = treeTable(handles.treePanel, ...
-            {'','Instrument','Variable','Show','Slice'},...
-            handles.treePanelData,...
-            'ColumnTypes',{'','char','char','logical','integer'},...
-            'ColumnEditable',{false, false, true, true});
-        % Make 'Visible' column width small as practible
-        handles.jtable.getColumnModel.getColumn(2).setMaxWidth(50);
-        % right-align second column
-        renderer = handles.jtable.getColumnModel.getColumn(1).getCellRenderer;
-        %renderer = javax.swing.table.DefaultTableCellRenderer;
-        renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        handles.jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
         
-        set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+        %         if isfield(handles,'jtable')
+        %             %delete(handles.jtable);
+        %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+        %         end
+        handles.jtable = createTreeTable(handles);
+        
         handles.firstPlot=true;
         guidata(ancestor(hObject,'figure'), handles);
         plotData(ancestor(hObject,'figure'));
         %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
         %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+        % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+        
         drawnow;
     end
 end
@@ -928,6 +973,7 @@ if strcmp(selectionType,'normal')
     %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
     %    end
 end
+setVisibilityCallback(hObject,true);
 guidata(ancestor(hObject,'figure'), handles);
 
 end
@@ -1060,10 +1106,10 @@ else
         dataLimits.yMax=dataLimits.yMax*1.05;
         dataLimits.yMin=dataLimits.yMin*0.95;
     end
-%     if dataLimits.xMax-dataLimits.xMin < eps
-%         dataLimits.xMin = floor(now);
-%         dataLimits.xMax = floor(now)+1;
-%     end
+    %     if dataLimits.xMax-dataLimits.xMin < eps
+    %         dataLimits.xMin = floor(now);
+    %         dataLimits.xMax = floor(now)+1;
+    %     end
     % paranoid now
     if ~isfinite(dataLimits.xMin) dataLimits.xMin=floor(now); end
     if ~isfinite(dataLimits.xMax) dataLimits.xMax=floor(now)+1; end
@@ -1198,4 +1244,65 @@ if count>1
     % More than 1
     flag = true;
 end
+end
+
+%% Get data from Table
+function table_data = getData(jtable_handle)
+
+numrows = jtable_handle.getRowCount;
+numcols = jtable_handle.getColumnCount;
+
+table_data = cell(numrows, numcols);
+
+for n = 1 : numrows
+    for m = 1 : numcols
+        [n,m]
+        temp_data = jtable_handle.getValueAt(n-1, m-1); % java indexing
+        if isempty(temp_data)
+            table_data{n,m} = '';
+        else
+            table_data{n,m} = temp_data;
+        end
+    end
+end
+
+end % function getData
+
+%%
+function setVisibilityCallback(hObject,toggle)
+
+hFig=ancestor(hObject,'figure');
+handles=guidata(hFig);
+if ~isempty(handles)
+    if isfield(handles,'jtable')
+        if toggle
+            %disp('Turning ON tableVisibilityCallback');
+            set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+        else
+            %disp('Turning OFF tableVisibilityCallback');
+            set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', []);
+        end
+    end
+end
+guidata(ancestor(hObject,'figure'), handles);
+
+end
+
+%%
+function jtable = createTreeTable(fHandle)
+
+jtable = treeTable(fHandle.treePanel, ...
+    fHandle.treePanelHeader,...
+    fHandle.treePanelData,...
+    'ColumnTypes',fHandle.treePanelColumnTypes,...
+    'ColumnEditable',fHandle.treePanelColumnEditable);
+
+% Make 'Visible' column width small as practible
+jtable.getColumnModel.getColumn(2).setMaxWidth(45);
+% right-align second column
+renderer = jtable.getColumnModel.getColumn(1).getCellRenderer;
+%renderer = javax.swing.table.DefaultTableCellRenderer;
+renderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
+
 end
