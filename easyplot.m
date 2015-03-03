@@ -494,7 +494,7 @@ varList{end+1}='ALLVARS';
 title = 'Variable to plot?';
 prompt = 'Variable List';
 defaultanswer = 1;
-choice = optionDialog( title, prompt, varList, defaultanswer )
+choice = optionDialog( title, prompt, varList, defaultanswer );
 
 pause(0.1);
 if isempty(choice), return; end
@@ -929,38 +929,41 @@ setVisibilityCallback(hObject,false);
 selectionType=get(handles.figure1,'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
+    index_selected = get(handles.listbox1,'Value');
+    file_list = get(handles.listbox1,'String');
+    % Item selected in list box
+    filename = file_list{index_selected};
     
-    if numel(handles.sample_data) == 1
-        % removing last plot
-        clearPlot_Callback(hObject, eventdata, handles);
-    else
-        index_selected = get(handles.listbox1,'Value');
-        file_list = get(handles.listbox1,'String');
-        % Item selected in list box
-        filename = file_list{index_selected};
-        iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
-        handles.sample_data(iFile)=[];
-        guidata(ancestor(hObject,'figure'),handles);
-        set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
-        set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
-        handles.treePanelData = generateTreeData(handles.sample_data);
-        guidata(ancestor(hObject,'figure'), handles);
-        % surely I don't have to delete and recreate jtable
-        
-        %         if isfield(handles,'jtable')
-        %             %delete(handles.jtable);
-        %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-        %         end
-        handles.jtable = createTreeTable(handles);
-        
-        handles.firstPlot=true;
-        guidata(ancestor(hObject,'figure'), handles);
-        plotData(ancestor(hObject,'figure'));
-        %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
-        %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
-        % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
-        
-        drawnow;
+    buttonName = questdlg(['Remove file : ' filename], 'Remove file?', 'No');
+    if strcmp(upper(buttonName),'YES')
+        if numel(handles.sample_data) == 1
+            % removing last plot
+            clearPlot_Callback(hObject, eventdata, handles);
+        else
+            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), handles.sample_data, 'UniformOutput', false))));
+            handles.sample_data(iFile)=[];
+            guidata(ancestor(hObject,'figure'),handles);
+            set(handles.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
+            set(handles.listbox1,'String', getFilelistNames(handles.sample_data));
+            handles.treePanelData = generateTreeData(handles.sample_data);
+            guidata(ancestor(hObject,'figure'), handles);
+            % surely I don't have to delete and recreate jtable
+            
+            %         if isfield(handles,'jtable')
+            %             %delete(handles.jtable);
+            %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+            %         end
+            handles.jtable = createTreeTable(handles);
+            
+            handles.firstPlot=true;
+            guidata(ancestor(hObject,'figure'), handles);
+            plotData(ancestor(hObject,'figure'));
+            %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
+            %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+            % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+            
+            drawnow;
+        end
     end
 end
 
@@ -976,9 +979,6 @@ if strcmp(selectionType,'normal')
     zoom(handles.axes1,'reset');
     set(handles.axes1,'XLim',newXLimits);
     updateDateLabel(handles.figure1,struct('Axes', handles.axes1), true);
-    %    if handles.plotAllVars==1
-    %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
-    %    end
 end
 setVisibilityCallback(hObject,true);
 guidata(ancestor(hObject,'figure'), handles);
