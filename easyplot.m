@@ -478,6 +478,7 @@ if isempty(sample_data)
     error('CHOOSEVAR: empty sample_data');
 end
 
+plotVar=[];
 varList= {};
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
@@ -490,12 +491,18 @@ varList=unique(varList);
 varList{end+1}='ALLVARS';
 %disp(sprintf('%s ','Variable list = ',varList{:}));
 
-ii=menu('Variable to plot?',varList);
+title = 'Variable to plot?';
+prompt = 'Variable List';
+defaultanswer = 1;
+choice = optionDialog( title, prompt, varList, defaultanswer )
+
 pause(0.1);
-if ii==numel(varList) %choosen plot all variables
+if isempty(choice), return; end
+
+if strcmp(choice,'ALLVARS') %choosen plot all variables
     plotVar=varList(1:end-1);
 else
-    plotVar={varList{ii}};
+    plotVar={choice};
 end
 end
 
