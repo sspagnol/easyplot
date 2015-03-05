@@ -48,7 +48,7 @@ end
 
 
 %% --- Executes just before easyplot is made visible.
-function easyplot_OpeningFcn(hObject, eventdata, fHandle, varargin)
+function easyplot_OpeningFcn(hObject, eventdata, gData, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -57,26 +57,26 @@ function easyplot_OpeningFcn(hObject, eventdata, fHandle, varargin)
 
 % Choose default command line output for easyplot
 hFig=ancestor(hObject,'figure');
-fHandle=guidata(hFig);
-fHandle.output = hObject;
+gData=guidata(hFig);
+gData.output = hObject;
 
-set(fHandle.figure1,'Color',[1 1 1]);
-set(fHandle.figure1,'Toolbar','figure');
+set(gData.figure1,'Color',[1 1 1]);
+set(gData.figure1,'Toolbar','figure');
 % create easyplot toolbar
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
-fHandle.xMin=NaN;
-fHandle.xMax=NaN;
-fHandle.yMin=NaN;
-fHandle.yMax=NaN;
+gData.xMin=NaN;
+gData.xMax=NaN;
+gData.yMin=NaN;
+gData.yMax=NaN;
 % old path for easier importing
-[fHandle.EPdir, name, ext] = fileparts(mfilename('fullpath'));
-fHandle.oldPathname=fHandle.EPdir;
-fHandle.ini = ini2struct(fullfile(fHandle.EPdir,'easyplot.ini'));
+[gData.EPdir, name, ext] = fileparts(mfilename('fullpath'));
+gData.oldPathname=gData.EPdir;
+gData.ini = ini2struct(fullfile(gData.EPdir,'easyplot.ini'));
 try
-    thePath=fHandle.ini.startDialog.dataDir;
+    thePath=gData.ini.startDialog.dataDir;
     if exist(thePath)
-        fHandle.oldPathname=thePath;
+        gData.oldPathname=thePath;
     end
 end
 
@@ -137,7 +137,7 @@ theList.message{ii}='Choose TR1060/TDR2050 files:';
 theList.parser{ii}='XRParse';
 
 ii=ii+1;
-theList.name{ii}='RDI (000,PD0)';
+theList.name{ii}='Teledyne RDI (000,PD0)';
 theList.wildcard{ii}={'*.000', '*.PD0'};
 theList.message{ii}='Choose RDI 000/PD0 files:';
 theList.parser{ii}='workhorseParse';
@@ -190,21 +190,21 @@ theList.wildcard{ii}={'*.dat'};
 theList.message{ii}='Choose WQM files:';
 theList.parser{ii}='WQMParse';
 
-fHandle.theList=theList;
+gData.theList=theList;
 
-fHandle.firstPlot = true;
+gData.firstPlot = true;
 
-axesInfo.Linked = fHandle.axes1;
+axesInfo.Linked = gData.axes1;
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 axesInfo.XLabel = 'Time (UTC)';
 % why does axes UserData get wiped somewhere later?
-axH=handle(fHandle.axes1);
+axH=handle(gData.axes1);
 set(axH, 'UserData', axesInfo);
 set(axH, 'XLim', [floor(now) floor(now)+1]);
 % until I understand what happens to UserData use guidata to store it
-fHandle.axesInfo=axesInfo;
-guidata(hFig, fHandle);
+gData.axesInfo=axesInfo;
+guidata(hFig, gData);
 
 % Couldn't get easyplot to function correctly so pulled in code from
 % dynamicDateTick into easyplot and modified as required.
@@ -224,27 +224,30 @@ set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
-xlabel(fHandle.axes1,'Time (UTC)');
+xlabel(gData.axes1,'Time (UTC)');
 
 %hoverlines( handles.figure1 );
 
 % custome data tip with nicely formatted date
-dcm_h = datacursormode(fHandle.figure1);
+dcm_h = datacursormode(gData.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-% Dummy treeTable data
-fHandle.treePanelData{1,1}='None';
-fHandle.treePanelData{1,2}='None';
-fHandle.treePanelData{1,3}='None';
-fHandle.treePanelData{1,4}=false;
-fHandle.treePanelData{1,5}=0;
-fHandle.treePanelHeader = {'','Instrument','Variable','Show','Slice'};
-fHandle.treePanelColumnTypes = {'','char','char','logical','integer'};
-fHandle.treePanelColumnEditable = {false, false, true, true};
+%
+set(hFig,'WindowButtonDownFcn', @mouseDownListener);
 
-fHandle.jtable = createTreeTable(fHandle);
+% Dummy treeTable data
+gData.treePanelData{1,1}='None';
+gData.treePanelData{1,2}='None';
+gData.treePanelData{1,3}='None';
+gData.treePanelData{1,4}=false;
+gData.treePanelData{1,5}=0;
+gData.treePanelHeader = {'','Instrument','Variable','Show','Slice'};
+gData.treePanelColumnTypes = {'','char','char','logical','integer'};
+gData.treePanelColumnEditable = {false, false, true, true};
+
+gData.jtable = createTreeTable(gData);
 setVisibilityCallback(hObject,true);
-guidata(hFig, fHandle);
+guidata(hFig, gData);
 
 % UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
 % uiwait(handles.figure1);
@@ -272,10 +275,10 @@ function import_Callback(hObject, eventdata, oldHandles)
 
 hFig=ancestor(hObject,'figure');
 
-fHandle=guidata(hFig);
+gData=guidata(hFig);
 setVisibilityCallback(hObject,false);
 
-theList=fHandle.theList;
+theList=gData.theList;
 
 iParse=menu('Choose instrument type',theList.name);
 if iParse < 1 % no instrument chosen
@@ -286,29 +289,29 @@ end
 % get parser for the filetype
 parser = str2func(theList.parser{iParse});
 
-filterSpec=fullfile(fHandle.oldPathname,strjoin(theList.wildcard{iParse},';'));
+filterSpec=fullfile(gData.oldPathname,strjoin(theList.wildcard{iParse},';'));
 
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
 %uiwait(handles.figure1);
-fHandle.oldPathname=PATHNAME;
+gData.oldPathname=PATHNAME;
 if isequal(FILENAME,0) || isequal(PATHNAME,0)
     disp('No file selected.');
 else
     if ischar(FILENAME)
         FILENAME = {FILENAME};
     end
-    if ~isfield(fHandle,'sample_data')
-        fHandle.sample_data={};
+    if ~isfield(gData,'sample_data')
+        gData.sample_data={};
     end
     iFailed=0;
     notLoaded=false;
     for ii=1:length(FILENAME)
         % skip any files the user has already imported
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), fHandle.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), gData.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
-                set(fHandle.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
+                set(gData.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
                 % adopt similar code layout as imos-toolbox importManager
@@ -316,57 +319,57 @@ else
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
                     tmpStruct = finaliseDataEasyplot(structs{1});
-                    fHandle.sample_data{end+1} = tmpStruct;
+                    gData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
                         tmpStruct = finaliseDataEasyplot(structs{k});
-                        fHandle.sample_data{end+1} = tmpStruct;
+                        gData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                     end
                 end
                 clear('structs');
-                set(fHandle.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
+                set(gData.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
                 drawnow;
             catch ME
                 astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
-                set(fHandle.progress,'String',astr);
+                set(gData.progress,'String',astr);
                 drawnow;
-                guidata(hFig, fHandle);
+                guidata(hFig, gData);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
             end
         else
             disp(['File ' char(FILENAME{ii}) ' already loaded.']);
-            set(fHandle.progress,'String',strcat({'Already loaded : '}, char(FILENAME{ii})));
+            set(gData.progress,'String',strcat({'Already loaded : '}, char(FILENAME{ii})));
             drawnow;
         end
     end
     
-    guidata(ancestor(hObject,'figure'), fHandle);
+    guidata(ancestor(hObject,'figure'), gData);
     
-    set(fHandle.listbox1,'String', getFilelistNames(fHandle.sample_data),'Value',1);
-    guidata(hFig, fHandle);
+    set(gData.listbox1,'String', getFilelistNames(gData.sample_data),'Value',1);
+    guidata(hFig, gData);
     
-    set(fHandle.progress,'String','Finished importing.');
-    guidata(hFig, fHandle);
+    set(gData.progress,'String','Finished importing.');
+    guidata(hFig, gData);
     drawnow;
     if numel(FILENAME)~=iFailed
-        plotVar=chooseVar(fHandle.sample_data);
+        plotVar=chooseVar(gData.sample_data);
         %guidata(hObject,handles);
-        fHandle.sample_data = markPlotVar(fHandle.sample_data, plotVar);
-        fHandle.treePanelData = generateTreeData(fHandle.sample_data);
-        guidata(ancestor(hObject,'figure'),fHandle);
+        gData.sample_data = markPlotVar(gData.sample_data, plotVar);
+        gData.treePanelData = generateTreeData(gData.sample_data);
+        guidata(ancestor(hObject,'figure'),gData);
         %         if isfield(handles,'jtable')
         %             %delete(handles.jtable);
         %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
         %         end
         
-        fHandle.jtable = createTreeTable(fHandle);
-        guidata(ancestor(hObject,'figure'), fHandle);
+        gData.jtable = createTreeTable(gData);
+        guidata(ancestor(hObject,'figure'), gData);
         %% trying to just change the table data and redraw
         % [data,headers] = getTableData(handles.jtable);
         %  setTableData(jtable,handles.treePanelData,headers);
@@ -407,16 +410,16 @@ else
         % jt.repaint;
         
         
-        guidata(ancestor(hObject,'figure'),fHandle);
+        guidata(ancestor(hObject,'figure'),gData);
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
         %set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
-        guidata(ancestor(hObject,'figure'), fHandle);
+        guidata(ancestor(hObject,'figure'), gData);
         plotData(hFig);
         warning(oldWarnState);
     end
 end
 setVisibilityCallback(hObject,true);
-guidata(hFig, fHandle);
+guidata(hFig, gData);
 
 end
 
@@ -586,15 +589,15 @@ function tableVisibilityCallback(hModel,hEvent, hObject)
 % prevent re-entry
 persistent hash;
 if isempty(hash)
-    hash = java.util.Hashtable; 
+    hash = java.util.Hashtable;
 end
 if ~isempty(hash.get(hObject))
-return;
+    return;
 end
 hash.put(hObject,1);
 
 if ishghandle(hObject)
-    fHandle=guidata(ancestor(hObject,'figure'));
+    gData=guidata(ancestor(hObject,'figure'));
 else
     disp('I am stuck in tableVisibilityCallback');
     return;
@@ -609,25 +612,25 @@ theVariable   = hModel.getValueAt(modifiedRow,2);
 plotTheVar = hModel.getValueAt(modifiedRow,3);
 iSlice = hModel.getValueAt(modifiedRow,4);
 
-for ii=1:numel(fHandle.sample_data) % loop over files
-    for jj=1:numel(fHandle.sample_data{ii}.variables)
-        if strcmp(fHandle.sample_data{ii}.meta.instrument_model, theModel) && ...
-                strcmp(fHandle.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
-                strcmp(fHandle.sample_data{ii}.variables{jj}.name, theVariable)
-            fHandle.sample_data{ii}.plotThisVar(jj) = plotTheVar;
-            if isvector(fHandle.sample_data{ii}.variables{jj}.data)
+for ii=1:numel(gData.sample_data) % loop over files
+    for jj=1:numel(gData.sample_data{ii}.variables)
+        if strcmp(gData.sample_data{ii}.meta.instrument_model, theModel) && ...
+                strcmp(gData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
+                strcmp(gData.sample_data{ii}.variables{jj}.name, theVariable)
+            gData.sample_data{ii}.plotThisVar(jj) = plotTheVar;
+            if isvector(gData.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,4);
-                fHandle.sample_data{ii}.variables{jj}.iSlice = 1;
+                gData.sample_data{ii}.variables{jj}.iSlice = 1;
             else
-                [d1,d2] = size(fHandle.sample_data{ii}.variables{jj}.data);
+                [d1,d2] = size(gData.sample_data{ii}.variables{jj}.data);
                 if iSlice<1
                     hModel.setValueAt(1,modifiedRow,4);
-                    fHandle.sample_data{ii}.variables{jj}.iSlice = 1;
+                    gData.sample_data{ii}.variables{jj}.iSlice = 1;
                 elseif iSlice>d2
                     hModel.setValueAt(d2,modifiedRow,4);
-                    fHandle.sample_data{ii}.variables{jj}.iSlice = d2;
+                    gData.sample_data{ii}.variables{jj}.iSlice = d2;
                 else
-                    fHandle.sample_data{ii}.variables{jj}.iSlice = iSlice;
+                    gData.sample_data{ii}.variables{jj}.iSlice = iSlice;
                 end
             end
         end
@@ -637,10 +640,10 @@ end
 % model.groupAndRefresh;
 % handles.jtable.repaint;
 
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 plotData(ancestor(hObject,'figure'));
 
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 
 % release rentrancy flag
 hash.remove(hObject);
@@ -690,13 +693,13 @@ function plotData(hObject)
 if isempty(hObject), return; end
 
 hFig = ancestor(hObject,'figure');
-fHandle=guidata(hFig);
+gData=guidata(hFig);
 
 if isempty(hFig), return; end
-if isempty(fHandle.sample_data), return; end
+if isempty(gData.sample_data), return; end
 
 figure(hFig); %make figure current
-hAx=fHandle.axes1;
+hAx=gData.axes1;
 
 %Create a string for legend
 %legendStr={'Plots'};
@@ -711,7 +714,7 @@ legend(hAx,'off');
 %     delete(handles.legend_h);
 % end
 %children = get(handles.axes1, 'Children');
-children = findobj(fHandle.axes1,'Type','line');
+children = findobj(gData.axes1,'Type','line');
 if ~isempty(children)
     delete(children);
 end
@@ -719,27 +722,27 @@ end
 varNames={};
 %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
-for ii=1:numel(fHandle.sample_data) % loop over files
-    for jj=1:numel(fHandle.sample_data{ii}.variables)
-        if strcmp(fHandle.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
+for ii=1:numel(gData.sample_data) % loop over files
+    for jj=1:numel(gData.sample_data{ii}.variables)
+        if strcmp(gData.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
             lineStyle='.';
         else
             lineStyle='-';
         end
-        if fHandle.sample_data{ii}.plotThisVar(jj)
-            idTime  = getVar(fHandle.sample_data{ii}.dimensions, 'TIME');
-            instStr=strcat(fHandle.sample_data{ii}.variables{jj}.name, '-',fHandle.sample_data{ii}.meta.instrument_model,'-',fHandle.sample_data{ii}.meta.instrument_serial_no);
+        if gData.sample_data{ii}.plotThisVar(jj)
+            idTime  = getVar(gData.sample_data{ii}.dimensions, 'TIME');
+            instStr=strcat(gData.sample_data{ii}.variables{jj}.name, '-',gData.sample_data{ii}.meta.instrument_model,'-',gData.sample_data{ii}.meta.instrument_serial_no);
             %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
-            [PATHSTR,NAME,EXT] = fileparts(fHandle.sample_data{ii}.toolbox_input_file);
+            [PATHSTR,NAME,EXT] = fileparts(gData.sample_data{ii}.toolbox_input_file);
             try
-                if isvector(fHandle.sample_data{ii}.variables{jj}.data)
-                    plot(hAx,fHandle.sample_data{ii}.dimensions{idTime}.data, ...
-                        fHandle.sample_data{ii}.variables{jj}.data, ...
+                if isvector(gData.sample_data{ii}.variables{jj}.data)
+                    plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
+                        gData.sample_data{ii}.variables{jj}.data, ...
                         lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
                 else
-                    iSlice = fHandle.sample_data{ii}.variables{jj}.iSlice;
-                    plot(hAx,fHandle.sample_data{ii}.dimensions{idTime}.data, ...
-                        fHandle.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+                    iSlice = gData.sample_data{ii}.variables{jj}.iSlice;
+                    plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
+                        gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
                         lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
                 end
                 %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
@@ -748,24 +751,24 @@ for ii=1:numel(fHandle.sample_data) % loop over files
             end
             hold(hAx,'on');
             legendStr{end+1}=strrep(instStr,'_','\_');
-            varNames{end+1}=fHandle.sample_data{ii}.variables{jj}.name;
-            set(fHandle.progress,'String',strcat('Plot : ', instStr));
-            guidata(ancestor(hObject,'figure'), fHandle);
+            varNames{end+1}=gData.sample_data{ii}.variables{jj}.name;
+            set(gData.progress,'String',strcat('Plot : ', instStr));
+            guidata(ancestor(hObject,'figure'), gData);
             %drawnow;
         end
     end
 end
 varNames=unique(varNames);
-dataLimits=findVarExtents(fHandle.sample_data);
-fHandle.xMin = dataLimits.xMin;
-fHandle.xMax = dataLimits.xMax;
-fHandle.yMin = dataLimits.yMin;
-fHandle.yMax = dataLimits.yMax;
-guidata(ancestor(hObject,'figure'), fHandle);
-if fHandle.firstPlot
-    set(hAx,'XLim',[fHandle.xMin fHandle.xMax]);
-    set(hAx,'YLim',[fHandle.yMin fHandle.yMax]);
-    fHandle.firstPlot=false;
+dataLimits=findVarExtents(gData.sample_data);
+gData.xMin = dataLimits.xMin;
+gData.xMax = dataLimits.xMax;
+gData.yMin = dataLimits.yMin;
+gData.yMax = dataLimits.yMax;
+guidata(ancestor(hObject,'figure'), gData);
+if gData.firstPlot
+    set(hAx,'XLim',[gData.xMin gData.xMax]);
+    set(hAx,'YLim',[gData.yMin gData.yMax]);
+    gData.firstPlot=false;
 end
 
 if isempty(varNames)
@@ -800,10 +803,10 @@ updateDateLabel(hFig,struct('Axes', hAx), true);
 
 legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
 %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 6)
-fHandle.legend_h=legend_h;
-set(fHandle.progress,'String','Done');
+gData.legend_h=legend_h;
+set(gData.progress,'String','Done');
 drawnow;
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 %drawnow;
 end
 
@@ -815,14 +818,14 @@ function saveImage_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-fHandle=guidata(ancestor(hObject,'figure'));
-if isfield(fHandle,'sample_data') && numel(fHandle.sample_data) > 0
+gData=guidata(ancestor(hObject,'figure'));
+if isfield(gData,'sample_data') && numel(gData.sample_data) > 0
     [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
     if isequal(FILENAME,0) || isequal(PATHNAME,0)
         disp('No file selected.');
     else
         %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
-        export_fig(fullfile(PATHNAME,FILENAME),'-png',fHandle.axes1);
+        export_fig(fullfile(PATHNAME,FILENAME),'-png',gData.axes1);
     end
     %uiresume(handles.figure1);
 end
@@ -837,38 +840,38 @@ function clearPlot_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to clearPlot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fHandle=guidata(ancestor(hObject,'figure'));
+gData=guidata(ancestor(hObject,'figure'));
 % clear plot
-if isfield(fHandle, 'sample_data')
-    children = get(fHandle.axes1, 'Children');
+if isfield(gData, 'sample_data')
+    children = get(gData.axes1, 'Children');
     delete(children);
-    legend(fHandle.axes1,'off')
-    fHandle.sample_data={};
+    legend(gData.axes1,'off')
+    gData.sample_data={};
     % how do I reset contents of handles.jtable?
     %     if isfield(handles,'jtable')
     %         %delete(handles.jtable);
     %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
     %     end
     
-    fHandle.treePanelData{1,1}='None';
-    fHandle.treePanelData{1,2}='None';
-    fHandle.treePanelData{1,3}='None';
-    fHandle.treePanelData{1,4}=false;
-    fHandle.treePanelData{1,5}=1;
+    gData.treePanelData{1,1}='None';
+    gData.treePanelData{1,2}='None';
+    gData.treePanelData{1,3}='None';
+    gData.treePanelData{1,4}=false;
+    gData.treePanelData{1,5}=1;
     %     model = handles.jtable.getModel.getActualModel;
     %     %model = getOriginalModel(jtable);
     %     model.groupAndRefresh;
     %     handles.jtable.repaint;
     
-    set(fHandle.listbox1,'String', '');
+    set(gData.listbox1,'String', '');
     
-    fHandle.firstPlot=true;
-    fHandle.xMin=NaN;
-    fHandle.xMax=NaN;
-    fHandle.yMin=NaN;
-    fHandle.yMax=NaN;
+    gData.firstPlot=true;
+    gData.xMin=NaN;
+    gData.xMax=NaN;
+    gData.yMin=NaN;
+    gData.yMax=NaN;
     
-    guidata(ancestor(hObject,'figure'), fHandle);
+    guidata(ancestor(hObject,'figure'), gData);
 end
 end
 
@@ -880,12 +883,12 @@ function exit_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to exit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fHandle=guidata(ancestor(hObject,'figure'));
-fHandle.ini.startDialog.dataDir=fHandle.oldPathname;
-struct2ini(fullfile(fHandle.EPdir,'easyplot.ini'),fHandle.ini);
+gData=guidata(ancestor(hObject,'figure'));
+gData.ini.startDialog.dataDir=gData.oldPathname;
+struct2ini(fullfile(gData.EPdir,'easyplot.ini'),gData.ini);
 
 %delete(handles.lisH);
-delete(fHandle.figure1);
+delete(gData.figure1);
 end
 
 
@@ -894,15 +897,15 @@ function replot_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fHandle=guidata(ancestor(hObject,'figure'));
+gData=guidata(ancestor(hObject,'figure'));
 setVisibilityCallback(hObject,false);
-if isfield(fHandle, 'sample_data')
+if isfield(gData, 'sample_data')
     
-    plotVar = chooseVar(fHandle.sample_data);
-    fHandle.sample_data = markPlotVar(fHandle.sample_data, plotVar);
+    plotVar = chooseVar(gData.sample_data);
+    gData.sample_data = markPlotVar(gData.sample_data, plotVar);
     
-    fHandle.treePanelData = generateTreeData(fHandle.sample_data);
-    guidata(ancestor(hObject,'figure'),fHandle);
+    gData.treePanelData = generateTreeData(gData.sample_data);
+    guidata(ancestor(hObject,'figure'),gData);
     
     %     %model = handles.jtable.getModel.getActualModel;
     %     model = getOriginalModel(handles.jtable);
@@ -914,12 +917,12 @@ if isfield(fHandle, 'sample_data')
     %         %delete(handles.jtable);
     %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
     %     end
-    fHandle.jtable = createTreeTable(fHandle);
-    guidata(ancestor(hObject,'figure'), fHandle);
+    gData.jtable = createTreeTable(gData);
+    guidata(ancestor(hObject,'figure'), gData);
     plotData(ancestor(hObject,'figure'));
 end
 setVisibilityCallback(hObject,true);
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 
 end
 
@@ -930,42 +933,42 @@ function listbox1_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-fHandle=guidata(ancestor(hObject,'figure'));
+gData=guidata(ancestor(hObject,'figure'));
 setVisibilityCallback(hObject,false);
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
-selectionType=get(fHandle.figure1,'SelectionType');
+selectionType=get(gData.figure1,'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
-    index_selected = get(fHandle.listbox1,'Value');
-    file_list = get(fHandle.listbox1,'String');
+    index_selected = get(gData.listbox1,'Value');
+    file_list = get(gData.listbox1,'String');
     % Item selected in list box
     filename = file_list{index_selected};
     
     buttonName = questdlg(['Remove file : ' filename], 'Remove file?', 'No');
     if strcmp(upper(buttonName),'YES')
-        if numel(fHandle.sample_data) == 1
+        if numel(gData.sample_data) == 1
             % removing last plot
-            clearPlot_Callback(hObject, eventdata, fHandle);
+            clearPlot_Callback(hObject, eventdata, gData);
         else
-            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), fHandle.sample_data, 'UniformOutput', false))));
-            fHandle.sample_data(iFile)=[];
-            guidata(ancestor(hObject,'figure'),fHandle);
-            set(fHandle.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
-            set(fHandle.listbox1,'String', getFilelistNames(fHandle.sample_data));
-            fHandle.treePanelData = generateTreeData(fHandle.sample_data);
-            guidata(ancestor(hObject,'figure'), fHandle);
+            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
+            gData.sample_data(iFile)=[];
+            guidata(ancestor(hObject,'figure'),gData);
+            set(gData.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
+            set(gData.listbox1,'String', getFilelistNames(gData.sample_data));
+            gData.treePanelData = generateTreeData(gData.sample_data);
+            guidata(ancestor(hObject,'figure'), gData);
             % surely I don't have to delete and recreate jtable
             
             %         if isfield(handles,'jtable')
             %             %delete(handles.jtable);
             %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
             %         end
-            fHandle.jtable = createTreeTable(fHandle);
+            gData.jtable = createTreeTable(gData);
             
-            fHandle.firstPlot=true;
-            guidata(ancestor(hObject,'figure'), fHandle);
+            gData.firstPlot=true;
+            guidata(ancestor(hObject,'figure'), gData);
             plotData(ancestor(hObject,'figure'));
             %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
             %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
@@ -977,20 +980,20 @@ if strcmp(selectionType,'open')
 end
 
 if strcmp(selectionType,'normal')
-    index_selected = get(fHandle.listbox1,'Value');
-    file_list = get(fHandle.listbox1,'String');
+    index_selected = get(gData.listbox1,'Value');
+    file_list = get(gData.listbox1,'String');
     % Item selected in list box
     filename = file_list{index_selected};
-    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), fHandle.sample_data, 'UniformOutput', false))));
-    idTime  = getVar(fHandle.sample_data{iFile}.dimensions, 'TIME');
-    newXLimits=[fHandle.sample_data{iFile}.dimensions{idTime}.data(1) fHandle.sample_data{iFile}.dimensions{idTime}.data(end)];
+    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
+    idTime  = getVar(gData.sample_data{iFile}.dimensions, 'TIME');
+    newXLimits=[gData.sample_data{iFile}.dimensions{idTime}.data(1) gData.sample_data{iFile}.dimensions{idTime}.data(end)];
     %xlim(handles.axes1, newXLimits);
-    zoom(fHandle.axes1,'reset');
-    set(fHandle.axes1,'XLim',newXLimits);
-    updateDateLabel(fHandle.figure1,struct('Axes', fHandle.axes1), true);
+    zoom(gData.axes1,'reset');
+    set(gData.axes1,'XLim',newXLimits);
+    updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
 end
 setVisibilityCallback(hObject,true);
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 
 end
 
@@ -1043,18 +1046,18 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomYextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fHandle=guidata(ancestor(hObject,'figure'));
-if isfield(fHandle,'sample_data')
-    dataLimits=findVarExtents(fHandle.sample_data);
-    fHandle.xMin = dataLimits.xMin;
-    fHandle.xMax = dataLimits.xMax;
-    fHandle.yMin = dataLimits.yMin;
-    fHandle.yMax = dataLimits.yMax;
-    if ~isnan(fHandle.yMin) || ~isnan(fHandle.yMax)
-        set(fHandle.axes1,'YLim',[fHandle.yMin fHandle.yMax]);
+gData=guidata(ancestor(hObject,'figure'));
+if isfield(gData,'sample_data')
+    dataLimits=findVarExtents(gData.sample_data);
+    gData.xMin = dataLimits.xMin;
+    gData.xMax = dataLimits.xMax;
+    gData.yMin = dataLimits.yMin;
+    gData.yMax = dataLimits.yMax;
+    if ~isnan(gData.yMin) || ~isnan(gData.yMax)
+        set(gData.axes1,'YLim',[gData.yMin gData.yMax]);
     end
-    guidata(ancestor(hObject,'figure'), fHandle);
-    updateDateLabel(fHandle.figure1,struct('Axes', fHandle.axes1), true);
+    guidata(ancestor(hObject,'figure'), gData);
+    updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
 end
 end
 
@@ -1065,18 +1068,18 @@ function zoomXextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomXextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fHandle=guidata(ancestor(hObject,'figure'));
-if isfield(fHandle,'sample_data')
-    dataLimits=findVarExtents(fHandle.sample_data);
-    fHandle.xMin = dataLimits.xMin;
-    fHandle.xMax = dataLimits.xMax;
-    fHandle.yMin = dataLimits.yMin;
-    fHandle.yMax = dataLimits.yMax;
-    if ~isnan(fHandle.xMin) || ~isnan(fHandle.xMax)
-        set(fHandle.axes1,'XLim',[fHandle.xMin fHandle.xMax]);
+gData=guidata(ancestor(hObject,'figure'));
+if isfield(gData,'sample_data')
+    dataLimits=findVarExtents(gData.sample_data);
+    gData.xMin = dataLimits.xMin;
+    gData.xMax = dataLimits.xMax;
+    gData.yMin = dataLimits.yMin;
+    gData.yMax = dataLimits.yMax;
+    if ~isnan(gData.xMin) || ~isnan(gData.xMax)
+        set(gData.axes1,'XLim',[gData.xMin gData.xMax]);
     end
-    guidata(ancestor(hObject,'figure'), fHandle);
-    updateDateLabel(fHandle.figure1,struct('Axes', fHandle.axes1), true);
+    guidata(ancestor(hObject,'figure'), gData);
+    updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
 end
 end
 
@@ -1158,8 +1161,8 @@ elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
         %disp('updateDateLabel callback')
         axH = eventData.Axes; % On which axes has the zoom/pan occurred
-        handles=guidata(source);
-        axesInfo = handles.axesInfo;
+        gData=guidata(source);
+        axesInfo = gData.axesInfo;
         keepLimits=true;
         %set(source,'Interruptible','off');
     catch
@@ -1169,9 +1172,9 @@ elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     end
 else %called as a listener XLim event
     %disp('updateDateLabel listener');
-    handles=guidata(get(eventData.AffectedObject,'Parent'));
-    axesInfo = handles.axesInfo;
-    axH = handle(handles.axes1);
+    gData=guidata(get(eventData.AffectedObject,'Parent'));
+    axesInfo = gData.axesInfo;
+    axH = handle(gData.axes1);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
@@ -1288,30 +1291,30 @@ end % function getData
 function setVisibilityCallback(hObject,toggle)
 
 hFig=ancestor(hObject,'figure');
-fHandle=guidata(hFig);
-if ~isempty(fHandle)
-    if isfield(fHandle,'jtable')
+gData=guidata(hFig);
+if ~isempty(gData)
+    if isfield(gData,'jtable')
         if toggle
             %disp('Turning ON tableVisibilityCallback');
-            set(handle(getOriginalModel(fHandle.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+            set(handle(getOriginalModel(gData.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
         else
             %disp('Turning OFF tableVisibilityCallback');
-            set(handle(getOriginalModel(fHandle.jtable),'CallbackProperties'), 'TableChangedCallback', []);
+            set(handle(getOriginalModel(gData.jtable),'CallbackProperties'), 'TableChangedCallback', []);
         end
     end
 end
-guidata(ancestor(hObject,'figure'), fHandle);
+guidata(ancestor(hObject,'figure'), gData);
 
 end
 
 %%
-function jtable = createTreeTable(fHandle)
+function jtable = createTreeTable(gData)
 
-jtable = treeTable(fHandle.treePanel, ...
-    fHandle.treePanelHeader,...
-    fHandle.treePanelData,...
-    'ColumnTypes',fHandle.treePanelColumnTypes,...
-    'ColumnEditable',fHandle.treePanelColumnEditable);
+jtable = treeTable(gData.treePanel, ...
+    gData.treePanelHeader,...
+    gData.treePanelData,...
+    'ColumnTypes',gData.treePanelColumnTypes,...
+    'ColumnEditable',gData.treePanelColumnEditable);
 
 % Make 'Visible' column width small as practible
 jtable.getColumnModel.getColumn(2).setMaxWidth(45);
@@ -1323,4 +1326,134 @@ renderer = jtable.getColumnModel.getColumn(1).getCellRenderer;
 renderer.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
 jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
 
+end
+
+%%
+function mouseDownListener(hObject,eventdata); %hObject, eventdata
+
+% set re-entrancy flag
+persistent hash;
+if isempty(hash)
+    hash = java.util.Hashtable;
+end
+if ~isempty(hash.get(hObject))
+    return;
+end
+hash.put(hObject,1);
+
+%     switch lower(selType)
+%         case 'normal'
+%             disp('Left Click');
+%         case 'extend'
+%             disp('Shift - click left mouse button or click both left and right mouse buttons');
+%         case 'alt'
+%             disp('Control - click left mouse button or click right mouse button.');
+%         case 'open'
+%             disp('Double-click any mouse button')
+%         otherwise
+%             disp(selType)
+%     end %switch
+
+switch lower(get(hObject, 'SelectionType'))
+    case 'extend'
+        printInfo(hObject, eventdata);
+end
+
+% release rentrancy flag
+hash.remove(hObject);
+
+end
+
+%%
+function printInfo(hObject, eventdata)
+
+figH=ancestor(hObject,'figure');
+gData=guidata(figH);
+axH = gData.axes1;
+
+% is the current pointer within the bounds of the axes?
+if localInBounds(axH)
+    
+    %     % gets the old figure units
+    %     oldUnits = get(figH, 'Units');
+    %     % sets them to pixels
+    %     set(figH, 'Units', 'pixels')
+    %     % gets the current position of the cursor
+    %     currentPosition = get(hObject, 'CurrentPoint');
+    %     % changes the units back
+    %     set(hObject, 'Units', oldUnits)
+    %     % gets the axes x limits, and y limits
+    %     axesData = cell2mat(get(axH, {  'XLim', 'YLim'}));
+    %     %axesPositions = getposition(axH, 'pixels');
+    %     axesPositions = getpos(axH, 'px');
+    
+    listData=cell(0,4);
+    currentPosition = get(axH, 'CurrentPoint');
+    gData=guidata(ancestor(hObject,'figure'));
+    
+    for ii=1:numel(gData.sample_data) % loop over files
+        for jj=1:numel(gData.sample_data{ii}.variables)
+            if gData.sample_data{ii}.plotThisVar(jj)
+                idTime  = getVar(gData.sample_data{ii}.dimensions, 'TIME');
+                tData=gData.sample_data{ii}.dimensions{idTime}.data;
+                [index,distance]=near(tData,currentPosition(1),1);
+                listData(end+1,:)={gData.sample_data{ii}.variables{jj}.name,...
+                    strcat(gData.sample_data{ii}.meta.instrument_model,'-',gData.sample_data{ii}.meta.instrument_serial_no),...
+                    datestr(tData(index),'yyyy-mm-dd HH:MM:SS.FFF'),...
+                    gData.sample_data{ii}.variables{jj}.data(index)};
+            end
+        end
+    end
+    
+    tableFig = figure('Position',[200 200 800 150],'Interruptible','off');
+    columnname =   {'Variable', 'Instrument', 'Date', 'Value'};
+    columnformat = {'char', 'char', 'char', 'numeric'};
+    columneditable =  [false false false false];
+    mtable = uitable('Units','normalized','Position',...
+        [0.1 0.1 0.9 0.9], 'Data', listData,...
+        'ColumnName', columnname,...
+        'ColumnFormat', columnformat,...
+        'ColumnEditable', columneditable,...
+        'RowName',[],...
+        'ColumnWidth','auto');
+
+    jscrollpane = findjobj(mtable);
+    jtable = jscrollpane.getViewport.getView;
+    % Now turn the JIDE sorting on
+    jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
+    jtable.setAutoResort(true);
+    jtable.setMultiColumnSortable(false);
+    jtable.setPreserveSelectionsAfterSorting(true);
+    jtable.setColumnAutoResizable(true);
+    
+    %waitfor(tableFig);
+    uiwait(tableFig);
+    
+end
+
+end
+
+%%
+% from datacursormode
+function targetInBounds = localInBounds(hAxes)
+%Check if the user clicked within the bounds of the axes. If not, do
+%nothing.
+targetInBounds = true;
+tol = 3e-16;
+cp = get(hAxes,'CurrentPoint');
+XLims = get(hAxes,'XLim');
+if ((cp(1,1) - min(XLims)) < -tol || (cp(1,1) - max(XLims)) > tol) && ...
+        ((cp(2,1) - min(XLims)) < -tol || (cp(2,1) - max(XLims)) > tol)
+    targetInBounds = false;
+end
+YLims = get(hAxes,'YLim');
+if ((cp(1,2) - min(YLims)) < -tol || (cp(1,2) - max(YLims)) > tol) && ...
+        ((cp(2,2) - min(YLims)) < -tol || (cp(2,2) - max(YLims)) > tol)
+    targetInBounds = false;
+end
+ZLims = get(hAxes,'ZLim');
+if ((cp(1,3) - min(ZLims)) < -tol || (cp(1,3) - max(ZLims)) > tol) && ...
+        ((cp(2,3) - min(ZLims)) < -tol || (cp(2,3) - max(ZLims)) > tol)
+    targetInBounds = false;
+end
 end
