@@ -232,7 +232,7 @@ xlabel(gData.axes1,'Time (UTC)');
 dcm_h = datacursormode(gData.figure1);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-%
+% callback for mouse click on plot
 set(hFig,'WindowButtonDownFcn', @mouseDownListener);
 
 % Dummy treeTable data
@@ -284,7 +284,6 @@ iParse=menu('Choose instrument type',theList.name);
 if iParse < 1 % no instrument chosen
     return;
 end
-
 
 % get parser for the filetype
 parser = str2func(theList.parser{iParse});
@@ -458,7 +457,6 @@ for kk=1:numel(sam.variables)
     if ~isEmptyDim && isData
         sam.isPlottableVar(kk) = true;
         sam.plotThisVar(kk) = false;
-        sam.variables{kk}.plotThisVar=false;
     end
 end
 
@@ -534,7 +532,6 @@ for ii=1:numel(sample_data)
     sample_data{ii}.plotThisVar = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
     for jj=1:numel(sample_data{ii}.variables)
         if sample_data{ii}.plotThisVar(jj)
-            sample_data{ii}.variables{jj}.plotThisVar=true;
             sample_data{ii}.variables{jj}.iSlice=1;
             if ~isvector(sample_data{ii}.variables{jj}.data)
                 [d1,d2] = size(sample_data{ii}.variables{jj}.data);
@@ -543,7 +540,6 @@ for ii=1:numel(sample_data)
                 sample_data{ii}.variables{jj}.maxSlice=d2;
             end
         else
-            sample_data{ii}.variables{jj}.plotThisVar=false;
             sample_data{ii}.variables{jj}.iSlice=1;
             sample_data{ii}.variables{jj}.minSlice=1;
             sample_data{ii}.variables{jj}.maxSlice=1;
@@ -725,27 +721,38 @@ varNames={};
 for ii=1:numel(gData.sample_data) % loop over files
     for jj=1:numel(gData.sample_data{ii}.variables)
         if strcmp(gData.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
-            lineStyle='.';
+            lineStyle='none';
+            markerStyle='.';
         else
             lineStyle='-';
+            markerStyle='none';
         end
         if gData.sample_data{ii}.plotThisVar(jj)
             idTime  = getVar(gData.sample_data{ii}.dimensions, 'TIME');
             instStr=strcat(gData.sample_data{ii}.variables{jj}.name, '-',gData.sample_data{ii}.meta.instrument_model,'-',gData.sample_data{ii}.meta.instrument_serial_no);
             %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
-            [PATHSTR,NAME,EXT] = fileparts(gData.sample_data{ii}.toolbox_input_file);
+            %[PATHSTR,NAME,EXT] = fileparts(gData.sample_data{ii}.toolbox_input_file);
+            tagStr = [gData.sample_data{ii}.inputFile gData.sample_data{ii}.inputFileExt];
             try
                 if isvector(gData.sample_data{ii}.variables{jj}.data)
-                    plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
-                        gData.sample_data{ii}.variables{jj}.data, ...
-                        lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
+                    % plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
+                    % gData.sample_data{ii}.variables{jj}.data, ...
+                    % lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
+                    line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data, ...
+                        'YData',gData.sample_data{ii}.variables{jj}.data, ...
+                        'LineStyle',lineStyle, 'Marker', markerStyle,...
+                        'DisplayName', instStr, 'Tag', tagStr);
                 else
                     iSlice = gData.sample_data{ii}.variables{jj}.iSlice;
-                    plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
-                        gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
-                        lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
+                    % plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
+                    % gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+                    % lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
+                    line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data, ...
+                        'YData',gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+                        'LineStyle',lineStyle, 'Marker', markerStyle,...
+                        'DisplayName', instStr, 'Tag', tagStr);
+                    
                 end
-                %line(handles.sample_data{ii}.dimensions{idTime}.data, handles.sample_data{ii}.variables{jj}.data,'DisplayName',instStr);
             catch
                 error('PLOTDATA: plot failed.');
             end
@@ -1099,10 +1106,6 @@ else
     dataLimits.xMax = NaN;
     dataLimits.yMin = NaN;
     dataLimits.yMax = NaN;
-    %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), sample_data,'UniformOutput',false);
-    % for ii=1:numel(allVarInd) % loop over files
-    %     varInd=allVarInd{ii};
-    %     for jj=1:numel(varInd)
     for ii=1:numel(sample_data) % loop over files
         for jj=1:numel(sample_data{ii}.variables)
             if sample_data{ii}.plotThisVar(jj)
@@ -1125,11 +1128,6 @@ else
         dataLimits.yMax=dataLimits.yMax*1.05;
         dataLimits.yMin=dataLimits.yMin*0.95;
     end
-    %     if dataLimits.xMax-dataLimits.xMin < eps
-    %         dataLimits.xMin = floor(now);
-    %         dataLimits.xMax = floor(now)+1;
-    %     end
-    % paranoid now
     if ~isfinite(dataLimits.xMin) dataLimits.xMin=floor(now); end
     if ~isfinite(dataLimits.xMax) dataLimits.xMax=floor(now)+1; end
     if ~isfinite(dataLimits.yMin) dataLimits.yMin=0; end
@@ -1410,27 +1408,33 @@ if localInBounds(axH)
     
     tableFig = figure('Position',[200 200 800 150],'Interruptible','off');
     columnname =   {'Variable', 'Instrument', 'Date', 'Value'};
-    columnformat = {'char', 'char', 'char', 'numeric'};
-    columneditable =  [false false false false];
-    mtable = uitable('Parent', tableFig,...
-        'Units', 'normalized', 'Position', [0.1 0.1 0.9 0.9],...
-        'Data', listData,...
-        'ColumnName', columnname,...
-        'ColumnFormat', columnformat,...
-        'ColumnEditable', columneditable,...
-        'RowName',[],...
-        'ColumnWidth','auto');
-
-    jscrollpane = findjobj(mtable);
-    jtable = jscrollpane.getViewport.getView;
-    % Now turn the JIDE sorting on
-    jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
-    jtable.setAutoResort(true);
-    jtable.setMultiColumnSortable(false);
-    jtable.setPreserveSelectionsAfterSorting(true);
-    jtable.setColumnAutoResizable(true);
+    %     columnformat = {'char', 'char', 'char', 'numeric'};
+    %     columneditable =  [false false false false];
+    %% could not get uitable to correctly set auto column width
+    %     mtable = uitable('Parent', tableFig,...
+    %         'Units', 'normalized', 'Position', [0.1 0.1 0.9 0.9],...
+    %         'Data', listData,...
+    %         'ColumnName', columnname,...
+    %         'ColumnFormat', columnformat,...
+    %         'ColumnEditable', columneditable,...
+    %         'RowName',[],...
+    %         'ColumnWidth','auto');
+    %     jscrollpane = findjobj(mtable);
+    %     jtable = jscrollpane.getViewport.getView;
+    %     % Now turn the JIDE sorting on
+    %     jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
+    %     jtable.setAutoResort(true);
+    %     jtable.setMultiColumnSortable(false);
+    %     jtable.setPreserveSelectionsAfterSorting(true);
+    %     jtable.setColumnAutoResizable(true);
+    %     hButton = uicontrol('Parent', tableFig,...
+    %         'Units', 'normalized', 'Position',[0.45 0.05 0.2 0.1],...
+    %         'String','Continue',...
+    %         'Callback','uiresume(gcbf)');
     
-    %waitfor(tableFig);
+    
+    mtable = createTable('Container',tableFig,'Data',listData, 'Headers',columnname, 'Buttons','off');
+    
     uiwait(tableFig);
     
 end
