@@ -809,7 +809,50 @@ end
 updateDateLabel(hFig,struct('Axes', hAx), true);
 
 legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
-%[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 6)
+%[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 8);
+
+% make the legend lines a little thicker
+% hh=get(legend_h,'children');
+% ii=arrayfun(@(x) ~isempty(get(x,'Tag')), hh);
+% set(hh(ii),'linewidth',2);
+% % resize legend line lengths
+% XData = cell2mat(get(hh(ii), 'XData'));
+% XScale = XData(:,2) - XData(:,1) ;
+% XData(:,1) = XData(:,2) - XScale(:) / 2 ; % half location
+% kk=1;
+% for jj=find(ii)
+% set(hh(jj), 'XData', XData(kk,:)) ;
+% kk=kk+1;
+% end
+% % leg_pos = get(legend_h,'position') ;
+% % set(legend_h,'position',[leg_pos(1)+( (XData(1,2) - XScale(1)) / 2),...
+% %     leg_pos(2),...
+% %     leg_pos(3)*0.8,...
+% %     leg_pos(4)]) ;
+                
+legChildren = get(legend_h,'Children');
+% make legend lines a little thicker
+ii=arrayfun(@(x) ~isempty(get(x,'Tag')), legChildren);
+set(legChildren(ii),'linewidth',2);
+nLegends = length(legChildren);
+allMarkers = legChildren(1:3:nLegends);
+allLines = legChildren(2:3:nLegends);
+allText = legChildren(3:3:nLegends);
+% Readjusting the lines
+for ii = 1:length(allLines)
+        xcor = get(allLines(ii),'xdata');
+        leftshift = (xcor(2)-xcor(1))/2;
+        set(allLines(ii),'xdata',[xcor(1) xcor(1)+(xcor(2)-xcor(1))/2]);
+end
+% Readjusting the text
+for ii = 1:length(allText)
+    pos = get(allText(ii),'Position');
+    set(allText(ii),'Position',[pos(1)-leftshift pos(2)]);
+end
+% Change the Position Property
+posleg = get(legend_h,'Position');
+set(legend_h,'Position',[posleg(1) posleg(2) posleg(3)-leftshift posleg(4)]);
+
 gData.legend_h=legend_h;
 set(gData.progress,'String','Done');
 drawnow;
