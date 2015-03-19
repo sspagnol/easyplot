@@ -175,6 +175,7 @@ time = getVar(dimensions, 'TIME');
 if time ~= 0
     [mtime,timezone]=cdfdate2num(dimensions{time}.units,'julian',dimensions{time}.data);
     dimensions{time}.data = mtime;
+    dimensions{time}.units = 'days since 0000-01-01 00:00:00 UTC';
 end
 
 % fill out the resulting struct

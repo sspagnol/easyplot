@@ -313,7 +313,7 @@ else
     notLoaded=false;
     for ii=1:length(FILENAME)
         % skip any files the user has already imported
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, char(FILENAME{ii}))), gData.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, char(FILENAME{ii}))), gData.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
                 set(gData.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
@@ -461,11 +461,13 @@ if isfield(sam,'toolbox_input_file')
     sam.inputFilePath = PATHSTR;
     sam.inputFile = NAME;
     sam.inputFileExt = EXT;
+    sam.easyplot_input_file = sam.toolbox_input_file;
 else
     [PATHSTR,NAME,EXT] = fileparts(fileName);
     sam.inputFilePath = PATHSTR;
     sam.inputFile = NAME;
     sam.inputFileExt = EXT;
+    sam.easyplot_input_file = fileName;
 end
 
 sam.isPlottableVar = false(1,numel(sam.variables));
@@ -623,6 +625,9 @@ modifiedRow = get(hEvent,'FirstRow');
 modifiedCol = get(hEvent,'Column');
 theModel   = hModel.getValueAt(modifiedRow,0);
 theSerial   = hModel.getValueAt(modifiedRow,1);
+if isempty(theSerial)
+    theSerial = '';
+end
 theVariable   = hModel.getValueAt(modifiedRow,2);
 plotTheVar = hModel.getValueAt(modifiedRow,3);
 iSlice = hModel.getValueAt(modifiedRow,4);
@@ -853,8 +858,13 @@ if ~isempty(legend_h)
         set(allText(ii),'Position',[pos(1)-leftshift pos(2)]);
     end
     % Change the Position Property
-    posleg = get(legend_h,'Position');
-    set(legend_h,'Position',[posleg(1) posleg(2) posleg(3)-leftshift posleg(4)]);
+    % need better logic to make the legend box fix the new extents
+    % posleg = get(legend_h,'Position');
+    % newposleg3 = posleg(3)-leftshift;
+    % if newposleg3 < 0
+    %         leftshift = 0.0;
+    % end;
+    % set(legend_h,'Position',[posleg(1) posleg(2) posleg(3)-leftshift posleg(4)]);
     
     gData.legend_h=legend_h;
 end
@@ -952,7 +962,7 @@ function replot_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 gData=guidata(ancestor(hObject,'figure'));
-setVisibilityCallback(hObject,false);
+%setVisibilityCallback(hObject,false);
 if isfield(gData, 'sample_data')
     
     plotVar = chooseVar(gData.sample_data);
@@ -975,7 +985,7 @@ if isfield(gData, 'sample_data')
     guidata(ancestor(hObject,'figure'), gData);
     plotData(ancestor(hObject,'figure'));
 end
-setVisibilityCallback(hObject,true);
+%setVisibilityCallback(hObject,true);
 guidata(ancestor(hObject,'figure'), gData);
 
 end
@@ -988,7 +998,7 @@ function listbox1_Callback(hObject, eventdata, oldHandles)
 % handles    structure with handles and user data (see GUIDATA)
 
 gData=guidata(ancestor(hObject,'figure'));
-setVisibilityCallback(hObject,false);
+%setVisibilityCallback(hObject,false);
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
@@ -1006,7 +1016,7 @@ if strcmp(selectionType,'open')
             % removing last plot
             clearPlot_Callback(hObject, eventdata, gData);
         else
-            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
+            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
             gData.sample_data(iFile)=[];
             guidata(ancestor(hObject,'figure'),gData);
             set(gData.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
@@ -1038,7 +1048,7 @@ if strcmp(selectionType,'normal')
     file_list = get(gData.listbox1,'String');
     % Item selected in list box
     filename = file_list{index_selected};
-    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
+    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), gData.sample_data, 'UniformOutput', false))));
     idTime  = getVar(gData.sample_data{iFile}.dimensions, 'TIME');
     newXLimits=[gData.sample_data{iFile}.dimensions{idTime}.data(1) gData.sample_data{iFile}.dimensions{idTime}.data(end)];
     %xlim(handles.axes1, newXLimits);
@@ -1046,7 +1056,7 @@ if strcmp(selectionType,'normal')
     set(gData.axes1,'XLim',newXLimits);
     updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
 end
-setVisibilityCallback(hObject,true);
+%setVisibilityCallback(hObject,true);
 guidata(ancestor(hObject,'figure'), gData);
 
 end
@@ -1511,81 +1521,4 @@ if ((cp(1,3) - min(ZLims)) < -tol || (cp(1,3) - max(ZLims)) > tol) && ...
         ((cp(2,3) - min(ZLims)) < -tol || (cp(2,3) - max(ZLims)) > tol)
     targetInBounds = false;
 end
-end
-
-%%
-function [time,timezone]=cdfdate2num(units,calendar,time)
-% Convert netcdf times to datenums
-%
-% USAGE: time = cdfdate2num(units,calendar,time)
-%
-% Warning: strange calendars like 360_day are simply stretched by 365.24237/360
-% This means datevec will no longer return the right hour and minutes etc.
-%
-%
-%
-% Example:
-%  [time,timezone]= cdfdate2num('hours since 1856-01-03 -07:00 UTC','julian',5)
-%  datestr(time)
-%  datestr(time+timezone)
-%
-% Here the -07:00 UTC is returned in timezone. timezone is also 
-%
-% Aslak Grinsted 2013
-
-
-%inspired by reference: http://netcdf4-python.googlecode.com/svn/trunk/docs/netcdftime.netcdftime-pysrc.html#utime.num2date
-% units=n.vars.time.atts.units.value;
-% calendar=n.vars.time.atts.calendar.value;
-
-%pat='(?<resolution>\w+)\s+since\s+(?<offsetdate>\d+-\d+-\d+)\s*(?<offsethoursign>[-+\s]*)(?<offsethour>[\d:]+)';
-pat='(?<resolution>\w+)\s+since\s+(?<yyyy>\d+)-(?<mm>\d+)-(?<dd>\d+)(?<hours>[\s\d:-+]*)';
-units=regexpi(units,pat,'names','once');
-
-if isempty(units)
-    error('Unknown time units.')
-end
-
-switch lower(units.resolution)
-    case 'days'
-    case 'hours'
-        time=time/24;
-    case 'minutes'
-        time=time/(24*60);
-    case 'seconds'
-        time=time/(24*60*60);
-    otherwise
-        error('unsupported units');
-end
-yyyy=str2double(units.yyyy);
-mm=str2double(units.mm);
-dd=str2double(units.dd);
-offset=datenum(yyyy,mm,dd);
-
-hhmmss=[0 0 0];
-units.hours=deblank(units.hours);
-if ~isempty(units.hours)
-    hhmmss=str2double(regexp(units.hours,'-?\d+','match'))
-    hhmmss(2:end)=hhmmss(2:end)*sign(hhmmss(1));
-    if length(hhmmss)<3,hhmmss(3)=0;end;
-end    
-timezone=datenum(0,0,0,hhmmss(1),hhmmss(2),hhmmss(3));
-
-
-
-
-yearlen=365.24237;
-switch lower(calendar)
-    case {'julian','standard','gregorian','proleptic_gregorian'}
-        time=offset+time;
-    case {'noleap','365_day'}
-        time=offset+time*yearlen/365;
-    case {'all_leap','366_day'}
-        time=offset+time*yearlen/366;
-    case '360_day'
-        time=offset+time*yearlen/360;
-    otherwise
-        error('unsupported calendar');
-end
-
 end
