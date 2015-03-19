@@ -101,10 +101,16 @@ theList.message{ii}='Choose Citadel CTD csv files:';
 theList.parser{ii}='citadelParse';
 
 ii=ii+1;
-theList.name{ii}='Netcdf (nc)';
+theList.name{ii}='Netcdf IMOS toolbox (nc)';
 theList.wildcard{ii}={'*.nc'};
 theList.message{ii}='Choose Netcdf *.nc files:';
 theList.parser{ii}='netcdfParse';
+
+ii=ii+1;
+theList.name{ii}='Netcdf Other (nc)';
+theList.wildcard{ii}={'*.nc'};
+theList.message{ii}='Choose Netcdf *.nc files:';
+theList.parser{ii}='netcdfOtherParse';
 
 ii=ii+1;
 theList.name{ii}='Nortek AWAC (wpr,wpb)';
@@ -317,14 +323,14 @@ else
                 structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
-                    tmpStruct = finaliseDataEasyplot(structs{1});
+                    tmpStruct = finaliseDataEasyplot(structs{1},fullfile(PATHNAME,FILENAME{ii}));
                     gData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
-                        tmpStruct = finaliseDataEasyplot(structs{k});
+                        tmpStruct = finaliseDataEasyplot(structs{k},fullfile(PATHNAME,FILENAME{ii}));
                         gData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                     end
@@ -423,7 +429,7 @@ guidata(hFig, gData);
 end
 
 %%
-function sam = finaliseDataEasyplot(sam)
+function sam = finaliseDataEasyplot(sam,fileName)
 %FINALISEDATA Adds new TIMEDIFF var
 %
 % Inputs:
@@ -432,7 +438,13 @@ function sam = finaliseDataEasyplot(sam)
 % Outputs:
 %   sample_data - same as input, with fields added/modified
 
+% make all dimension names upper case
+for ii=1:numel(sam.dimensions)
+sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);
+end
+
 idTime  = getVar(sam.dimensions, 'TIME');
+
 tmpStruct = struct();
 tmpStruct.dimensions = idTime;
 tmpStruct.name = 'TIMEDIFF';
@@ -444,10 +456,17 @@ tmpStruct.typeCastFunc = sam.dimensions{idTime}.typeCastFunc;
 sam.variables{end+1} = tmpStruct;
 clear('tmpStruct');
 
-[PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
-sam.inputFilePath = PATHSTR;
-sam.inputFile = NAME;
-sam.inputFileExt = EXT;
+if isfield(sam,'toolbox_input_file')
+    [PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
+    sam.inputFilePath = PATHSTR;
+    sam.inputFile = NAME;
+    sam.inputFileExt = EXT;
+else
+    [PATHSTR,NAME,EXT] = fileparts(fileName);
+    sam.inputFilePath = PATHSTR;
+    sam.inputFile = NAME;
+    sam.inputFileExt = EXT;
+end
 
 sam.isPlottableVar = false(1,numel(sam.variables));
 sam.plotThisVar = false(1,numel(sam.variables));
@@ -809,51 +828,36 @@ end
 updateDateLabel(hFig,struct('Axes', hAx), true);
 
 legend_h=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
-%[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 8);
-
-% make the legend lines a little thicker
-% hh=get(legend_h,'children');
-% ii=arrayfun(@(x) ~isempty(get(x,'Tag')), hh);
-% set(hh(ii),'linewidth',2);
-% % resize legend line lengths
-% XData = cell2mat(get(hh(ii), 'XData'));
-% XScale = XData(:,2) - XData(:,1) ;
-% XData(:,1) = XData(:,2) - XScale(:) / 2 ; % half location
-% kk=1;
-% for jj=find(ii)
-% set(hh(jj), 'XData', XData(kk,:)) ;
-% kk=kk+1;
-% end
-% % leg_pos = get(legend_h,'position') ;
-% % set(legend_h,'position',[leg_pos(1)+( (XData(1,2) - XScale(1)) / 2),...
-% %     leg_pos(2),...
-% %     leg_pos(3)*0.8,...
-% %     leg_pos(4)]) ;
-                
-legChildren = get(legend_h,'Children');
-% make legend lines a little thicker
-ii=arrayfun(@(x) ~isempty(get(x,'Tag')), legChildren);
-set(legChildren(ii),'linewidth',2);
-nLegends = length(legChildren);
-allMarkers = legChildren(1:3:nLegends);
-allLines = legChildren(2:3:nLegends);
-allText = legChildren(3:3:nLegends);
-% Readjusting the lines
-for ii = 1:length(allLines)
-        xcor = get(allLines(ii),'xdata');
+if ~isempty(legend_h)
+    % had issues with legendflex
+    %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'xscale', 0.5, 'FontSize', 8);
+    
+    legChildren = get(legend_h,'Children');
+    % % make legend lines a little thicker
+    %ii=arrayfun(@(x) ~isempty(get(x,'Tag')), legChildren);
+    %set(legChildren(ii),'linewidth',2);
+    nLegends = length(legChildren);
+    allMarkers = legChildren(1:3:nLegends);
+    allLines = legChildren(2:3:nLegends);
+    allText = legChildren(3:3:nLegends);
+    % Readjusting the lines
+    for ii = 1:length(allLines)
+        xcor = get(allLines(ii),'XData');
         leftshift = (xcor(2)-xcor(1))/2;
-        set(allLines(ii),'xdata',[xcor(1) xcor(1)+(xcor(2)-xcor(1))/2]);
+        set(allLines(ii),'XData',[xcor(1) xcor(1)+(xcor(2)-xcor(1))/2]);
+        set(allLines(ii),'Linewidth',2);
+    end
+    % Readjusting the text
+    for ii = 1:length(allText)
+        pos = get(allText(ii),'Position');
+        set(allText(ii),'Position',[pos(1)-leftshift pos(2)]);
+    end
+    % Change the Position Property
+    posleg = get(legend_h,'Position');
+    set(legend_h,'Position',[posleg(1) posleg(2) posleg(3)-leftshift posleg(4)]);
+    
+    gData.legend_h=legend_h;
 end
-% Readjusting the text
-for ii = 1:length(allText)
-    pos = get(allText(ii),'Position');
-    set(allText(ii),'Position',[pos(1)-leftshift pos(2)]);
-end
-% Change the Position Property
-posleg = get(legend_h,'Position');
-set(legend_h,'Position',[posleg(1) posleg(2) posleg(3)-leftshift posleg(4)]);
-
-gData.legend_h=legend_h;
 set(gData.progress,'String','Done');
 drawnow;
 guidata(ancestor(hObject,'figure'), gData);
@@ -1507,4 +1511,81 @@ if ((cp(1,3) - min(ZLims)) < -tol || (cp(1,3) - max(ZLims)) > tol) && ...
         ((cp(2,3) - min(ZLims)) < -tol || (cp(2,3) - max(ZLims)) > tol)
     targetInBounds = false;
 end
+end
+
+%%
+function [time,timezone]=cdfdate2num(units,calendar,time)
+% Convert netcdf times to datenums
+%
+% USAGE: time = cdfdate2num(units,calendar,time)
+%
+% Warning: strange calendars like 360_day are simply stretched by 365.24237/360
+% This means datevec will no longer return the right hour and minutes etc.
+%
+%
+%
+% Example:
+%  [time,timezone]= cdfdate2num('hours since 1856-01-03 -07:00 UTC','julian',5)
+%  datestr(time)
+%  datestr(time+timezone)
+%
+% Here the -07:00 UTC is returned in timezone. timezone is also 
+%
+% Aslak Grinsted 2013
+
+
+%inspired by reference: http://netcdf4-python.googlecode.com/svn/trunk/docs/netcdftime.netcdftime-pysrc.html#utime.num2date
+% units=n.vars.time.atts.units.value;
+% calendar=n.vars.time.atts.calendar.value;
+
+%pat='(?<resolution>\w+)\s+since\s+(?<offsetdate>\d+-\d+-\d+)\s*(?<offsethoursign>[-+\s]*)(?<offsethour>[\d:]+)';
+pat='(?<resolution>\w+)\s+since\s+(?<yyyy>\d+)-(?<mm>\d+)-(?<dd>\d+)(?<hours>[\s\d:-+]*)';
+units=regexpi(units,pat,'names','once');
+
+if isempty(units)
+    error('Unknown time units.')
+end
+
+switch lower(units.resolution)
+    case 'days'
+    case 'hours'
+        time=time/24;
+    case 'minutes'
+        time=time/(24*60);
+    case 'seconds'
+        time=time/(24*60*60);
+    otherwise
+        error('unsupported units');
+end
+yyyy=str2double(units.yyyy);
+mm=str2double(units.mm);
+dd=str2double(units.dd);
+offset=datenum(yyyy,mm,dd);
+
+hhmmss=[0 0 0];
+units.hours=deblank(units.hours);
+if ~isempty(units.hours)
+    hhmmss=str2double(regexp(units.hours,'-?\d+','match'))
+    hhmmss(2:end)=hhmmss(2:end)*sign(hhmmss(1));
+    if length(hhmmss)<3,hhmmss(3)=0;end;
+end    
+timezone=datenum(0,0,0,hhmmss(1),hhmmss(2),hhmmss(3));
+
+
+
+
+yearlen=365.24237;
+switch lower(calendar)
+    case {'julian','standard','gregorian','proleptic_gregorian'}
+        time=offset+time;
+    case {'noleap','365_day'}
+        time=offset+time*yearlen/365;
+    case {'all_leap','366_day'}
+        time=offset+time*yearlen/366;
+    case '360_day'
+        time=offset+time*yearlen/360;
+    otherwise
+        error('unsupported calendar');
+end
+
 end
