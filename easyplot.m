@@ -101,6 +101,12 @@ theList.message{ii}='Choose Citadel CTD csv files:';
 theList.parser{ii}='citadelParse';
 
 ii=ii+1;
+theList.name{ii}='HOBO U22 Temp (txt)';
+theList.wildcard{ii}={'*.txt'};
+theList.message{ii}='Choose HOBO U22 txt files:';
+theList.parser{ii}='hoboU22Parse';
+
+ii=ii+1;
 theList.name{ii}='Netcdf IMOS toolbox (nc)';
 theList.wildcard{ii}={'*.nc'};
 theList.message{ii}='Choose Netcdf *.nc files:';
@@ -252,11 +258,9 @@ gData.treePanelColumnTypes = {'','char','char','logical','integer'};
 gData.treePanelColumnEditable = {false, false, true, true};
 
 gData.jtable = createTreeTable(gData);
-setVisibilityCallback(hObject,true);
+%setVisibilityCallback(hObject,true);
 guidata(hFig, gData);
 
-% UIWAIT makes easyplot wait for user response (see UIRESUMEUIRESUME)
-% uiwait(handles.figure1);
 end
 
 
@@ -298,7 +302,9 @@ filterSpec=fullfile(gData.oldPathname,strjoin(theList.wildcard{iParse},';'));
 
 pause(0.1); % need to pause to get uigetfile to operate correctly
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
-%uiwait(handles.figure1);
+
+%utcOffsets = askUtcOffset(FILENAME);
+
 gData.oldPathname=PATHNAME;
 if isequal(FILENAME,0) || isequal(PATHNAME,0)
     disp('No file selected.');
@@ -355,6 +361,8 @@ else
     end
     
     guidata(ancestor(hObject,'figure'), gData);
+    
+    gData.sample_data = timeOffsetPP(gData.sample_data, 'raw', false);
     
     set(gData.listbox1,'String', getFilelistNames(gData.sample_data),'Value',1);
     guidata(hFig, gData);
@@ -429,6 +437,39 @@ guidata(hFig, gData);
 end
 
 %%
+function utcOffsets = askUtcOffset(FILENAME)
+
+f = figure('Position',[100 100 400 150]);
+startData =  {};
+for ii=1:numel(FILENAME)
+startData{ii,1} = FILENAME;
+startData{ii,2} = 0;
+end
+columnname =   {'Filename', 'UTC Offset'};
+columnformat = {'char', 'numeric'};
+columneditable =  [false  true]; 
+myTable = uitable('Units','normalized','Position',...
+            [0.1 0.1 0.9 0.9], 'Data', startData,... 
+            'ColumnName', columnname,...
+            'ColumnFormat', columnformat,...
+            'ColumnEditable', columneditable,...
+            'RowName',[]);
+set(h,'CloseRequestFcn',@myCloseFcn);
+set(h,'Tag', 'myTag');
+set(mytable,'Tag','myTableTag');
+waitfor(gcf);
+finalData=get(myTable,'Data');
+
+function myCloseFcn(~,~)
+myfigure=findobj('Tag','myTag');
+myData=get(findobj(myfigure,'Tag','myTableTag'),'Data')
+assignin('base','myTestData',myData)
+delete(myfigure)
+end
+
+end
+
+%%
 function sam = finaliseDataEasyplot(sam,fileName)
 %FINALISEDATA Adds new TIMEDIFF var
 %
@@ -469,6 +510,25 @@ else
     sam.inputFileExt = EXT;
     sam.easyplot_input_file = fileName;
 end
+
+sam.time_coverage_start = sam.dimensions{idTime}.data(1);
+sam.time_coverage_end = sam.dimensions{idTime}.data(end);
+sam.dimensions{idTime}.comment = '';
+sam.meta.site_id = sam.inputFile;
+
+% if ~isfield(sample_data,'utc_offset_hours')
+%     sample_data.utc_offset_hours = 0;
+% end
+
+if isfield(sam.meta,'timezone')
+    if isempty(sam.meta.timezone)
+        sam.meta.timezone='UTC';
+    end
+else
+    sam.meta.timezone='UTC';
+end
+
+sam.history = '';
 
 sam.isPlottableVar = false(1,numel(sam.variables));
 sam.plotThisVar = false(1,numel(sam.variables));
@@ -552,18 +612,14 @@ function [sample_data] = markPlotVar(sample_data, plotVar)
 for ii=1:numel(sample_data)
     sample_data{ii}.plotThisVar = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
     for jj=1:numel(sample_data{ii}.variables)
-        if sample_data{ii}.plotThisVar(jj)
-            sample_data{ii}.variables{jj}.iSlice=1;
-            if ~isvector(sample_data{ii}.variables{jj}.data)
-                [d1,d2] = size(sample_data{ii}.variables{jj}.data);
-                sample_data{ii}.variables{jj}.iSlice=floor(d2/2);
-                sample_data{ii}.variables{jj}.minSlice=1;
-                sample_data{ii}.variables{jj}.maxSlice=d2;
-            end
-        else
-            sample_data{ii}.variables{jj}.iSlice=1;
+        sample_data{ii}.variables{jj}.iSlice=1;
+        sample_data{ii}.variables{jj}.minSlice=1;
+        sample_data{ii}.variables{jj}.maxSlice=1;
+        if ~isvector(sample_data{ii}.variables{jj}.data)
+            [d1,d2] = size(sample_data{ii}.variables{jj}.data);
+            sample_data{ii}.variables{jj}.iSlice=floor(d2/2);
             sample_data{ii}.variables{jj}.minSlice=1;
-            sample_data{ii}.variables{jj}.maxSlice=1;
+            sample_data{ii}.variables{jj}.maxSlice=d2;
         end
     end
 end
@@ -762,15 +818,24 @@ for ii=1:numel(gData.sample_data) % loop over files
                     % plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
                     % gData.sample_data{ii}.variables{jj}.data, ...
                     % lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
-                    line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data, ...
+%                     line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data - gData.sample_data{ii}.utc_offset_hours/24, ...
+%                         'YData',gData.sample_data{ii}.variables{jj}.data, ...
+%                         'LineStyle',lineStyle, 'Marker', markerStyle,...
+%                         'DisplayName', instStr, 'Tag', tagStr);
+                       line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data, ...
                         'YData',gData.sample_data{ii}.variables{jj}.data, ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', instStr, 'Tag', tagStr);
+
                 else
                     iSlice = gData.sample_data{ii}.variables{jj}.iSlice;
                     % plot(hAx,gData.sample_data{ii}.dimensions{idTime}.data, ...
                     % gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
                     % lineStyle, 'DisplayName', instStr, 'Tag', [NAME EXT]);
+%                     line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data - gData.sample_data{ii}.utc_offset_hours/24, ...
+%                         'YData',gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+%                         'LineStyle',lineStyle, 'Marker', markerStyle,...
+%                         'DisplayName', instStr, 'Tag', tagStr);
                     line('Parent',hAx,'XData',gData.sample_data{ii}.dimensions{idTime}.data, ...
                         'YData',gData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
@@ -1491,8 +1556,6 @@ if localInBounds(axH)
     
     
     mtable = createTable('Container',tableFig,'Data',listData, 'Headers',columnname, 'Buttons','off');
-    
-    uiwait(tableFig);
     
 end
 
