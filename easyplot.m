@@ -1510,7 +1510,7 @@ if localInBounds(axH)
     %     %axesPositions = getposition(axH, 'pixels');
     %     axesPositions = getpos(axH, 'px');
     
-    listData=cell(0,4);
+    listData=cell(0,6);
     currentPosition = get(axH, 'CurrentPoint');
     gData=guidata(ancestor(hObject,'figure'));
     
@@ -1522,6 +1522,8 @@ if localInBounds(axH)
                 [index,distance]=near(tData,currentPosition(1),1);
                 listData(end+1,:)={gData.sample_data{ii}.variables{jj}.name,...
                     strcat(gData.sample_data{ii}.meta.instrument_model,'-',gData.sample_data{ii}.meta.instrument_serial_no),...
+                    datestr(tData(1),'yyyy-mm-dd HH:MM:SS.FFF'),...
+                    datestr(tData(end),'yyyy-mm-dd HH:MM:SS.FFF'),...
                     datestr(tData(index),'yyyy-mm-dd HH:MM:SS.FFF'),...
                     gData.sample_data{ii}.variables{jj}.data(index)};
             end
@@ -1529,7 +1531,7 @@ if localInBounds(axH)
     end
     
     tableFig = figure('Position',[200 200 800 150],'Interruptible','off');
-    columnname =   {'Variable', 'Instrument', 'Date', 'Value'};
+    columnname =   {'Variable', 'Instrument', 'Start', 'End', 'User Date', 'Value'};
     %     columnformat = {'char', 'char', 'char', 'numeric'};
     %     columneditable =  [false false false false];
     %% could not get uitable to correctly set auto column width
