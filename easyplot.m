@@ -149,6 +149,12 @@ theList.message{ii}='Choose TR1060/TDR2050 files:';
 theList.parser{ii}='XRParse';
 
 ii=ii+1;
+theList.name{ii}='Reefnet Sensus (csv)';
+theList.wildcard{ii}={'*.csv'};
+theList.message{ii}='Choose SensusUltra files:';
+theList.parser{ii}='sensusUltraParse';
+
+ii=ii+1;
 theList.name{ii}='Teledyne RDI (000,PD0)';
 theList.wildcard{ii}={'*.000', '*.PD0'};
 theList.message{ii}='Choose RDI 000/PD0 files:';
