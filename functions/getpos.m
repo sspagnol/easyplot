@@ -157,10 +157,25 @@ for n=1:numel(M)
         % Get the current "Position" vector of H
         temp=get(h,'position');
         % Get the current "Position" vector of HREF
-        if ~href % HREF is the Root object (no 'Position' property)
-            temp_href=get(href,'screensize'); %%% Should be safe here !
-        else temp_href=get(href,'position');
+        %         if ~href % HREF is the Root object (no 'Position' property)
+        %             temp_href=get(href,'screensize'); %%% Should be safe here !
+        %         else
+        %             temp_href=get(href,'position');
+        %         end
+        if isnumeric(href) %HG1
+            if ~href % HREF is the Root object (no 'Position' property)
+                temp_href=get(href,'screensize'); %%% Should be safe here !
+            else
+                temp_href=get(href,'position');
+            end
+        else %HG2
+            if isequal(href,groot) % HREF is the Root object (no 'Position' property)
+                temp_href=get(href,'screensize'); %%% Should be safe here !
+            else
+                temp_href=get(href,'position');
+            end
         end
+
         % Get and store the specified field from the "Position" vector
         % If HREF is specified and is not the parent of H, flag_href=1 else flag_href=0
         pos(n)=temp(n)-temp_href(n)*flag_href;
