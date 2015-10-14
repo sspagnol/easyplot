@@ -83,7 +83,7 @@ try
     end
 end
 
-% this is what I am working toward, parsers can be 'queried' for some info
+% This is what I am working toward, parsers can be 'queried' for some info
 % and file extensions supported
 % parsers=listParsers;
 % structs={};
@@ -93,125 +93,131 @@ end
 % end
 % aStr=cellfun(@(x) x.short_message, structs, 'UniformOutput', false);
 % [choice, idx]=optionDialog('Choose instument type','Choose instument type',aStr,1);
-% but for the moment have this
-% list of instruments and their parsers
+%
+% But for the moment have this list of instruments and their parsers
 ii=0;
 
 ii=ii+1;
-theList.name{ii}='Citadel CTD (csv)';
-theList.wildcard{ii}={'*.csv'};
-theList.message{ii}='Choose Citadel CTD csv files:';
-theList.parser{ii}='citadelParse';
+parserList.name{ii}='Citadel CTD (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose Citadel CTD csv files:';
+parserList.parser{ii}='citadelParse';
 
 ii=ii+1;
-theList.name{ii}='HOBO U22 Temp (txt)';
-theList.wildcard{ii}={'*.txt'};
-theList.message{ii}='Choose HOBO U22 txt files:';
-theList.parser{ii}='hoboU22Parse';
+parserList.name{ii}='HOBO U22 Temp (txt)';
+parserList.wildcard{ii}={'*.txt'};
+parserList.message{ii}='Choose HOBO U22 txt files:';
+parserList.parser{ii}='hoboU22Parse';
 
 ii=ii+1;
-theList.name{ii}='Netcdf IMOS toolbox (nc)';
-theList.wildcard{ii}={'*.nc'};
-theList.message{ii}='Choose Netcdf *.nc files:';
-theList.parser{ii}='netcdfParse';
+parserList.name{ii}='Netcdf IMOS toolbox (nc)';
+parserList.wildcard{ii}={'*.nc'};
+parserList.message{ii}='Choose Netcdf *.nc files:';
+parserList.parser{ii}='netcdfParse';
 
 ii=ii+1;
-theList.name{ii}='Netcdf Other (nc)';
-theList.wildcard{ii}={'*.nc'};
-theList.message{ii}='Choose Netcdf *.nc files:';
-theList.parser{ii}='netcdfOtherParse';
+parserList.name{ii}='Netcdf Other (nc)';
+parserList.wildcard{ii}={'*.nc'};
+parserList.message{ii}='Choose Netcdf *.nc files:';
+parserList.parser{ii}='netcdfOtherParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek AWAC (wpr,wpb)';
-theList.wildcard{ii}={'*.wpr', '*.wpb'};
-theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
-theList.parser{ii}='awacParse';
+parserList.name{ii}='Nortek AWAC (wpr,wpb)';
+parserList.wildcard{ii}={'*.wpr', '*.wpb'};
+parserList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+parserList.parser{ii}='awacParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek Continental (wpr,wpb)';
-theList.wildcard{ii}={'*.wpr', '*.wpb'};
-theList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
-theList.parser{ii}='continentalParse';
+parserList.name{ii}='Nortek Continental (wpr,wpb)';
+parserList.wildcard{ii}={'*.wpr', '*.wpb'};
+parserList.message{ii}='Choose Nortek *.wpr, *.wpb files:';
+parserList.parser{ii}='continentalParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek Aquadopp Velocity (aqd)';
-theList.wildcard{ii}={'*.aqd'};
-theList.message{ii}='Choose Nortek *.aqd files:';
-theList.parser{ii}='aquadoppVelocityParse';
+parserList.name{ii}='Nortek Aquadopp Velocity (aqd)';
+parserList.wildcard{ii}={'*.aqd'};
+parserList.message{ii}='Choose Nortek *.aqd files:';
+parserList.parser{ii}='aquadoppVelocityParse';
 
 ii=ii+1;
-theList.name{ii}='Nortek Aquadopp Profiler (prf)';
-theList.wildcard{ii}={'*.prf'};
-theList.message{ii}='Choose Nortek *.prf files:';
-theList.parser{ii}='aquadoppProfilerParse';
+parserList.name{ii}='Nortek Aquadopp Profiler (prf)';
+parserList.wildcard{ii}={'*.prf'};
+parserList.message{ii}='Choose Nortek *.prf files:';
+parserList.parser{ii}='aquadoppProfilerParse';
 
 ii=ii+1;
-theList.name{ii}='RBR (txt,dat)';
-theList.wildcard{ii}={'*.txt', '*.dat'};
-theList.message{ii}='Choose TR1060/TDR2050 files:';
-theList.parser{ii}='XRParse';
+parserList.name{ii}='RBR (txt,dat)';
+parserList.wildcard{ii}={'*.txt', '*.dat'};
+parserList.message{ii}='Choose TR1060/TDR2050 files:';
+parserList.parser{ii}='XRParse';
 
 ii=ii+1;
-theList.name{ii}='Reefnet Sensus (csv)';
-theList.wildcard{ii}={'*.csv'};
-theList.message{ii}='Choose SensusUltra files:';
-theList.parser{ii}='sensusUltraParse';
+parserList.name{ii}='Reefnet Sensus (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose SensusUltra files:';
+parserList.parser{ii}='sensusUltraParse';
 
 ii=ii+1;
-theList.name{ii}='Teledyne RDI (000,PD0)';
-theList.wildcard{ii}={'*.000', '*.PD0'};
-theList.message{ii}='Choose RDI 000/PD0 files:';
-theList.parser{ii}='workhorseParse';
+parserList.name{ii}='Teledyne RDI (000,PD0)';
+parserList.wildcard{ii}={'*.000', '*.PD0'};
+parserList.message{ii}='Choose RDI 000/PD0 files:';
+parserList.parser{ii}='workhorseParse';
 
 ii=ii+1;
-theList.name{ii}='SBE37 (asc)';
-theList.wildcard{ii}={'*.asc'};
-theList.message{ii}='Choose SBE37 files:';
-theList.parser{ii}='SBE37Parse';
+parserList.name{ii}='SBE37 (asc)';
+parserList.wildcard{ii}={'*.asc'};
+parserList.message{ii}='Choose SBE37 files:';
+parserList.parser{ii}='SBE37Parse';
 
 ii=ii+1;
-theList.name{ii}='SBE37 (cnv)';
-theList.wildcard{ii}={'*.cnv'};
-theList.message{ii}='Choose SBE37 files:';
-theList.parser{ii}='SBE37SMParse';
+parserList.name{ii}='SBE37 (cnv)';
+parserList.wildcard{ii}={'*.cnv'};
+parserList.message{ii}='Choose SBE37 files:';
+parserList.parser{ii}='SBE37SMParse';
 
 ii=ii+1;
-theList.name{ii}='SBE39 (asc)';
-theList.wildcard{ii}={'*.asc'};
-theList.message{ii}='Choose SBE39 asc files:';
-theList.parser{ii}='SBE39Parse';
+parserList.name{ii}='SBE39 (asc)';
+parserList.wildcard{ii}={'*.asc'};
+parserList.message{ii}='Choose SBE39 asc files:';
+parserList.parser{ii}='SBE39Parse';
 
 ii=ii+1;
-theList.name{ii}='SBE56 (cnv)';
-theList.wildcard{ii}={'*.cnv'};
-theList.message{ii}='Choose SBE56 cnv files:';
-theList.parser{ii}='SBE56Parse';
+parserList.name{ii}='SBE56 (cnv)';
+parserList.wildcard{ii}={'*.cnv'};
+parserList.message{ii}='Choose SBE56 cnv files:';
+parserList.parser{ii}='SBE56Parse';
 
 ii=ii+1;
-theList.name{ii}='SBE CTD (cnv)';
-theList.wildcard{ii}={'*.cnv'};
-theList.message{ii}='Choose CTD cnv files:';
-theList.parser{ii}='SBE19Parse';
+parserList.name{ii}='SBE CTD (cnv)';
+parserList.wildcard{ii}={'*.cnv'};
+parserList.message{ii}='Choose CTD cnv files:';
+parserList.parser{ii}='SBE19Parse';
 
 ii=ii+1;
-theList.name{ii}='Vemco Minilog-II-T (csv)';
-theList.wildcard{ii}={'*.csv'};
-theList.message{ii}='Choose VML2T *.csv files:';
-theList.parser{ii}='VemcoParse';
+parserList.name{ii}='StarmonMini (dat)';
+parserList.wildcard{ii}={'*.dat'};
+parserList.message{ii}='Choose StarmonMini dat files:';
+parserList.parser{ii}='StarmonMiniParse';
 
 ii=ii+1;
-theList.name{ii}='Wetlabs (FL)NTU (raw)';
-theList.wildcard{ii}={'*.raw'};
-theList.message{ii}='Choose (FL)NTU *.raw files:';
-theList.parser{ii}='ECOTripletParse';
+parserList.name{ii}='Vemco Minilog-II-T (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose VML2T *.csv files:';
+parserList.parser{ii}='VemcoParse';
 
 ii=ii+1;
-theList.name{ii}='WQM (dat)';
-theList.wildcard{ii}={'*.dat'};
-theList.message{ii}='Choose WQM files:';
-theList.parser{ii}='WQMParse';
+parserList.name{ii}='Wetlabs (FL)NTU (raw)';
+parserList.wildcard{ii}={'*.raw'};
+parserList.message{ii}='Choose (FL)NTU *.raw files:';
+parserList.parser{ii}='ECOTripletParse';
 
-userData.theList=theList;
+ii=ii+1;
+parserList.name{ii}='WQM (dat)';
+parserList.wildcard{ii}={'*.dat'};
+parserList.message{ii}='Choose WQM files:';
+parserList.parser{ii}='WQMParse';
+
+userData.parserList=parserList;
 
 userData.firstPlot = true;
 
@@ -228,7 +234,6 @@ userData.axesInfo=axesInfo;
 % Couldn't get easyplot to function correctly so pulled in code from
 % dynamicDateTick into easyplot and modified as required.
 %dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
-
 
 % Tried a callback on zoom/pan and XLim listener but that just cause
 % massive confusion. At the moment just call updateDateLabel as required,
@@ -304,20 +309,20 @@ hFig=ancestor(hObject,'figure');
 userData=getappdata(hFig,'UserData');
 gData = guidata(hFig);
 
-theList=userData.theList;
+parserList=userData.parserList;
 
-iParse=menu('Choose instrument type',theList.name);
+iParse=menu('Choose instrument type',parserList.name);
 if iParse < 1 % no instrument chosen
     return;
 end
 
 % get parser for the filetype
-parser = str2func(theList.parser{iParse});
+parser = str2func(parserList.parser{iParse});
 
-filterSpec=fullfile(userData.oldPathname,strjoin(theList.wildcard{iParse},';'));
+filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
 
 pause(0.1); % need to pause to get uigetfile to operate correctly
-[FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, theList.message{iParse}, 'MultiSelect','on');
+[FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
 
 %utcOffsets = askUtcOffset(FILENAME);
 
