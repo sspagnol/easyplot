@@ -97,6 +97,13 @@ end
 % But for the moment have this list of instruments and their parsers
 ii=0;
 
+% csv file of fully qualified filename and parser to use
+ii=ii+1;
+parserList.name{ii}='File list (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose file list:';
+parserList.parser{ii}='fileListParse';
+
 ii=ii+1;
 parserList.name{ii}='Citadel CTD (csv)';
 parserList.wildcard{ii}={'*.csv'};
@@ -316,57 +323,75 @@ if iParse < 1 % no instrument chosen
     return;
 end
 
-% get parser for the filetype
-parser = str2func(parserList.parser{iParse});
-
-filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
-
-pause(0.1); % need to pause to get uigetfile to operate correctly
-[FILENAME, PATHNAME, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
+if iParse == 1
+    % load csv with
+    % column 1 : fully qualified data file
+    % column 2 : imos toolbox parser to use
+    [theFile, thePath, FILTERINDEX] = uigetfile('*.csv', parserList.message{iParse}, 'MultiSelect','off');
+    fileID = fopen(fullfile(thePath,theFile));
+    C = textscan(fileID, '%s%s', 'Delimiter', ',');
+    fclose(fileID);
+    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), C{1}, 'UniformOutput', false);
+    FILEparsers = C{2};
+    clear('C');
+else
+    % user selected files for one particular instrument type
+    filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
+    pause(0.1); % need to pause to get uigetfile to operate correctly
+    [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
+    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), fullfile(thePath, theFiles), 'UniformOutput', false);
+    FILEparsers(true(size(FILEnames))) = {parserList.parser{iParse}};
+end
 
 %utcOffsets = askUtcOffset(FILENAME);
 
-userData.oldPathname=PATHNAME;
-if isequal(FILENAME,0) || isequal(PATHNAME,0)
+userData.oldPathname=thePath;
+if isequal(FILEnames,0) || isequal(thePath,0)
     disp('No file selected.');
 else
-    if ischar(FILENAME)
-        FILENAME = {FILENAME};
-    end
+%     if ischar(FILEnames)
+%         FILEnames = {FILEnames};
+%     end
     if ~isfield(userData,'sample_data')
         userData.sample_data={};
     end
     iFailed=0;
     notLoaded=false;
-    for ii=1:length(FILENAME)
+    nFiles = length(FILEnames);
+    for ii=1:nFiles
+        theFile = char([FILEnames{ii} FILEexts{ii}]);
+        theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         % skip any files the user has already imported
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, char(FILENAME{ii}))), userData.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
-                set(gData.progress,'String',strcat({'Loading : '}, char(FILENAME{ii})));
+                set(gData.progress,'String',strcat({'Loading : '}, theFile));
                 drawnow;
-                disp(['importing file ', num2str(ii), ' of ', num2str(length(FILENAME)), ' : ', char(FILENAME{ii})]);
+                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 % adopt similar code layout as imos-toolbox importManager
-                structs = {parser( {fullfile(PATHNAME,FILENAME{ii})}, 'TimeSeries' )};
+                % get parser for the filetype
+                parser = str2func(FILEparsers{ii});
+
+                structs = {parser( {theFullFile}, 'TimeSeries' )};
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
-                    tmpStruct = finaliseDataEasyplot(structs{1},fullfile(PATHNAME,FILENAME{ii}));
+                    tmpStruct = finaliseDataEasyplot(structs{1}, theFullFile);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
-                        tmpStruct = finaliseDataEasyplot(structs{k},fullfile(PATHNAME,FILENAME{ii}));
+                        tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                     end
                 end
                 clear('structs');
-                set(gData.progress,'String',strcat({'Loaded : '}, char(FILENAME{ii})));
+                set(gData.progress,'String',strcat({'Loaded : '}, theFile));
                 drawnow;
             catch ME
-                astr=['Importing file ', char(FILENAME{ii}), ' failed due to an unforseen issue. ' ME.message];
+                astr=['Importing file ', theFile, ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
                 set(gData.progress,'String',astr);
                 drawnow;
@@ -375,8 +400,8 @@ else
                 iFailed=1;
             end
         else
-            disp(['File ' char(FILENAME{ii}) ' already loaded.']);
-            set(gData.progress,'String',strcat({'Already loaded : '}, char(FILENAME{ii})));
+            disp(['File ' theFile ' already loaded.']);
+            set(gData.progress,'String',strcat({'Already loaded : '}, theFile));
             drawnow;
         end
     end
@@ -389,7 +414,7 @@ else
     setappdata(hFig, 'UserData', userData);
     drawnow;
     
-    if numel(FILENAME)~=iFailed
+    if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
         
         userData.sample_data = markPlotVar(userData.sample_data, plotVar);
@@ -847,7 +872,6 @@ for ii=1:numel(userData.sample_data) % loop over files
                         'YData',userData.sample_data{ii}.variables{jj}.data, ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', instStr, 'Tag', tagStr);
-
                 else
                     % 2D var
                     iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
@@ -855,7 +879,6 @@ for ii=1:numel(userData.sample_data) % loop over files
                         'YData',userData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', instStr, 'Tag', tagStr);
-                    
                 end
             catch
                 error('PLOTDATA: plot failed.');
@@ -889,7 +912,6 @@ else
     ylabel(hAx,'Multiple Variables');
 end
 
-% make
 h = findobj(hAx,'Type','line','-not','tag','legend','-not','tag','Colobar');
 
 % mapping = round(linspace(1,64,length(h)))';
