@@ -176,6 +176,7 @@ plotcals
                 h(a) = plot(tbase,insdat,'x-','color',cc(a,:));
                 
                 if isfield(userData,'calx2')
+                    figure(1)
                     if initiatefig2
                         h2(a) = plot(tbase2,caldat2,'kx-','linewidth',2);
                         initiatefig2 = 0;
@@ -183,39 +184,41 @@ plotcals
                     h2(a) = plot(tbase2,insdat2,'x-','color',cc(a,:));
                 end
                 
-                %plot differences by instrument type
-                figure(2)
-                ik = strcmp(strtrim(insnms(a,:)),cellstr(iu)); %find the instrument group
-                hh = plot(caldat,insdat-caldat,'marker',mrk{ik},'color',cb(ik,:));
-                text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
-                if isfield(userData,'calx2')
-                    hh = plot(caldat2,insdat2-caldat2,'marker',mrk{ik},'color',cb(ik,:));
+                if exist('h','var')
+                    %plot differences by instrument type
+                    figure(2)
+                    ik = strcmp(strtrim(insnms(a,:)),cellstr(iu)); %find the instrument group
+                    hh = plot(caldat,insdat-caldat,'marker',mrk{ik},'color',cb(ik,:));
                     text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
+                    if isfield(userData,'calx2')
+                        hh = plot(caldat2,insdat2-caldat2,'marker',mrk{ik},'color',cb(ik,:));
+                        text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
+                    end
                 end
-                
             else
                 rmins = [rmins;a];
                 
             end
         end
-        
-        h(rmins) = [];
-        inst = instList(logical(sets));
-        inst(rmins) = [];
-        figure(1)
-        grid on
-        xlabel('Time')
-        ylabel('Temperature \circC')
-        datetick
-        legend(h,inst)
-        title('Bath Calibrations')
-        figure(2)
-        
-%         legend(iu)
-        title('Calibration bath temperature offsets from reference instrument')
-        xlabel('Bath temperature \circC')
-        ylabel('Temperature offset \circC')
-        grid on
+        if exist('h','var')
+            h(rmins) = [];
+            inst = instList(logical(sets));
+            inst(rmins) = [];
+            figure(1)
+            grid on
+            xlabel('Time')
+            ylabel('Temperature \circC')
+            datetick
+            legend(h,inst)
+            title('Bath Calibrations')
+            figure(2)
+            
+            %         legend(iu)
+            title('Calibration bath temperature offsets from reference instrument')
+            xlabel('Bath temperature \circC')
+            ylabel('Temperature offset \circC')
+            grid on
+        end
     end
 
 
