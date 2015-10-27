@@ -40,7 +40,7 @@ sets(refinst) = [];
 %bath:
 %make another input box:
 f = figure(...
-    'Name',        'Bath Calibrated Instruments',...
+    'Name',        'Select the Bath Calibrated Instruments',...
     'Visible',     'off',...
     'MenuBar'  ,   'none',...
     'Resize',      'off',...
@@ -68,7 +68,7 @@ set(cancelButton,   'Units', 'normalized');
 set(confirmButton,  'Units', 'normalized');
 set(setCheckboxes,  'Units', 'normalized');
 
-set(f,             'Position', [0.2 0.35 0.6 0.3]);
+set(f,             'Position', [0.2 0.35 0.6 0.5]);
 set(cancelButton,  'Position', [0.0 0.0  0.5 0.1]);
 set(confirmButton, 'Position', [0.5 0.0  0.5 0.1]);
 
@@ -116,12 +116,11 @@ plotcals
         refdif = nanmedian(diff(refti));
         tmin1 = userData.calx(1);
         tmax1 = userData.calx(2);
-        igood = (refti >= tmin1 & refti <= tmax1);
+        igRef1 = refti >= tmin1 & refti <= tmax1;
         if isfield(userData,'calx2')
             tmin2 = userData.calx2(1);
             tmax2 = userData.calx2(2);
-            igood = (refti >= tmin1 & refti <= tmax1) ...
-                | (refti >= tmin2 & refti <= tmax2);
+            igRef2 = refti >= tmin2 & refti <= tmax2;
         end
         
         data = userData.sample_data;
@@ -136,66 +135,83 @@ plotcals
         cb = parula(size(iu,1));
         clear h h2
         mrk = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
-
+        initiatefig1 = 1;
+        initiatefig2 = 2;
+        rmins = [];
         for a = 1:numel(data)
             insti = data{a}.dimensions{1}.data;
             temp = data{a}.variables{data{a}.plotThisVar}.data;
-            igood2 = (insti >= tmin1 & insti <= tmax1);
+            igIns1 = insti >= tmin1 & insti <= tmax1;
             if isfield(userData,'calx2')
-                igood2 = insti >= tmin1 & insti <= tmax1 ...
-                    | (insti >= tmin2 & insti <= tmax2);
+                igIns2 = insti >= tmin2 & insti <= tmax2;
             end
-            if sum(igood2) > 0
+            if sum(igIns1) > 0
                 %need the largest time diff between ref and each ins as timebase:
                 insdif = nanmedian(diff(insti));
-                if refdif > insdif
-                    tbase = refti(igood);
-                    caldat = reftemp(igood);
-                    insdat = match_timebase(tbase,insti(igood2),temp(igood2));
+                if refdif >= insdif
+                    tbase = refti(igRef1);
+                    caldat = reftemp(igRef1);
+                    insdat = match_timebase(tbase,insti(igIns1),temp(igIns1));
+                    if isfield(userData,'calx2')
+                        tbase2 = refti(igRef2);
+                        caldat2 = reftemp(igRef2);
+                        insdat2 = match_timebase(tbase2,insti(igIns2),temp(igIns2));
+                    end
                 else
-                    tbase = insti(igood2);
-                    insdat = temp(igood2);
-                    caldat = match_timebase(tbase,refti(igood),reftemp(igood));
+                    tbase = insti(igIns1);
+                    insdat = temp(igIns1);
+                    caldat = match_timebase(tbase,refti(igRef1),reftemp(igRef1));
+                    if isfield(userData,'calx2')
+                        tbase2 = insti(igIns2);
+                        insdat2 = temp(igIns2);
+                        caldat2 = match_timebase(tbase2,refti(igRef2),reftemp(igRef2));
+                    end
                 end
                 %plot only the regions of comparison
-                ii = tbase >= tmin1 & tbase <= tmax1;
                 figure(1)
-                if a == 1
-                    h(a) = plot(tbase(ii),caldat(ii),'kx-','linewidth',2);
+                if initiatefig1
+                    h(a) = plot(tbase,caldat,'kx-','linewidth',2);
+                    initiatefig1 = 0;
                 end
-                h(a) = plot(tbase(ii),insdat(ii),'x-','color',cc(a,:));
+                h(a) = plot(tbase,insdat,'x-','color',cc(a,:));
                 
                 if isfield(userData,'calx2')
-                    ij = tbase >= tmin2 & tbase <= tmax2;
-                    if a == 1
-                        h2(a) = plot(tbase(ij),caldat(ij),'kx-','linewidth',2);
+                    if initiatefig2
+                        h2(a) = plot(tbase2,caldat2,'kx-','linewidth',2);
+                        initiatefig2 = 0;
                     end
-                    h2(a) = plot(tbase(ij),insdat(ij),'x-','color',cc(a,:));
+                    h2(a) = plot(tbase2,insdat2,'x-','color',cc(a,:));
                 end
                 
                 %plot differences by instrument type
                 figure(2)
                 ik = strcmp(strtrim(insnms(a,:)),cellstr(iu)); %find the instrument group
-                h = plot(caldat(ii),insdat(ii)-caldat(ii),'marker',mrk{ik},'color',cb(ik,:));
-                text(double(h.XData(end)),double(h.YData(end)),iu(ik,:))
+                hh = plot(caldat,insdat-caldat,'marker',mrk{ik},'color',cb(ik,:));
+                text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
                 if isfield(userData,'calx2')
-                    h = plot(caldat(ij),insdat(ij)-caldat(ij),'marker',mrk{ik},'color',cb(ik,:));
-                    text(double(h.XData(end)),double(h.YData(end)),iu(ik,:))
+                    hh = plot(caldat2,insdat2-caldat2,'marker',mrk{ik},'color',cb(ik,:));
+                    text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
                 end
                 
+            else
+                rmins = [rmins;a];
                 
             end
         end
+        
+        h(rmins) = [];
+        inst = instList(logical(sets));
+        inst(rmins) = [];
         figure(1)
         grid on
         xlabel('Time')
         ylabel('Temperature \circC')
         datetick
-        legend(h,instList(find(sets),:))
+        legend(h,inst)
         title('Bath Calibrations')
         figure(2)
         
-        legend(iu)
+%         legend(iu)
         title('Calibration bath temperature offsets from reference instrument')
         xlabel('Bath temperature \circC')
         ylabel('Temperature offset \circC')

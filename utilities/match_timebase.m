@@ -18,27 +18,14 @@ rawdat = rawdat(:);
 ig = find(rawtime >= min(tbase) & rawtime < max(tbase) & ~isnan(rawdat));
 
 if length(ig)/length(rawtime) < 0.05,
-    disp(['match_timebase: Less than 5% of data is good! Using ' num2str(length(ig)) ' records!']);
+    disp('match_timebase: Less than 5% of data is in time range!');
+    return
 end
 
 if ~isempty(ig),
-    
-    [dm,ds]=nanmore(rawdat(ig)); 
-
-    ndec = floor(diff(tbase(1:2))/diff(rawtime(3:4)));
-    if ndec > 1,    % need to lowpass
-        junk = [rawdat(:)-dm]/ds;
-        junk= filt_ends(hamming(ndec),junk(ig))*ds  + dm;
-        junktime = rawtime(ig);
-    else % interpolate
-        ig = find(rawtime >= min(tbase) & rawtime < max(tbase));
-        junk = rawdat(ig);
-        junktime = rawtime(ig);
-    end
- 
     % interpolate to timebase:
-    newdat = interp1(junktime,junk,tbase);
-    ib = find(tbase < min(junktime) | tbase > max(junktime) );
+    newdat = interp1(rawtime,rawdat,tbase);
+    ib = find(tbase < min(rawtime) | tbase > max(rawtime) );
     newdat(ib) = NaN*ib;
     if ~isreal(newdat),newdat(ib) =  NaN*ib*(1+i);end
     
