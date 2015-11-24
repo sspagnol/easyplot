@@ -325,15 +325,39 @@ end
 
 if iParse == 1
     % load csv with
-    % column 1 : fully qualified data file
+    % column 1 : data file (full qualified or just filename) or a directory
     % column 2 : imos toolbox parser to use
+    % if column 1 is a directory, it will be used as a base dir for 
+    % recursive searchdata for data files that are not fully qualified.
+    % If multiple directory only name then the first is used.
+    % e.g.
+    % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502\sbe3787511508.cnv, SBE37SMParse
+    % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502\SBE05601011_2015-08-12.cnv, SBE56Parse
+    % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502, BASEDIR
+    % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502\58521508.asc, SBE39Parse
+    % FTB10000.000, workhorseParse
     [theFile, thePath, FILTERINDEX] = uigetfile('*.csv', parserList.message{iParse}, 'MultiSelect','off');
     fileID = fopen(fullfile(thePath,theFile));
     C = textscan(fileID, '%s%s', 'Delimiter', ',');
     fclose(fileID);
-    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), C{1}, 'UniformOutput', false);
     FILEparsers = C{2};
+    fileList = C{1};
     clear('C');
+    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), fileList, 'UniformOutput', false);
+    % find first directory only file, make that the base directory
+    iDir = cellfun(@isdir , fileList);
+    baseDir = fileList{find(iDir),1};
+    FILEpaths(iDir) = [];
+    FILEnames(iDir) = [];
+    FILEexts(iDir) = [];
+    FILEparsers(iDir) = [];
+    % find all filename only, do recursive search in baseDir
+    iFileOnly = cellfun(@isempty , FILEpaths);
+    iFileOnly = find(iFileOnly);
+    for ii=1:length(iFileOnly)
+        jj = iFileOnly(ii);
+        [FILEpaths{jj}, FILEnames{jj}, FILEexts{jj}] = fileparts(char(getAllFiles(baseDir, [FILEnames{jj} FILEexts{jj}])));
+    end    
 else
     % user selected files for one particular instrument type
     filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
