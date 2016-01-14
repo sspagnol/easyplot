@@ -363,7 +363,11 @@ else
     filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
     [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
-    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), fullfile(thePath, theFiles), 'UniformOutput', false);
+    allFiles = fullfile(thePath, theFiles);
+    if ~iscell(allFiles) 
+        allFiles = { allFiles };
+    end
+    [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), allFiles, 'UniformOutput', false);
     FILEparsers(true(size(FILEnames))) = {parserList.parser{iParse}};
 end
 
