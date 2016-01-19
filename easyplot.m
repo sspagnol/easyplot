@@ -400,10 +400,10 @@ else
                 % get parser for the filetype
                 parser = str2func(FILEparsers{ii});
 
-                structs = {parser( {theFullFile}, 'TimeSeries' )};
+                structs = parser( {theFullFile}, 'TimeSeries' );
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
-                    tmpStruct = finaliseDataEasyplot(structs{1}, theFullFile);
+                    tmpStruct = finaliseDataEasyplot(structs, theFullFile);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                 else
@@ -605,7 +605,7 @@ sam.isPlottableVar = false(1,numel(sam.variables));
 sam.plotThisVar = false(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
     isEmptyDim = isempty(sam.variables{kk}.dimensions);
-    isData = isfield(sam.variables{kk},'data') & any(any(~isnan(sam.variables{kk}.data)));
+    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data(:)));
     if ~isEmptyDim && isData
         sam.isPlottableVar(kk) = true;
         sam.plotThisVar(kk) = false;
