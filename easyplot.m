@@ -648,13 +648,19 @@ for ii=1:numel(sample_data)
     end
 end
 varList=unique(varList);
+for ii=1:numel(varList)
+   short_name = char(varList{ii});
+   long_name = imosParameters(short_name, 'long_name');
+   uom = imosParameters(short_name, 'uom');
+   dialogList{ii} = [short_name ' (' long_name ') [' uom ']'];
+end
 varList{end+1}='ALLVARS';
 %disp(sprintf('%s ','Variable list = ',varList{:}));
 
 title = 'Variable to plot?';
 prompt = 'Variable List';
 defaultanswer = 1;
-choice = optionDialog( title, prompt, varList, defaultanswer );
+choice = optionDialog( title, prompt, dialogList, defaultanswer );
 
 pause(0.1);
 if isempty(choice), return; end
@@ -662,7 +668,8 @@ if isempty(choice), return; end
 if strcmp(choice,'ALLVARS') %choosen plot all variables
     plotVar=varList(1:end-1);
 else
-    plotVar={choice};
+    ii = strcmp(choice, dialogList);
+    plotVar=varList{ii};
 end
 end
 
@@ -935,7 +942,10 @@ end
 if isempty(varNames)
     ylabel(hAx,'No Variables');
 elseif numel(varNames)==1
-    ylabel(hAx,strrep(char(varNames{1}),'_','\_'));
+    short_name = char(varNames{1});
+    long_name = imosParameters( short_name, 'long_name' );
+    units = imosParameters( short_name, 'uom' );
+    ylabel(hAx,{strrep(short_name,'_','\_'), [strrep(long_name,'_','\_') ' (' units ')']});
 else
     ylabel(hAx,'Multiple Variables');
 end
