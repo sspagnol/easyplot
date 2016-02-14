@@ -944,8 +944,8 @@ if isempty(varNames)
 elseif numel(varNames)==1
     short_name = char(varNames{1});
     long_name = imosParameters( short_name, 'long_name' );
-    units = imosParameters( short_name, 'uom' );
-    ylabel(hAx,{strrep(short_name,'_','\_'), [strrep(long_name,'_','\_') ' (' units ')']});
+    uom = imosParameters( short_name, 'uom' );
+    ylabel(hAx,{strrep(short_name,'_','\_'), [strrep(long_name,'_','\_') ' (' strrep(uom,'_','\_') ')']});
 else
     ylabel(hAx,'Multiple Variables');
 end
