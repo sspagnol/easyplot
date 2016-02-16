@@ -23,7 +23,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 05-Mar-2015 04:34:59
+% Last Modified by GUIDE v2.5 20-Oct-2015 13:05:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -339,6 +339,10 @@ else
     filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
     [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
+    if size(theFiles,1) ==1
+        theFiles = cellstr(theFiles);
+        thePath = cellstr(thePath);
+    end
     [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), fullfile(thePath, theFiles), 'UniformOutput', false);
     FILEparsers(true(size(FILEnames))) = {parserList.parser{iParse}};
 end
@@ -360,7 +364,11 @@ else
     nFiles = length(FILEnames);
     for ii=1:nFiles
         theFile = char([FILEnames{ii} FILEexts{ii}]);
-        theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
+        if isempty(FILEpaths{ii})
+            theFullFile = which([FILEnames{ii} FILEexts{ii}]);
+        else
+            theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
+        end
         % skip any files the user has already imported
         notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
         if notLoaded
@@ -911,6 +919,8 @@ elseif numel(varNames)==1
 else
     ylabel(hAx,'Multiple Variables');
 end
+
+grid on
 
 h = findobj(hAx,'Type','line','-not','tag','legend','-not','tag','Colobar');
 
@@ -1622,4 +1632,84 @@ if ((cp(1,3) - min(ZLims)) < -tol || (cp(1,3) - max(ZLims)) > tol) && ...
         ((cp(2,3) - min(ZLims)) < -tol || (cp(2,3) - max(ZLims)) > tol)
     targetInBounds = false;
 end
+end
+
+
+% --- Executes on button press in BathCals.
+function BathCals_Callback(hObject, eventdata, handles)
+% hObject    handle to BathCals (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%have to first make sure that temperature is plotted:
+theParent = ancestor(hObject,'figure');
+userData=getappdata(theParent, 'UserData');
+gData = guidata(theParent);
+
+if isfield(userData, 'sample_data')
+    
+    plotVar = 'TEMP';
+    userData.sample_data = markPlotVar(userData.sample_data, plotVar);
+    userData.treePanelData = generateTreeData(userData.sample_data);
+    userData.jtable = createTreeTable(gData,userData);
+
+    setappdata(theParent, 'UserData', userData);
+    plotData(theParent);
+    zoomYextent_Callback(hObject);
+    zoomXextent_Callback(hObject);
+end
+
+%need to now select the time period/data to do the comparison: need to get
+%input from the user using ginput.
+%tell the user what to do:
+handles.selectPoints.Visible = 'on';
+handles.BathCals.Visible = 'off';
+
+h = helpdlg(['Select the region to use for bath calibrations by ' ...
+    'zooming in and then use the ''select points'' button.', ...
+    'Calibration selection']);
+uiwait(h)
+zoom on
+
+end
+
+
+% --- Executes on button press in selectPoints.
+function selectPoints_Callback(hObject, eventdata, handles)
+% hObject    handle to selectPoints (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%user is ready to choose the area for the bath calibrations:
+zoom off
+[x,y] = select_points;
+
+theParent = ancestor(hObject,'figure');
+userData=getappdata(theParent, 'UserData');
+
+userData.calx = x;
+userData.caly = y;
+
+% is there a second temperature range?
+temp2 = questdlg('If there a second temperature range to select, click ',...
+    'Bath Calibrations','No');
+
+switch temp2
+    case 'Yes'
+        zoom off
+        [x,y] = select_points;
+        userData.calx2 = x;
+        userData.caly2 = y;
+    case 'No'
+    case 'Cancel'
+        return
+end
+
+%now call the function to process the bath calibrations and make some
+%plots:
+bathCals(userData)
+
+handles.selectPoints.Visible = 'off';
+handles.BathCals.Visible = 'on';
+
 end

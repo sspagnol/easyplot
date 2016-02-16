@@ -5,8 +5,10 @@ function setup_easyplot
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 
 % location of the users toolbox installation
-imos_tb_home='D:\Projects\aims-gitlab\imos-toolbox';
+imos_tb_home='/Users/cow074/Documents/work_mac/moorings/imos-toolbox/imos-toolbox/';
 
+%location of raw data files:
+raw_files_pth = '/Volumes/DWmoorings1/Solander_2015/2014_recoveries/RawData/';
 % user should not need to edit anything further
 
 %%
@@ -14,6 +16,9 @@ reAddPaths(EPdir,'AIMS easyplot',true);
 
 %% add IMOS Toolbox paths
 reAddPaths(imos_tb_home,'IMOS toolbox',true);
+
+%% add Data file paths
+reAddPaths(raw_files_pth,'Raw Files',true);
 
 end
 
