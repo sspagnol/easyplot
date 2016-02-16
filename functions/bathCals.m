@@ -145,7 +145,7 @@ plotcals
             if isfield(userData,'calx2')
                 igIns2 = insti >= tmin2 & insti <= tmax2;
             end
-            if sum(igIns1) > 0
+            if sum(igIns1) > 10
                 %need the largest time diff between ref and each ins as timebase:
                 insdif = nanmedian(diff(insti));
                 if refdif >= insdif
@@ -189,10 +189,16 @@ plotcals
                     figure(2)
                     ik = strcmp(strtrim(insnms(a,:)),cellstr(iu)); %find the instrument group
                     hh = plot(caldat,insdat-caldat,'marker',mrk{ik},'color',cb(ik,:));
-                    text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
+                    iend = find(~isnan(hh.XData) & ~isnan(hh.YData));
+                    iend = iend(end);
+                    text(double(hh.XData(iend)),double(hh.YData(iend)),...
+                        data{a}.meta.instrument_serial_no)
                     if isfield(userData,'calx2')
                         hh = plot(caldat2,insdat2-caldat2,'marker',mrk{ik},'color',cb(ik,:));
-                        text(double(hh.XData(end)),double(hh.YData(end)),data{a}.meta.instrument_serial_no)
+                        iend = find(~isnan(hh.XData) & ~isnan(hh.YData));
+                        iend = iend(end);
+                        text(double(hh.XData(iend)),double(hh.YData(iend)),...
+                            data{a}.meta.instrument_serial_no)
                     end
                 end
             else
