@@ -920,6 +920,8 @@ else
     ylabel(hAx,'Multiple Variables');
 end
 
+grid on
+
 h = findobj(hAx,'Type','line','-not','tag','legend','-not','tag','Colobar');
 
 % mapping = round(linspace(1,64,length(h)))';
