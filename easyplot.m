@@ -580,6 +580,9 @@ else
     sam.inputFile = NAME;
     sam.inputFileExt = EXT;
     sam.easyplot_input_file = fileName;
+    % for v2.5+ need toolbox_input_file
+    sam.toolbox_input_file = fileName;
+
 end
 
 sam.time_coverage_start = sam.dimensions{idTime}.data(1);
