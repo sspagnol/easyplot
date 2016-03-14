@@ -1684,7 +1684,6 @@ userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 
 if isfield(userData, 'sample_data')
-    
     plotVar = 'TEMP';
     userData.sample_data = markPlotVar(userData.sample_data, plotVar);
     userData.treePanelData = generateTreeData(userData.sample_data);
@@ -1699,14 +1698,19 @@ end
 %need to now select the time period/data to do the comparison: need to get
 %input from the user using ginput.
 %tell the user what to do:
-handles.selectPoints.Visible = 'on';
-handles.BathCals.Visible = 'off';
+if verLessThan('matlab','8.4')
+    set(handles.selectPoints, 'Visible', 'on');
+    set(handles.BathCals, 'Visible', 'off');
+else
+    handles.selectPoints.Visible = 'on';
+    handles.BathCals.Visible = 'off';
+end
 
 h = helpdlg(['Select the region to use for bath calibrations by ' ...
     'zooming in and then use the ''select points'' button.', ...
     'Calibration selection']);
-uiwait(h)
-zoom on
+uiwait(h);
+%zoom('on');
 
 end
 
@@ -1718,8 +1722,8 @@ function selectPoints_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %user is ready to choose the area for the bath calibrations:
-zoom off
-[x,y] = select_points;
+zoom('off');
+[x,y,hh1] = select_points;
 
 theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
@@ -1733,8 +1737,8 @@ temp2 = questdlg('If there a second temperature range to select, click ',...
 
 switch temp2
     case 'Yes'
-        zoom off
-        [x,y] = select_points;
+        zoom('off');
+        [x,y,hh2] = select_points;
         userData.calx2 = x;
         userData.caly2 = y;
     case 'No'
@@ -1744,9 +1748,21 @@ end
 
 %now call the function to process the bath calibrations and make some
 %plots:
-bathCals(userData)
+try
+    bathCals(userData);
+catch
+   warning('had problems executing bathCals'); 
+end
 
-handles.selectPoints.Visible = 'off';
-handles.BathCals.Visible = 'on';
+if verLessThan('matlab','8.4')
+    set(handles.selectPoints,'Visible','off');
+    set(handles.BathCals,'Visible','on');
+else
+    handles.selectPoints.Visible = 'off';
+    handles.BathCals.Visible = 'on';
+end
+
+if exist('hh1'), delete(hh1); end;
+if exist('hh2'), delete(hh2); end;
 
 end

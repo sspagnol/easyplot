@@ -1,23 +1,22 @@
-function setup_easyplot(varargin)
+function setup_easyplot(strType)
 
 % path to easyplot dir
 [EPdir, name, ext] = fileparts(mfilename('fullpath'));
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 if nargin == 0
-strType='pc';
-else
-strType=varagin{1};
+    strType='pc';
 end
+
 switch strType
     case 'pc'
-        baseDIR='C:\AIMS';
-        AODNbaseDir='C:\AIMS';
+        baseDIR='D:\AIMS';
+        AODNbaseDir='D:\AIMS';
         AMdir=fullfile(baseDIR,'matlab');
         OETdir=fullfile(AMdir,'OpenEarthTools');
         
     case 'pc-dev'
-        baseDIR='c:\Projects\aims-gitlab';
-        AODNbaseDir='c:\Projects\aodn';
+        baseDIR='D:\Projects\aims-gitlab';
+        AODNbaseDir='D:\Projects\aodn';
         AMdir=fullfile(baseDIR,'aims-matlab');
         OETdir=fullfile(baseDIR,'aims-matlab','OpenEarthTools');
         
@@ -48,10 +47,10 @@ EPdir=fullfile(baseDIR,'easyplot');
 IUCLdir=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
 
 % location of the users toolbox installation
-imos_tb_home='D:\Projects\aims-gitlab\imos-toolbox';
+ITBdir='D:\Projects\aims-gitlab\imos-toolbox';
 
 % location of the aims imos datatols installation
-imos_tb_home='D:\Projects\aims-gitlab\imos-datatiiks';
+IDTdir='D:\Projects\aims-gitlab\imos-datatools';
 
 % user should not need to edit anything further
 

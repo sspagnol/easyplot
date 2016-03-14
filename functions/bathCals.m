@@ -4,7 +4,7 @@ function bathCals(userData)
 % Return plots of the difference from the reference SBE unit and a table of
 % means and standard deviations over the period selected.
 %
-% Inputs: 
+% Inputs:
 %       userData  contains all the data relevant to the instruments
 %                   loaded
 %       gData     data from the input gui that called this routine
@@ -16,10 +16,11 @@ function bathCals(userData)
 dat = userData.treePanelData;
 %Get the instrument list:
 itemp = cellfun(@(x) x, dat(:,4));
-instList = cellstr([char(dat(itemp,1)) char(dat(itemp,2))]);
-sets      = ones(numel(instList),1);
-insnms = char(dat(itemp,1));
-
+instModels = dat(itemp,1);
+instSerials = dat(itemp,2);
+iSet     = true(size(instModels));
+instList = strcat(instModels, '# ', instSerials);
+instList = regexprep(instList,'#',' ');
 
 %create the dialog box
 [refinst,ok] = listdlg('PromptString','Choose the reference instrument',...
@@ -33,8 +34,8 @@ end
 userData.refInst = refinst;
 %reset instList so that it doesn't include the reference instrument
 instList(refinst) = [];
-insnms(refinst,:) = [];
-sets(refinst) = [];
+instModels(refinst) = [];
+iSet(refinst) = [];
 
 %ref instrument chosen, now ask to select the instruments that were in the
 %bath:
@@ -53,13 +54,11 @@ confirmButton = uicontrol('Style',  'pushbutton', 'String', 'Ok');
 setCheckboxes  = [];
 
 for k = 1:numel(instList)
-    
     setCheckboxes(k) = uicontrol(...
         'Style',    'checkbox',...
         'String',   instList{k},...
         'Value',    1, ...
         'UserData', k);
-    
 end
 
 % set all widgets to normalized for positioning
@@ -74,9 +73,7 @@ set(confirmButton, 'Position', [0.5 0.0  0.5 0.1]);
 
 rowHeight = 0.9 / numel(instList);
 for k = 1:numel(instList)
-    
     rowStart = 1.0 - k * rowHeight;
-    
     set(setCheckboxes (k), 'Position', [0.0 rowStart 0.6 rowHeight]);
 end
 
@@ -100,130 +97,149 @@ uiwait(f);
 %now we know which instruments are in the cal bath ('sets').
 % and we know the time range for checking the offsets (calx,caly)
 % and we know the reference unit ('refinst').
-plotcals
+plotcals;
 
 
     function plotcals
-        %plot the bath calibration data as a comparison
+        %PLOTCALS plot the bath calibration data as a comparison
         %return the handle to the figure, h
         % now put them onto the same timebase to compare the temp offsets:
         %use the cal bath interval:
-        iu = unique(insnms,'rows');
+        iu = unique(instModels);
         
         ref = userData.sample_data{refinst};
-        reftemp = ref.variables{ref.plotThisVar}.data;
-        refti = ref.dimensions{1}.data;
-        refdif = nanmedian(diff(refti));
+        refTemp = ref.variables{ref.plotThisVar}.data;
+        refTime = ref.dimensions{1}.data;
+        refTimeDiff = nanmedian(diff(refTime));
         tmin1 = userData.calx(1);
         tmax1 = userData.calx(2);
-        igRef1 = refti >= tmin1 & refti <= tmax1;
+        igRef1 = refTime >= tmin1 & refTime <= tmax1;
         if isfield(userData,'calx2')
             tmin2 = userData.calx2(1);
             tmax2 = userData.calx2(2);
-            igRef2 = refti >= tmin2 & refti <= tmax2;
+            igRef2 = refTime >= tmin2 & refTime <= tmax2;
         end
         
         data = userData.sample_data;
         data(refinst) = [];
-        data = data(logical(sets));
-        insnms = insnms(find(sets),:);
-        %plot the calibration data for all temperature ranges by time:
-        figure(1);clf;hold on
-        %need a figure to plot diffs by instrument type:
-        figure(2);clf;hold on
+        data = data(iSet);
+        instModels = instModels(iSet);
+        %plot calibration data for all temperature ranges by time:
+        f1 = figure;
+        clf;
+        hold('on');
+        
+        %plot difference to reference instrument coloured by instrument type:
+        f2 = figure;
+        clf;
+        hold('on');
+        
         cc = parula(numel(data));
         cb = parula(size(iu,1));
-        clear h h2
-        mrk = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
-        initiatefig1 = 1;
-        initiatefig2 = 2;
+        clear('h');
+        clear('h2');
+        mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
         rmins = [];
-        for a = 1:numel(data)
-            insti = data{a}.dimensions{1}.data;
-            temp = data{a}.variables{data{a}.plotThisVar}.data;
-            igIns1 = insti >= tmin1 & insti <= tmax1;
+        % handles of plot that potentially be created
+        h1 = NaN(size(data));
+        h2 = NaN(size(data));
+        hh1 = NaN(size(data));
+        hh2 = NaN(size(data));
+        
+        for ii = 1:numel(data)
+            %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
+            instTime = data{ii}.dimensions{1}.data;
+            instTemp = data{ii}.variables{data{ii}.plotThisVar}.data;
+            igIns1 = instTime >= tmin1 & instTime <= tmax1;
             if isfield(userData,'calx2')
-                igIns2 = insti >= tmin2 & insti <= tmax2;
+                igIns2 = instTime >= tmin2 & instTime <= tmax2;
             end
             if sum(igIns1) > 10
                 %need the largest time diff between ref and each ins as timebase:
-                insdif = nanmedian(diff(insti));
-                if refdif >= insdif
-                    tbase = refti(igRef1);
-                    caldat = reftemp(igRef1);
-                    insdat = match_timebase(tbase,insti(igIns1),temp(igIns1));
+                insdif = nanmedian(diff(instTime));
+                if refTimeDiff >= insdif
+                    tbase = refTime(igRef1);
+                    caldat = refTemp(igRef1);
+                    insdat = match_timebase(tbase,instTime(igIns1),instTemp(igIns1));
                     if isfield(userData,'calx2')
-                        tbase2 = refti(igRef2);
-                        caldat2 = reftemp(igRef2);
-                        insdat2 = match_timebase(tbase2,insti(igIns2),temp(igIns2));
+                        tbase2 = refTime(igRef2);
+                        caldat2 = refTemp(igRef2);
+                        insdat2 = match_timebase(tbase2,instTime(igIns2),instTemp(igIns2));
                     end
                 else
-                    tbase = insti(igIns1);
-                    insdat = temp(igIns1);
-                    caldat = match_timebase(tbase,refti(igRef1),reftemp(igRef1));
+                    tbase = instTime(igIns1);
+                    insdat = instTemp(igIns1);
+                    caldat = match_timebase(tbase,refTime(igRef1),refTemp(igRef1));
                     if isfield(userData,'calx2')
-                        tbase2 = insti(igIns2);
-                        insdat2 = temp(igIns2);
-                        caldat2 = match_timebase(tbase2,refti(igRef2),reftemp(igRef2));
+                        tbase2 = instTime(igIns2);
+                        insdat2 = instTemp(igIns2);
+                        caldat2 = match_timebase(tbase2,refTime(igRef2),refTemp(igRef2));
                     end
                 end
+                
                 %plot only the regions of comparison
-                figure(1)
-                if initiatefig1
-                    h(a) = plot(tbase,caldat,'kx-','linewidth',2);
-                    initiatefig1 = 0;
+                figure(f1);
+                if ii == 1
+                    h1(ii) = plot(tbase,caldat,'kx-', 'linewidth',2);
                 end
-                h(a) = plot(tbase,insdat,'x-','color',cc(a,:));
+                h1(ii) = plot(tbase,insdat,'x-','color',cc(ii,:));
                 
                 if isfield(userData,'calx2')
-                    figure(1)
-                    if initiatefig2
-                        h2(a) = plot(tbase2,caldat2,'kx-','linewidth',2);
-                        initiatefig2 = 0;
+                    if ii == 1
+                        h2(ii) = plot(tbase2,caldat2,'kx-','linewidth',2);
                     end
-                    h2(a) = plot(tbase2,insdat2,'x-','color',cc(a,:));
+                    h2(ii) = plot(tbase2,insdat2,'x-','color',cc(ii,:));
                 end
                 
-                if exist('h','var')
-                    %plot differences by instrument type
-                    figure(2)
-                    ik = strcmp(strtrim(insnms(a,:)),cellstr(iu)); %find the instrument group
-                    hh = plot(caldat,insdat-caldat,'marker',mrk{ik},'color',cb(ik,:));
-                    iend = find(~isnan(hh.XData) & ~isnan(hh.YData));
-                    iend = iend(end);
-                    text(double(hh.XData(iend)),double(hh.YData(iend)),...
-                        data{a}.meta.instrument_serial_no)
-                    if isfield(userData,'calx2')
-                        hh = plot(caldat2,insdat2-caldat2,'marker',mrk{ik},'color',cb(ik,:));
-                        iend = find(~isnan(hh.XData) & ~isnan(hh.YData));
-                        iend = iend(end);
-                        text(double(hh.XData(iend)),double(hh.YData(iend)),...
-                            data{a}.meta.instrument_serial_no)
-                    end
+                %plot differences by instrument type
+                figure(f2);
+                ik = strcmp(strtrim(instModels{ii}), iu); %find the instrument group
+                hh1(ii) = plot(caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', iu{ik});
+                XData = get(hh1(ii), 'XData');
+                YData = get(hh1(ii), 'YData');
+                iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
+                text(double(XData(iend)),double(YData(iend)),...
+                    data{ii}.meta.instrument_serial_no); %iu{ik}); %
+                if isfield(userData,'calx2')
+                    hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', iu{ik});
+                    XData = get(hh2(ii), 'XData');
+                    YData = get(hh2(ii), 'YData');
+                    iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
+                    text(double(XData(iend)),double(YData(iend)),...
+                        data{ii}.meta.instrument_serial_no); %iu{ik}); %
                 end
             else
-                rmins = [rmins;a];
-                
+                rmins = [rmins; ii];
             end
         end
-        if exist('h','var')
-            h(rmins) = [];
-            inst = instList(logical(sets));
-            inst(rmins) = [];
-            figure(1)
-            grid on
-            xlabel('Time')
-            ylabel('Temperature \circC')
-            datetick
-            legend(h,inst)
-            title('Bath Calibrations')
-            figure(2)
+        
+        % remove handles of plots that weren't created (indicated by NaN)
+        h1(rmins) = [];
+        h2(rmins) = [];
+        hh1(rmins) = [];
+        hh2(rmins) = [];
+        iu(rmins) = [];
+        
+        if exist('h1','var')
+            figure(f1);
+            legText = instList(iSet);
+            legText(rmins) = [];
+            grid('on');
+            xlabel('Time');
+            ylabel('Temperature \circC');
+            datetick;
+            legend(h1,legText);
+            title('Bath Calibrations');
             
-            %         legend(iu)
-            title('Calibration bath temperature offsets from reference instrument')
-            xlabel('Bath temperature \circC')
-            ylabel('Temperature offset \circC')
-            grid on
+            figure(f2);
+            legText = instModels(iSet);
+            legText(rmins) = [];
+            [legText,IA,IC] = unique(legText);
+            legend(hh1(IA));
+            title('Calibration bath temperature offsets from reference instrument');
+            xlabel('Bath temperature \circC');
+            ylabel('Temperature offset \circC');
+            grid('on');
         end
     end
 
@@ -242,7 +258,7 @@ plotcals
         %CANCELCALLBACK Cancel button callback. Discards user input and closes the
         % dialog .
         %
-        sets(:)    = 0;
+        iSet(:)    = false;
         delete(f);
     end
 
@@ -258,8 +274,7 @@ plotcals
         idx = get(source, 'UserData');
         val = get(source, 'Value');
         
-        sets(idx) = val;
-        
+        iSet(idx) = logical(val);
     end
 
 end
