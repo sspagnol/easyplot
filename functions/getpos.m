@@ -46,7 +46,11 @@ function [pos,unit]=getpos(h,fmt,href,opt)
 %
 
 % Check the number of input arguments
-error(nargchk(1,4, nargin));
+if verLessThan('matlab','R2011b')
+    error(nargchk(1,4, nargin));
+else
+    narginchk(1,4);
+end
 
 % Check if H is a graphics object handle
 if ~ishandle(h)

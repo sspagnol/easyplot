@@ -1,11 +1,17 @@
 function setup_easyplot(strType)
 
 % path to easyplot dir
-[EPdir, name, ext] = fileparts(mfilename('fullpath'));
+[EPpath, name, ext] = fileparts(mfilename('fullpath'));
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 if nargin == 0
     strType='pc';
 end
+
+% baseDIR : typically top folder containing easyplot, imos-datatools and
+% imos-toolbox folders
+% ITBdir : folder name of imos toolbox
+% IDTdir : folder name of imos datatools
+% EPdir : foldername of easyplot
 
 switch strType
     case 'pc'
@@ -13,55 +19,60 @@ switch strType
         AODNbaseDir='D:\AIMS';
         AMdir=fullfile(baseDIR,'matlab');
         OETdir=fullfile(AMdir,'OpenEarthTools');
+        ITBdir = 'imos-toolbox-2.5-aims';
+        IDTdir = 'imos-datatools';
+        EPdir = 'easyplot';
         
     case 'pc-dev'
         baseDIR='D:\Projects\aims-gitlab';
         AODNbaseDir='D:\Projects\aodn';
         AMdir=fullfile(baseDIR,'aims-matlab');
         OETdir=fullfile(baseDIR,'aims-matlab','OpenEarthTools');
+        ITBdir = 'imos-toolbox';
+        IDTdir = 'imos-datatools';
+        EPdir = 'easyplot';
         
     case 'hpc'
         baseDIR='/export/ocean/AIMS';
         AODNbaseDir='/export/ocean/AIMS';
         AMdir=fullfile(baseDIR,'matlab');
         OETdir=fullfile(AMdir,'OpenEarthTools');
-        
+        ITBdir = 'imos-toolbox-2.5-aims';
+        IDTdir = 'imos-datatools';
+        EPdir = 'easyplot';
+
     case 'hpc-dev'
         baseDIR='/export/ocean/sspagnol/src/aims-gitlab';
         AODNbaseDir='/export/ocean/sspagnol/src/github/aodn';
         AMdir='/export/ocean/AIMS/matlab';
         OETdir=fullfile(AMdir,'OpenEarthTools');
-        
+        ITBdir = 'imos-toolbox';
+        IDTdir = 'imos-datatools';
+        EPdir = 'easyplot';
 end
 
 % path to AIMS imos-datatools, needed for getAllFiles etc
-ITBdir=fullfile(baseDIR,'imos-toolbox-2.5-aims');
+ITBpath=fullfile(baseDIR, ITBdir);
 
 % path to AIMS imos-datatools, needed for getAllFiles etc
-IDTdir=fullfile(baseDIR,'imos-datatools');
+IDTpath=fullfile(baseDIR, IDTdir);
 
 % path to AIMS Easyplot
-EPdir=fullfile(baseDIR,'easyplot');
+EPpath=fullfile(baseDIR, EPdir);
 
 % path to IMOS user code library
-IUCLdir=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
-
-% location of the users toolbox installation
-ITBdir='D:\Projects\aims-gitlab\imos-toolbox';
-
-% location of the aims imos datatols installation
-IDTdir='D:\Projects\aims-gitlab\imos-datatools';
+IUCLpath=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
 
 % user should not need to edit anything further
 
 %%
-reAddPaths(EPdir,'AIMS easyplot',true);
+reAddPaths(EPpath,'AIMS easyplot',true);
 
 %%
-reAddPaths(IDTdir,'AIMS imos-datatools',true);
+reAddPaths(IDTpath,'AIMS imos-datatools',true);
 
 %% add IMOS Toolbox paths
-reAddPaths(ITBdir,'IMOS toolbox',true);
+reAddPaths(ITBpath,'IMOS toolbox',true);
 
 end
 
@@ -69,14 +80,18 @@ end
 function reAddPaths(topDir,messageStr,atBeginning)
 
 disp(['Adding paths for ' messageStr ', please wait...']);
-gp=genpath_clean(topDir);
-disp('  Removing any existing paths.')
-rempath(gp);
-disp('  Adding new paths');
-if atBeginning
-    addpath(gp,'-begin');
-else
-    addpath(gp);
+try
+    gp=genpath_clean(topDir);
+    disp('  Removing any existing paths.')
+    rempath(gp);
+    disp('  Adding new paths');
+    if atBeginning
+        addpath(gp,'-begin');
+    else
+        addpath(gp);
+    end
+catch
+    error(['Path ' topDir ' does not exist.']);
 end
 
 end
