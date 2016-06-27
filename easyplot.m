@@ -404,7 +404,7 @@ else
                 % get parser for the filetype
                 parser = str2func(FILEparsers{ii});
 
-                structs = parser( {theFullFile}, 'TimeSeries' );
+                structs = parser( {theFullFile}, 'timeSeries' );
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
                     tmpStruct = finaliseDataEasyplot(structs, theFullFile);
@@ -605,6 +605,9 @@ if isfield(sam.meta,'timezone')
 else
     sam.meta.timezone='UTC';
 end
+
+% we don't know what the planned depth is in this application
+sam.meta.depth = 0;
 
 sam.history = '';
 
