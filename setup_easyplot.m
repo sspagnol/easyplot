@@ -69,7 +69,7 @@ IUCLpath=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
 reAddPaths(EPpath,'AIMS easyplot',true);
 
 %%
-reAddPaths(IDTpath,'AIMS imos-datatools',true);
+%reAddPaths(IDTpath,'AIMS imos-datatools',true);
 
 %% add IMOS Toolbox paths
 reAddPaths(ITBpath,'IMOS toolbox',true);

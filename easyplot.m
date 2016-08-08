@@ -960,7 +960,7 @@ else
     ylabel(hAx,'Multiple Variables');
 end
 
-grid('on');
+grid(hAx,'on');
 
 h = findobj(hAx,'Type','line','-not','tag','legend','-not','tag','Colobar');
 
@@ -1726,10 +1726,14 @@ function selectPoints_Callback(hObject, eventdata, handles)
 
 %user is ready to choose the area for the bath calibrations:
 zoom('off');
-[x,y,hh1] = select_points;
 
 theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
+
+gData = guidata(theParent);
+axH = gData.axes1;
+%[x,y,hh1] = select_points;
+[x,y] = select_points(axH);
 
 userData.calx = x;
 userData.caly = y;
@@ -1741,7 +1745,8 @@ temp2 = questdlg('If there a second temperature range to select, click ',...
 switch temp2
     case 'Yes'
         zoom('off');
-        [x,y,hh2] = select_points;
+        %[x,y,hh2] = select_points;
+        [x,y] = select_points(axH);
         userData.calx2 = x;
         userData.caly2 = y;
     case 'No'
