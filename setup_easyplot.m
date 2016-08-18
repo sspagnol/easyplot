@@ -15,39 +15,39 @@ end
 
 switch strType
     case 'pc'
-        baseDIR='D:\AIMS';
-        AODNbaseDir='D:\AIMS';
-        AMdir=fullfile(baseDIR,'matlab');
-        OETdir=fullfile(AMdir,'OpenEarthTools');
+        baseDIR='C:\AIMS';
+        AODNbaseDir='C:\AIMS';
+%        AMdir=fullfile(baseDIR,'matlab');
+%        OETdir=fullfile(AMdir,'OpenEarthTools');
         ITBdir = 'imos-toolbox-2.5-aims';
-        IDTdir = 'imos-datatools';
+%        IDTdir = 'imos-datatools';
         EPdir = 'easyplot';
         
     case 'pc-dev'
-        baseDIR='D:\Projects\aims-gitlab';
-        AODNbaseDir='D:\Projects\aodn';
-        AMdir=fullfile(baseDIR,'aims-matlab');
-        OETdir=fullfile(baseDIR,'aims-matlab','OpenEarthTools');
+        baseDIR='C:\Projects\aims-gitlab';
+        AODNbaseDir='C:\Projects\aodn';
+%        AMdir=fullfile(baseDIR,'aims-matlab');
+%        OETdir=fullfile(baseDIR,'aims-matlab','OpenEarthTools');
         ITBdir = 'imos-toolbox';
-        IDTdir = 'imos-datatools';
+%        IDTdir = 'imos-datatools';
         EPdir = 'easyplot';
         
     case 'hpc'
         baseDIR='/export/ocean/AIMS';
         AODNbaseDir='/export/ocean/AIMS';
-        AMdir=fullfile(baseDIR,'matlab');
-        OETdir=fullfile(AMdir,'OpenEarthTools');
+%        AMdir=fullfile(baseDIR,'matlab');
+%        OETdir=fullfile(AMdir,'OpenEarthTools');
         ITBdir = 'imos-toolbox-2.5-aims';
-        IDTdir = 'imos-datatools';
+%        IDTdir = 'imos-datatools';
         EPdir = 'easyplot';
 
     case 'hpc-dev'
         baseDIR='/export/ocean/sspagnol/src/aims-gitlab';
         AODNbaseDir='/export/ocean/sspagnol/src/github/aodn';
-        AMdir='/export/ocean/AIMS/matlab';
-        OETdir=fullfile(AMdir,'OpenEarthTools');
+ %       AMdir='/export/ocean/AIMS/matlab';
+ %       OETdir=fullfile(AMdir,'OpenEarthTools');
         ITBdir = 'imos-toolbox';
-        IDTdir = 'imos-datatools';
+ %       IDTdir = 'imos-datatools';
         EPdir = 'easyplot';
 end
 
@@ -55,13 +55,13 @@ end
 ITBpath=fullfile(baseDIR, ITBdir);
 
 % path to AIMS imos-datatools, needed for getAllFiles etc
-IDTpath=fullfile(baseDIR, IDTdir);
+%IDTpath=fullfile(baseDIR, IDTdir);
 
 % path to AIMS Easyplot
 EPpath=fullfile(baseDIR, EPdir);
 
 % path to IMOS user code library
-IUCLpath=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
+%IUCLpath=fullfile(AODNbaseDir,'imos-user-code-library','MATLAB_R2011');
 
 % user should not need to edit anything further
 

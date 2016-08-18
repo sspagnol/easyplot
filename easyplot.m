@@ -251,6 +251,7 @@ z = zoom(hFig);
 p = pan(hFig);
 set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
+set(hFig, 'WindowKeyPressFcn', @keyPressCallback);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 xlabel(gData.axes1,'Time (UTC)');
@@ -327,7 +328,7 @@ if iParse == 1
     % load csv with
     % column 1 : data file (full qualified or just filename) or a directory
     % column 2 : imos toolbox parser to use
-    % if column 1 is a directory, it will be used as a base dir for 
+    % if column 1 is a directory, it will be used as a base dir for
     % recursive searchdata for data files that are not fully qualified.
     % If multiple directory only name then the first is used.
     % e.g.
@@ -357,14 +358,14 @@ if iParse == 1
     for ii=1:length(iFileOnly)
         jj = iFileOnly(ii);
         [FILEpaths{jj}, FILEnames{jj}, FILEexts{jj}] = fileparts(char(getAllFiles(baseDir, [FILEnames{jj} FILEexts{jj}])));
-    end    
+    end
 else
     % user selected files for one particular instrument type
     filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
     [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
     allFiles = fullfile(thePath, theFiles);
-    if ~iscell(allFiles) 
+    if ~iscell(allFiles)
         allFiles = { allFiles };
     end
     [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), allFiles, 'UniformOutput', false);
@@ -377,9 +378,9 @@ userData.oldPathname=thePath;
 if isequal(FILEnames,0) || isequal(thePath,0)
     disp('No file selected.');
 else
-%     if ischar(FILEnames)
-%         FILEnames = {FILEnames};
-%     end
+    %     if ischar(FILEnames)
+    %         FILEnames = {FILEnames};
+    %     end
     if ~isfield(userData,'sample_data')
         userData.sample_data={};
     end
@@ -403,7 +404,7 @@ else
                 % adopt similar code layout as imos-toolbox importManager
                 % get parser for the filetype
                 parser = str2func(FILEparsers{ii});
-
+                
                 structs = parser( {theFullFile}, 'timeSeries' );
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
@@ -458,7 +459,7 @@ else
         %         end
         
         userData.jtable = createTreeTable(gData, userData);
-
+        
         %% trying to just change the table data and redraw
         % [data,headers] = getTableData(handles.jtable);
         %  setTableData(jtable,handles.treePanelData,headers);
@@ -517,30 +518,30 @@ function utcOffsets = askUtcOffset(FILENAME)
 f = figure('Position',[100 100 400 150]);
 startData =  {};
 for ii=1:numel(FILENAME)
-startData{ii,1} = FILENAME;
-startData{ii,2} = 0;
+    startData{ii,1} = FILENAME;
+    startData{ii,2} = 0;
 end
 columnname =   {'Filename', 'UTC Offset'};
 columnformat = {'char', 'numeric'};
-columneditable =  [false  true]; 
+columneditable =  [false  true];
 myTable = uitable('Units','normalized','Position',...
-            [0.1 0.1 0.9 0.9], 'Data', startData,... 
-            'ColumnName', columnname,...
-            'ColumnFormat', columnformat,...
-            'ColumnEditable', columneditable,...
-            'RowName',[]);
+    [0.1 0.1 0.9 0.9], 'Data', startData,...
+    'ColumnName', columnname,...
+    'ColumnFormat', columnformat,...
+    'ColumnEditable', columneditable,...
+    'RowName',[]);
 set(h,'CloseRequestFcn',@myCloseFcn);
 set(h,'Tag', 'myTag');
 set(mytable,'Tag','myTableTag');
 waitfor(gcf);
 finalData=get(myTable,'Data');
 
-function myCloseFcn(~,~)
-myfigure=findobj('Tag','myTag');
-myData=get(findobj(myfigure,'Tag','myTableTag'),'Data')
-assignin('base','myTestData',myData)
-delete(myfigure)
-end
+    function myCloseFcn(~,~)
+        myfigure=findobj('Tag','myTag');
+        myData=get(findobj(myfigure,'Tag','myTableTag'),'Data')
+        assignin('base','myTestData',myData)
+        delete(myfigure)
+    end
 
 end
 
@@ -556,7 +557,7 @@ function sam = finaliseDataEasyplot(sam,fileName)
 
 % make all dimension names upper case
 for ii=1:numel(sam.dimensions)
-sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);
+    sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);
 end
 
 idTime  = getVar(sam.dimensions, 'TIME');
@@ -586,7 +587,7 @@ else
     sam.easyplot_input_file = fileName;
     % for v2.5+ need toolbox_input_file
     sam.toolbox_input_file = fileName;
-
+    
 end
 
 sam.time_coverage_start = sam.dimensions{idTime}.data(1);
@@ -659,10 +660,10 @@ for ii=1:numel(sample_data)
 end
 varList=unique(varList);
 for ii=1:numel(varList)
-   short_name = char(varList{ii});
-   long_name = imosParameters(short_name, 'long_name');
-   uom = imosParameters(short_name, 'uom');
-   dialogList{ii} = [short_name ' (' long_name ') [' uom ']'];
+    short_name = char(varList{ii});
+    long_name = imosParameters(short_name, 'long_name');
+    uom = imosParameters(short_name, 'uom');
+    dialogList{ii} = [short_name ' (' long_name ') [' uom ']'];
 end
 varList{end+1}='ALLVARS';
 %disp(sprintf('%s ','Variable list = ',varList{:}));
@@ -883,7 +884,7 @@ hAx=gData.axes1;
 legendStr={};
 
 %legend(hAx,'off');
-if isfield(userData,'legend_h') 
+if isfield(userData,'legend_h')
     if ~isempty(userData.legend_h),  delete(userData.legend_h); end
 end
 %children = get(handles.axes1, 'Children');
@@ -913,7 +914,7 @@ for ii=1:numel(userData.sample_data) % loop over files
             try
                 if isvector(userData.sample_data{ii}.variables{jj}.data)
                     % 1D var
-                       line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                    line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
                         'YData',userData.sample_data{ii}.variables{jj}.data, ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', instStr, 'Tag', tagStr);
@@ -1043,7 +1044,7 @@ if isfield(userData, 'sample_data')
     children = get(gData.axes1, 'Children');
     delete(children);
     set(gData.listbox1,'String', '');
-
+    
     % clear legend
     legend(gData.axes1,'off')
     userData.legend_h = [];
@@ -1065,7 +1066,7 @@ if isfield(userData, 'sample_data')
     %     model.groupAndRefresh;
     %     handles.jtable.repaint;
     userData.jtable = createTreeTable(gData,userData);
-
+    
     userData.sample_data={};
     userData.firstPlot=true;
     userData.xMin=NaN;
@@ -1124,7 +1125,7 @@ if isfield(userData, 'sample_data')
     %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
     %     end
     userData.jtable = createTreeTable(gData,userData);
-
+    
     setappdata(theParent, 'UserData', userData);
     plotData(theParent);
     zoomYextent_Callback(hObject);
@@ -1364,7 +1365,12 @@ keepLimits=false;
 % call function for setup, callback and listener. Since I'm only doing
 % setup and listener could probably clean up, but keeping it around for
 % reference.
-if isfield(source,'Axes') %called as initialize axes
+if isgraphics(source,'Axes')
+    %disp('updateDateLabel init')
+    axH = source; % On which axes has the zoom/pan occurred
+    axesInfo = get(source, 'UserData');
+    keepLimits=true;
+elseif isfield(source,'Axes') %called as initialize axes
     %disp('updateDateLabel init')
     axH = source.Axes; % On which axes has the zoom/pan occurred
     axesInfo = get(source.Axes, 'UserData');
@@ -1477,7 +1483,7 @@ if count>1
 end
 end
 
-%% 
+%%
 function table_data = getData(jtable_handle)
 %getData : Get data from jtable Table
 
@@ -1691,7 +1697,7 @@ if isfield(userData, 'sample_data')
     userData.sample_data = markPlotVar(userData.sample_data, plotVar);
     userData.treePanelData = generateTreeData(userData.sample_data);
     userData.jtable = createTreeTable(gData,userData);
-
+    
     setappdata(theParent, 'UserData', userData);
     plotData(theParent);
     zoomYextent_Callback(hObject);
@@ -1759,7 +1765,7 @@ end
 try
     bathCals(userData);
 catch
-   warning('had problems executing bathCals'); 
+    warning('had problems executing bathCals');
 end
 
 if verLessThan('matlab','8.4')
@@ -1774,3 +1780,101 @@ if exist('hh1'), delete(hh1); end;
 if exist('hh2'), delete(hh2); end;
 
 end
+
+function keyPressCallback(source,ev)
+%KEYPRESSCALLBACK Called when the WindowKeyPressFcn function is called.
+% Keyboard shortcuts to zoom/pan on current axis and uses
+% zoomPostCallback to update any linked plots.
+%
+% Keys you can use are:
+% z, Z: zoom in, zoom out, in both dimensions
+% x, X: zoom in, zoom out, x dimension only (for all plots)
+% y, Y: zoom in, zoom out, y dimension only (only current selected plot)
+% arrow keys: pan the data (only current selected plot), shift
+% arrow increase panning factor
+% a: axis auto
+%
+% Idea borrowed from https://github.com/gulley/Ax-Drag
+
+theChar = get(gcbf,'CurrentCharacter');
+%theChar = sprintf('%c',ev.Character);
+isControl = any(cell2mat(regexpi(ev.Modifier, 'control')));
+isShift = any(cell2mat(regexpi(ev.Modifier, 'shift')));
+isAlt = any(cell2mat(regexpi(ev.Modifier, 'alt')));
+
+% Use these variables to change the zoom and pan amounts
+zoomFactor = 0.9;
+panFactor = 0.02;
+
+theYLabel = get(get(gca, 'YLabel'),'String');
+if any(cell2mat(regexpi(theYLabel, {'PRES', 'DEPTH'})))
+    panFactor = -panFactor;
+end
+
+if isShift
+    panFactor = 10*panFactor;
+end
+
+switch theChar
+    case 'a'
+        %axis('auto');
+        xlim('auto');
+        ylim('auto');
+        
+    case 'n'
+        %axis('normal');
+        xlim('auto');
+        ylim('auto');
+        
+    case {'x', 'X'}
+        if theChar == 'X',
+            zoomFactor=1/zoomFactor;
+        end
+        xLim=get(gca,'XLim');
+        xLimNew = [0 zoomFactor*diff(xLim)] + xLim(1) + (1-zoomFactor)*diff(xLim)/2;
+        set(gca,'XLim',xLimNew);
+        
+    case {'y', 'Y'}
+        if theChar == 'Y'
+            zoomFactor=1/zoomFactor;
+        end
+        yLim=get(gca,'YLim');
+        yLimNew = [0 zoomFactor*diff(yLim)] + yLim(1) + (1-zoomFactor)*diff(yLim)/2;
+        set(gca,'YLim',yLimNew);
+        
+    case {'z', 'Z'}
+        if theChar == 'Z'
+            zoomFactor=1/zoomFactor;
+        end
+        xLim=get(gca,'XLim');
+        yLim=get(gca,'YLim');
+        xLimNew = [0 zoomFactor*diff(xLim)] + xLim(1) + (1-zoomFactor)*diff(xLim)/2;
+        yLimNew = [0 zoomFactor*diff(yLim)] + yLim(1) + (1-zoomFactor)*diff(yLim)/2;
+        set(gca,'XLim',xLimNew,'YLim',yLimNew);
+        
+    case {'leftarrow', 28} % arrow left
+        xLim=get(gca,'XLim');
+        xLimNew = xLim + panFactor*diff(xLim);
+        set(gca,'XLim',xLimNew);
+        
+    case {'rightarrow', 29} % arrow right
+        xLim=get(gca,'XLim');
+        xLimNew = xLim - panFactor*diff(xLim);
+        set(gca,'XLim',xLimNew);
+        
+    case {'uparrow', 30} % arrow up
+        yLim=get(gca,'YLim');
+        yLimNew = yLim - panFactor*diff(yLim);
+        set(gca,'YLim',yLimNew);
+        
+    case {'downarrow', 31} % arrow down
+        yLim=get(gca,'YLim');
+        yLimNew = yLim + panFactor*diff(yLim);
+        set(gca,'YLim',yLimNew);
+        
+end
+
+updateDateLabel(gca, gca, true);
+
+end
+
