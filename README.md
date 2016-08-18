@@ -33,3 +33,14 @@ Most raw instrument data files will require some sort of conversion in order for
 | Wetlabs FLNTU	| raw	| The corresponding DEV file must be in the same folder and have the same base name. |
 | Vemco Minilog-II-T	| csv	| From Logger Vue software export VLD file as CSV. |
 
+
+Keyboard shortcuts
+
+| Key | Action |
+| --- | --- |
+| z, Z | zoom in, zoom out, in both dimensions |
+| x, X | zoom in, zoom out, x dimension only (for all plots) |
+| y, Y | zoom in, zoom out, y dimension only (only current selected plot) |
+| arrow keys | pan the data (only current selected plot), shift arrow increase panning factor |
+| a | axis auto |
+| Shift-leftmouseclick | display table of variables nearest timestamp selected. |
