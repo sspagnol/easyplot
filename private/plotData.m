@@ -46,47 +46,52 @@ varNames={};
 %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
 for ii=1:numel(userData.sample_data) % loop over files
-    for jj=1:numel(userData.sample_data{ii}.variables)
-        if strcmp(userData.sample_data{ii}.variables{jj}.name,'TIMEDIFF')
+    for jj = find(userData.sample_data{ii}.plotThisVar)
+        if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
             lineStyle='none';
             markerStyle='.';
         else
             lineStyle='-';
             markerStyle='none';
         end
-        if userData.sample_data{ii}.plotThisVar(jj)
+        
+        if strfind(userData.sample_data{ii}.variables{jj}.name, 'EP_LPF')
+            idTime  = getVar(userData.sample_data{ii}.dimensions, 'LPFTIME');
+        else
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
-            instStr=strcat(userData.sample_data{ii}.variables{jj}.name, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
-            %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
-            %[PATHSTR,NAME,EXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
-            tagStr = [userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt];
-            try
-                if isvector(userData.sample_data{ii}.variables{jj}.data)
-                    % 1D var
-                    line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                        'YData',userData.sample_data{ii}.variables{jj}.data, ...
-                        'LineStyle',lineStyle, 'Marker', markerStyle,...
-                        'DisplayName', instStr, 'Tag', tagStr);
-                else
-                    % 2D var
-                    iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
-                    line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                        'YData',userData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
-                        'LineStyle',lineStyle, 'Marker', markerStyle,...
-                        'DisplayName', instStr, 'Tag', tagStr);
-                end
-            catch
-                error('PLOTDATA: plot failed.');
-            end
-            hold(hAx,'on');
-            legendStr{end+1}=strrep(instStr,'_','\_');
-            varNames{end+1}=userData.sample_data{ii}.variables{jj}.name;
-            set(gData.progress,'String',strcat('Plot : ', instStr));
-            %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-            %drawnow;
         end
+        
+        instStr=strcat(userData.sample_data{ii}.variables{jj}.name, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
+        %[PATHSTR,NAME,EXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
+        tagStr = [userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt];
+        try
+            if isvector(userData.sample_data{ii}.variables{jj}.data)
+                % 1D var
+                line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                    'YData',userData.sample_data{ii}.variables{jj}.data, ...
+                    'LineStyle',lineStyle, 'Marker', markerStyle,...
+                    'DisplayName', instStr, 'Tag', tagStr);
+            else
+                % 2D var
+                iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
+                line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                    'YData',userData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+                    'LineStyle',lineStyle, 'Marker', markerStyle,...
+                    'DisplayName', instStr, 'Tag', tagStr);
+            end
+        catch
+            error('PLOTDATA: plot failed.');
+        end
+        hold(hAx,'on');
+        legendStr{end+1}=strrep(instStr,'_','\_');
+        varNames{end+1}=userData.sample_data{ii}.variables{jj}.name;
+        set(gData.progress,'String',strcat('Plot : ', instStr));
+        %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+        %drawnow;
     end
 end
+
 varNames=unique(varNames);
 dataLimits=findVarExtents(userData.sample_data);
 userData.xMin = dataLimits.xMin;
