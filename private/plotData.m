@@ -46,7 +46,8 @@ varNames={};
 %allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 
 for ii=1:numel(userData.sample_data) % loop over files
-    for jj = find(userData.sample_data{ii}.plotThisVar)
+    iVars = find(userData.sample_data{ii}.plotThisVar)';
+    for jj = iVars
         if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
             lineStyle='none';
             markerStyle='.';

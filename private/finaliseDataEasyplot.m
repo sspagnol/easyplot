@@ -69,6 +69,7 @@ for kk=1:numel(sam.variables)
         sam.plotThisVar(kk) = false;
     end
 end
+sam.plotThisVar = sam.plotThisVar(:);
 
 end
 

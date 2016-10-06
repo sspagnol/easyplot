@@ -4,6 +4,7 @@ function [sample_data] = markPlotVar(sample_data, plotVar)
 
 for ii=1:numel(sample_data)
     sample_data{ii}.plotThisVar = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
+    sample_data{ii}.plotThisVar = sample_data{ii}.plotThisVar(:);
     for jj=1:numel(sample_data{ii}.variables)
         sample_data{ii}.variables{jj}.iSlice=1;
         sample_data{ii}.variables{jj}.minSlice=1;
