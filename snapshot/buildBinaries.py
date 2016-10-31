@@ -21,7 +21,7 @@ lt = time.localtime()
 project = 'easyplot'
 
 # version    = 'master'
-version    = 'main_function_cleanup'
+version    = 'master'
 
 url        = ' http://gitlab.aims.gov.au/ogtech/%s.git' % project
 exportDir  = 'export'
