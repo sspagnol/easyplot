@@ -137,7 +137,10 @@ for jj = 1:length(h)
     end
 end
 
-[legend_h,object_h,plot_h,text_str]=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
+%[legend_h,object_h,plot_h,text_str]=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
+[legend_h,object_h,plot_h,text_str]=legend(hAx,legendStr);
+set(legend_h, 'FontSize', 8);
+
 % legendflex still has problems
 %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
 

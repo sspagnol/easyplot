@@ -7,20 +7,25 @@ if nargin == 0
     strType='pc';
 end
 
+driveLetter='';
+if ispc
+    driveLetter=EPpath(1:2);
+end
+
 % baseDIR : typically top folder containing easyplot and imos-toolbox folders
 % ITBdir : folder name of imos toolbox, assumes you have set imosToolbox so that imosToolbox.m already in your path
 % EPdir : foldername of easyplot
 
 switch strType
     case 'pc'
-        baseDIR='C:\AIMS';
-        AODNbaseDir='C:\AIMS';
+        baseDIR=[driveLetter '\AIMS'];
+        AODNbaseDir=[driveLetter '\AIMS'];
         ITBdir = 'imos-toolbox-2.5-aims';
         EPdir = 'easyplot';
         
     case 'pc-dev'
-        baseDIR='C:\Projects\aims-gitlab';
-        AODNbaseDir='C:\Projects\aodn';
+        baseDIR=[driveLetter '\Projects\aims-gitlab'];
+        AODNbaseDir=[driveLetter '\Projects\aodn'];
         ITBdir = 'imos-toolbox';
         EPdir = 'easyplot';
         
@@ -37,7 +42,7 @@ switch strType
         EPdir = 'easyplot';
 end
 
-% path to AIMS imos-datatools, needed for getAllFiles etc
+% path to imosToolbox
 ITBpath=fullfile(baseDIR, ITBdir);
 
 % path to AIMS Easyplot
