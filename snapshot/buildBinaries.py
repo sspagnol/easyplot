@@ -37,6 +37,8 @@ print('\n--checking out tree %s' % version)
 os.system('cd %s && git checkout %s' % (exportDir, version))
 print('\n--git status')
 os.system('git status')
+print('\n--updating submodules')
+os.system('git submodule update --init --recursive')
 
 
 # remove snapshot directory
