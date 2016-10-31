@@ -32,7 +32,7 @@ compilerLog = '.\%s\log.txt' % exportDir
 # clone from git
 #
 print('\n--exporting tree from %s to %s' % (url, exportDir))
-os.system('git clone %s %s' % (url, exportDir))
+os.system('git clone --recursive %s %s' % (url, exportDir))
 print('\n--checking out tree %s' % version)
 os.system('cd %s && git checkout %s' % (exportDir, version))
 print('\n--git status')
