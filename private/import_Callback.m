@@ -133,6 +133,9 @@ else
                 setappdata(hFig, 'UserData', userData);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
+                for kk=1:length(ME.stack)
+                    ME.stack(kk)
+                end
             end
         else
             disp(['File ' theFile ' already loaded.']);

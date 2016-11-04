@@ -98,6 +98,10 @@ function sam = add_EP_LPF(sam)
 % filtering need a monotonic time stamp with regular dt and with nan data
 % replaced with mean of time series.
 
+% only do LPF on PRES, PRES_REL
+iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES|PRES_REL')), sam.variables, 'UniformOutput', false)));
+if isempty(iLpfVars), return; end
+
 % filtering burst data like WQMs can be problematic, totally experimental
 % determination of a sampleInterval to construct a new time data
 instrument_sample_interval=sam.meta.instrument_sample_interval;
@@ -190,8 +194,7 @@ if candoLpf
     
     idLpfTime  = getVar(sam.dimensions, 'LPFTIME');
     
-    % only do LPF on PRES, PRES_REL
-    for ii = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES|PRES_REL')), sam.variables, 'UniformOutput', false)))
+    for ii = iLpfVars
         rawData=sam.variables{ii}.data;
         meansignal=nanmean(rawData);
         % interpolate onto clean time data

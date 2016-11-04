@@ -17,20 +17,13 @@ import shutil
 #
 
 lt = time.localtime()
-# http://gitlab.aims.gov.au/ogtech/easyplot.git
+
 project = 'easyplot'
-
-# version    = 'master'
 version    = 'master'
-
 url        = ' http://gitlab.aims.gov.au/ogtech/%s.git' % project
 exportDir  = 'export'
-
 compilerLog = '.\%s\log.txt' % exportDir
-
-#
-# clone from git
-#
+# clone from AIMS gitlab and update submodules
 print('\n--exporting tree from %s to %s' % (url, exportDir))
 os.system('git clone --recursive %s %s' % (url, exportDir))
 print('\n--checking out tree %s' % version)
@@ -40,6 +33,16 @@ os.system('git status')
 print('\n--updating submodules')
 os.system('git submodule update --init --recursive')
 
+#
+projectITB = 'imos-toolbox'
+versionITB    = 'AIMS-2.5'
+urlITB        = 'http://gitlab.aims.gov.au/sspagnol/%s.git' % projectITB
+exportDirITB  = 'export_imostoolbox'
+
+# export from AIMS gitlab
+print('\n--exporting tree from %s to %s' % (urlITB, exportDirITB))
+os.system('git clone %s %s' % (urlITB, exportDirITB))
+os.system('cd %s && git checkout %s' % (exportDirITB, versionITB))
 
 # remove snapshot directory
 #
@@ -64,5 +67,6 @@ matlabOpts = '-nodisplay -nojvm -wait -logfile "%s"' % compilerLog
 matlabCmd = "addpath('utilities'); try, easyplotCompile(); exit(); catch e, disp(e.message); end;"
 os.system('cd %s && matlab %s -r "%s"' % (exportDir, matlabOpts, matlabCmd))
 
-print('\n--removing local git tree')
+print('\n--removing local git trees')
 shutil.rmtree('%s' % exportDir)
+shutil.rmtree('%s' % exportDirITB)
