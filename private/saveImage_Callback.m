@@ -21,6 +21,14 @@ if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
     %uiresume(handles.figure1);
 end
 
+ButtonName = questdlg('Export MATLAB fig?', ...
+                         'Export MATLAB fig', ...
+                         'YES', 'NO', 'NO');
+   switch ButtonName,
+     case 'YES',
+      saveas(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\.fig','ignorecase')), 'fig');
+      %savefig(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\.fig','ignorecase')));
+   end % switch
 end
 
 
