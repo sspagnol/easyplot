@@ -26,7 +26,7 @@ ButtonName = questdlg('Export MATLAB fig?', ...
                          'YES', 'NO', 'NO');
    switch ButtonName,
      case 'YES',
-      saveas(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\.fig','ignorecase')), 'fig');
+      saveas(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\_ep\.fig','ignorecase')), 'fig');
       %savefig(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\.fig','ignorecase')));
    end % switch
 end

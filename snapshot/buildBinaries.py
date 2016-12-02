@@ -37,12 +37,12 @@ os.system('git submodule update --init --recursive')
 projectITB = 'imos-toolbox'
 versionITB    = 'AIMS-2.5'
 urlITB        = 'http://gitlab.aims.gov.au/sspagnol/%s.git' % projectITB
-exportDirITB  = 'export_imostoolbox'
+exportDirITB  = 'imostoolbox'
 
 # export from AIMS gitlab
 print('\n--exporting tree from %s to %s' % (urlITB, exportDirITB))
-os.system('git clone %s %s' % (urlITB, exportDirITB))
-os.system('cd %s && git checkout %s' % (exportDirITB, versionITB))
+os.system('cd export && git clone %s %s' % (urlITB, exportDirITB))
+os.system('cd export && cd %s && git checkout %s' % (exportDirITB, versionITB))
 
 # remove snapshot directory
 #
@@ -63,7 +63,7 @@ shutil.rmtree('%s/snapshot' % exportDir)
 # create snapshot
 #
 print('\n--building Matlab binaries')
-matlabOpts = '-nodisplay -nojvm -wait -logfile "%s"' % compilerLog
+matlabOpts = '-nodisplay -wait -logfile "%s"' % compilerLog
 matlabCmd = "addpath('utilities'); try, easyplotCompile(); exit(); catch e, disp(e.message); end;"
 os.system('cd %s && matlab %s -r "%s"' % (exportDir, matlabOpts, matlabCmd))
 
