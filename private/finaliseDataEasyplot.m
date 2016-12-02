@@ -9,14 +9,20 @@ function sam = finaliseDataEasyplot(sam,fileName)
 % Outputs:
 %   sample_data - same as input, with fields added/modified
 
-% make all dimension names upper case
+%% perform any extra instrument specific cleanup on sam structure
+if exist([sam.meta.parser 'Cleanup'], 'file')
+    parserCleanup = str2func([sam.meta.parser 'Cleanup']);
+    sam = parserCleanup(sam);
+end
+
+%% make all dimension names upper case
 for ii=1:numel(sam.dimensions)
     sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);
 end
 
 idTime  = getVar(sam.dimensions, 'TIME');
 
-% add derived diagnositic variables, prefaces with 'EP_'
+%% add derived diagnositic variables, prefaces with 'EP_'
 sam = add_EP_TIMEDIFF(sam);
 sam = add_EP_LPF(sam);
 
