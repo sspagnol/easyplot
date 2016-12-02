@@ -25,10 +25,10 @@ Most raw instrument data files will require some sort of conversion in order for
 | SBE37	| .asc |	As downloaded from instrument. |
 | SBE37	| .cnv |	Variables like 'Pressure', 'Temp', 'Conductivity' in any order. The variable 'time elapsed in second' must be included. NOTE: if your SBE37 does not have a pressure sensor do not include a pressure variable in your data setup. |
 | SBE39	| .asc |	As downloaded from instrument. |
-| SBE56	| .cnv |	%setting for export are: file type: .cnv, %date format: julian days, %miscelleanous: output informational header. |
+| SBE56	| .cnv |	%setting for export are: file type: .cnv, %date format: prefer NOT julian days, %miscelleanous: output informational header. |
 | WQM	| .dat	| WQM processed DAT file, the corresponding DEV file must be in the same folder and have the same base name eg if you data file is test.DAT the the dev file is test.DEV |
-| TR1060	| .txt	| Use Ruskin v1.7.19 or later, open your hex file. Right click on the dataset in the navigator window and export as Rtext using engineering format. |
-| TDR2050	| .txt	| Use Ruskin v1.7.19 or later, open your hex file. Right click on the dataset in the navigator window and export as Rtext using engineering format. |
+| TR1060	| .txt	| Use Ruskin v1.7.19 or later, open your hex file. Right click on the dataset in the navigator window and export as Rtext using engineering format. Newer version of Ruskin use legacy Rtext option. |
+| TDR2050	| .txt	| Use Ruskin v1.7.19 or later, open your hex file. Right click on the dataset in the navigator window and export as Rtext using engineering format. Newer version of Ruskin use legacy Rtext option. |
 | RDI	| 000	| Standard PD0 format as downloaded from instrument. |
 | Wetlabs FLNTU	| raw	| The corresponding DEV file must be in the same folder and have the same base name. |
 | Vemco Minilog-II-T	| csv	| From Logger Vue software export VLD file as CSV. |
