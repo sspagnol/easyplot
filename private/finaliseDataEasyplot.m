@@ -218,15 +218,15 @@ if candoLpf
         nyquist_freq = Fs/2;  % Nyquist frequency
         Wn=cutoff_freq/nyquist_freq;    % non-dimensional frequency
         % butterworth
-        %[filtb,filta]=butter(order,Wn,ftype); % construct the filter
-        %filterData=filtfilt(filtb,filta,double(rawData)) + meansignal;
-        [z,p,k] = butter(order,Wn,ftype);
-        [sos,g] = zp2sos(z,p,k);
-        filterData=filtfilt(sos,g,double(rawData)) + meansignal;
+        if license('test','Signal_Toolbox')
+            [z,p,k] = butter(order,Wn,ftype);
+            [sos,g] = zp2sos(z,p,k);
+            filterData=filtfilt(sos,g,double(rawData)) + meansignal;
+        else
+            filterData=pl66tn(rawData,dT/3600,33);
+            filterData = filterData + meansignal;
+        end
         
-        % cosine Lanczos
-        %[filterData,coef,window,Cx,Ff] = lanczosfilter(rawData,dT,cutoff_freq,[],ftype);
-        %fsignal(ibad)=nan;
         
         % if not enough lpf data skip
         if sum(isnan(filterData))==numel(filterData)
