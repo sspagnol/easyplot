@@ -22,13 +22,17 @@ if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
 end
 
 ButtonName = questdlg('Export MATLAB fig?', ...
-                         'Export MATLAB fig', ...
-                         'YES', 'NO', 'NO');
-   switch ButtonName,
-     case 'YES',
-      saveas(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\_ep\.fig','ignorecase')), 'fig');
-      %savefig(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\.fig','ignorecase')));
-   end % switch
+    'Export MATLAB fig', ...
+    'YES', 'NO', 'NO');
+switch ButtonName
+    case 'YES'
+        % set CreateFcn callback in case user double click on fig file to
+        % open it
+        hFig=ancestor(hObject,'figure');
+        set(hFig,'CreateFcn','openfig_Callback(gcbo)');
+        saveas(theParent, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\_ep\.fig','ignorecase')), 'fig');
+end % switch
+
 end
 
 
