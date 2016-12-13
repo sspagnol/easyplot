@@ -24,7 +24,7 @@ function y = afiltfilt(b,a,x)
 %	Copyright (c) 1984-94 by The MathWorks, Inc.
 %	$Revision: 1.9 $  $Date: 1994/01/25 17:59:07 $
 
-    error(nargchk(3,3,nargin))
+    narginchk(3,3);
     if (isempty(b)|isempty(a)|isempty(x))
         y = [];
         return
