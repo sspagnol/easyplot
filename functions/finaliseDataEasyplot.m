@@ -204,9 +204,8 @@ if candoLpf
         rawData=sam.variables{ii}.data;
         meansignal=nanmean(rawData);
         % interpolate onto clean time data
-        rawData=interp1(sam.dimensions{idTime}.data,rawData-meansignal,filterTime,'linear',0);
-        %ibad=isnan(rawData);
-        rawData(isnan(rawData))=0; % this should never be the case but...
+        newRawData=interp1(sam.dimensions{idTime}.data,rawData-meansignal,filterTime,'linear',0.0);
+        newRawData(isnan(newRawData))=0; % this should never be the case but...
         
         % butterworth low pass filter with 40h cutoff, using
         % matlab function as has zero phase shift
@@ -221,9 +220,9 @@ if candoLpf
         if license('test','Signal_Toolbox')
             [z,p,k] = butter(order,Wn,ftype);
             [sos,g] = zp2sos(z,p,k);
-            filterData=filtfilt(sos,g,double(rawData)) + meansignal;
+            filterData=filtfilt(sos,g,double(newRawData)) + meansignal;
         else
-            filterData=pl66tn(rawData,dT/3600,33);
+            filterData=pl66tn(newRawData,dT/3600,33);
             filterData = filterData + meansignal;
         end
         

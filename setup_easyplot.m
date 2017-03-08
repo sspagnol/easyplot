@@ -4,7 +4,7 @@ function setup_easyplot(strType)
 [EPpath, name, ext] = fileparts(mfilename('fullpath'));
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 if nargin == 0
-    strType='pc';
+    strType='';
 end
 
 driveLetter='';
@@ -38,6 +38,12 @@ switch strType
     case 'hpc-dev'
         baseDIR='/export/ocean/sspagnol/src/aims-gitlab';
         AODNbaseDir='/export/ocean/sspagnol/src/github/aodn';
+        ITBdir = 'imos-toolbox';
+        EPdir = 'easyplot';
+		
+	otherwise
+		[baseDIR, name, ext] = fileparts(mfilename('fullpath'));
+        baseDIR = fileparts(baseDIR); % up one folder
         ITBdir = 'imos-toolbox';
         EPdir = 'easyplot';
 end
