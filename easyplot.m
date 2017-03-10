@@ -99,6 +99,7 @@ axH=handle(gData.axes1);
 set(axH, 'UserData', axesInfo);
 set(axH, 'XLim', [floor(now) floor(now)+1]);
 userData.axesInfo=axesInfo;
+%set(axH,'ButtonDownFcn',@updateAxisManual)
 
 % Couldn't get easyplot to function correctly so pulled in code from
 % dynamicDateTick into easyplot and modified as required.

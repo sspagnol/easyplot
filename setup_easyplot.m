@@ -55,7 +55,7 @@ ITBpath=fullfile(baseDIR, ITBdir);
 EPpath=fullfile(baseDIR, EPdir);
 
 %%
-reAddPaths(EPpath,'AIMS easyplot',true);
+reAddPaths(EPpath,'AIMS easyplot',true,'(snapshot)');
 
 %% add IMOS Toolbox paths
 reAddPaths(ITBpath,'IMOS toolbox',true);
@@ -63,11 +63,14 @@ reAddPaths(ITBpath,'IMOS toolbox',true);
 end
 
 %%
-function reAddPaths(topDir,messageStr,atBeginning)
+function reAddPaths(topDir,messageStr,atBeginning,excludePattern)
 
 disp(['Adding paths for ' messageStr ', please wait...']);
 try
-    gp=genpath_clean(topDir);
+if ~exist('excludePattern')
+    excludePattern = '';
+end    
+    gp=genpath_clean(topDir, excludePattern);
     disp('  Removing any existing paths.')
     rempath(gp);
     disp('  Adding new paths');
@@ -102,7 +105,7 @@ end
 end
 
 %%
-function thePath = genpath_clean( topDir )
+function thePath = genpath_clean( topDir, excludePattern )
 %genpath_clean generate a path without .svn, .git etc.
 %   generate a path without .svn, .git etc. Based on idea from OpenEarthTools
 
@@ -111,6 +114,10 @@ s = strread(b, '%s','delimiter', pathsep);  % read path as cell
 rpattern='(\.svn|\.git|\.hg\private)';
 ii=cellfun(@isempty,regexp(s,rpattern,'match','once'));
 s=s(ii); %cell array without .git etc
+if ~isempty(excludePattern)
+ii=cellfun(@isempty,regexp(s,excludePattern,'match','once'));
+s=s(ii);
+end
 thePath=sprintf(['%s' pathsep],s{:}); %make string seperated by pathsep
 if thePath(end)==pathsep % remove last not needed pathsep
     thePath(end)=[];
