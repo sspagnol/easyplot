@@ -23,7 +23,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 20-Oct-2015 13:05:46
+% Last Modified by GUIDE v2.5 10-Mar-2017 13:22:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -159,3 +159,12 @@ varargout{1} = handles.figure1;
 end
 
 
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+end
