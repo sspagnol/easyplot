@@ -4,7 +4,7 @@ function setup_easyplot(strType)
 [EPpath, name, ext] = fileparts(mfilename('fullpath'));
 %easyplotDir='D:\Projects\aims-gitlab\easyplot';
 if nargin == 0
-    strType='';
+    strType='pc';
 end
 
 driveLetter='';
@@ -18,11 +18,13 @@ end
 
 switch strType
     case 'pc'
-        baseDIR=[driveLetter '\AIMS'];
-        AODNbaseDir=[driveLetter '\AIMS'];
+        %baseDIR=[driveLetter '\AIMS'];
+        %AODNbaseDir=[driveLetter '\AIMS'];
         ITBdir = 'imos-toolbox-2.5-aims';
-        EPdir = 'easyplot';
-        
+        %EPdir = 'easyplot'; % easyplot folder name
+        thisFilepath = mfilename('fullpath');
+        [baseDIR, EPdir] = fileparts(EPpath);
+
     case 'pc-dev'
         baseDIR=[driveLetter '\Projects\aims-gitlab'];
         AODNbaseDir=[driveLetter '\Projects\aodn'];
@@ -41,9 +43,8 @@ switch strType
         ITBdir = 'imos-toolbox';
         EPdir = 'easyplot';
 		
-	otherwise
-		[baseDIR, name, ext] = fileparts(mfilename('fullpath'));
-        baseDIR = fileparts(baseDIR); % up one folder
+    otherwise
+        [baseDIR, EPdir] = fileparts(EPpath);
         ITBdir = 'imos-toolbox';
         EPdir = 'easyplot';
 end
