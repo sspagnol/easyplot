@@ -25,9 +25,18 @@ userData = getappdata(hFig, 'UserData');
 
 if isempty(userData.sample_data), return; end
 
+% retrieve good flag values
+qcSet     = str2double(readProperty('toolbox.qc_set'));
+rawFlag   = imosQCFlag('raw', qcSet, 'flag');
+goodFlag  = imosQCFlag('good', qcSet, 'flag');
+%pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
+goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
+
 figure(hFig); %make figure current
 gData = guidata(hFig);
 hAx=gData.axes1;
+
+useQCflags = logical(gData.plotQC.Value);
 
 %Create a string for legend
 legendStr={};
@@ -69,15 +78,27 @@ for ii=1:numel(userData.sample_data) % loop over files
         try
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 % 1D var
+                ydataVar = userData.sample_data{ii}.variables{jj}.data;
+                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags');
+                    varFlags = userData.sample_data{ii}.variables{jj}.flags;
+                    iGood = ismember(varFlags, goodFlags);
+                    ydataVar(~iGood) = NaN;
+                end
                 line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                    'YData',userData.sample_data{ii}.variables{jj}.data, ...
+                    'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', tagStr);
             else
                 % 2D var
                 iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
+                ydataVar = userData.sample_data{ii}.variables{jj}.data(:,iSlice);
+                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags');
+                    varFlags = userData.sample_data{ii}.variables{jj}.flags(:,iSlice);
+                    iGood = ismember(varFlags, goodFlags);
+                    ydataVar(~iGood) = NaN;
+                end
                 line('Parent',hAx,'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                    'YData',userData.sample_data{ii}.variables{jj}.data(:,iSlice), ...
+                    'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', tagStr);
             end
@@ -95,10 +116,15 @@ end
 
 varNames=unique(varNames);
 dataLimits=findVarExtents(userData.sample_data);
-userData.xMin = dataLimits.xMin;
-userData.xMax = dataLimits.xMax;
-userData.yMin = dataLimits.yMin;
-userData.yMax = dataLimits.yMax;
+if useQCflags
+    theLimits = dataLimits.QC;
+else
+    theLimits = dataLimits.RAW;
+end
+userData.xMin = theLimits.xMin;
+userData.xMax = theLimits.xMax;
+userData.yMin = theLimits.yMin;
+userData.yMax = theLimits.yMax;
 if userData.firstPlot
     set(hAx,'XLim',[userData.xMin userData.xMax]);
     set(hAx,'YLim',[userData.yMin userData.yMax]);

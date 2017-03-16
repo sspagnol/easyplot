@@ -11,12 +11,19 @@ theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 
+useQCflags = logical(gData.plotQC.Value);
+
 if isfield(userData,'sample_data')
     dataLimits=findVarExtents(userData.sample_data);
-    userData.xMin = dataLimits.xMin;
-    userData.xMax = dataLimits.xMax;
-    userData.yMin = dataLimits.yMin;
-    userData.yMax = dataLimits.yMax;
+    if useQCflags
+       theLimits = dataLimits.QC;
+    else
+        theLimits = dataLimits.RAW;
+    end
+    userData.xMin = theLimits.xMin;
+    userData.xMax = theLimits.xMax;
+    userData.yMin = theLimits.yMin;
+    userData.yMax = theLimits.yMax;
     if ~isnan(userData.yMin) || ~isnan(userData.yMax)
         set(gData.axes1,'YLim',[userData.yMin userData.yMax]);
     end

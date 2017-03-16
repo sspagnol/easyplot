@@ -23,7 +23,7 @@ function varargout = easyplot(varargin)
 
 % Edit the above text to modify the response to help easyplot
 
-% Last Modified by GUIDE v2.5 10-Mar-2017 13:22:25
+% Last Modified by GUIDE v2.5 16-Mar-2017 08:21:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -168,3 +168,4 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 delete(hObject);
 end
+
