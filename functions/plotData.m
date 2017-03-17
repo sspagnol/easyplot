@@ -36,8 +36,12 @@ figure(hFig); %make figure current
 gData = guidata(hFig);
 hAx=gData.axes1;
 
-useQCflags = logical(gData.plotQC.Value);
-
+try
+    useQCflags = logical(gData.plotQC.Value);
+catch
+    useQCflags = false;
+end
+    
 %Create a string for legend
 legendStr={};
 

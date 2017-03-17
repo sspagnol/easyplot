@@ -14,7 +14,13 @@ theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 set(gData.progress, 'String', '');
-useQCflags = logical(gData.plotQC.Value);
+
+try
+    useQCflags = logical(gData.plotQC.Value);
+catch
+    useQCflags = false;
+end
+
 
 if isfield(userData,'sample_data')
     dataLimits=findVarExtents(userData.sample_data);
