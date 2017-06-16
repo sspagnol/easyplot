@@ -72,10 +72,10 @@ parserList.message{ii}='Choose Nortek *.prf files:';
 parserList.parser{ii}='aquadoppProfilerParse';
 
 ii=ii+1;
-parserList.name{ii}='RBR (txt,dat)';
-parserList.wildcard{ii}={'*.txt', '*.dat'};
-parserList.message{ii}='Choose TR1060/TDR2050 files:';
-parserList.parser{ii}='XRParse';
+parserList.name{ii}='RBR (txt,dat,rsk)';
+parserList.wildcard{ii}={'*.txt', '*.dat', '*.rsk'};
+parserList.message{ii}='Choose RBR files:';
+parserList.parser{ii}='XRParse_local';
 
 ii=ii+1;
 parserList.name{ii}='Reefnet Sensus (csv)';
