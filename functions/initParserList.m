@@ -71,6 +71,12 @@ parserList.wildcard{ii}={'*.prf'};
 parserList.message{ii}='Choose Nortek *.prf files:';
 parserList.parser{ii}='aquadoppProfilerParse';
 
+% ii=ii+1;
+% parserList.name{ii}='Nortek Vector (vec)';
+% parserList.wildcard{ii}={'*.vec'};
+% parserList.message{ii}='Choose Nortek *.vec files:';
+% parserList.parser{ii}='vectorParse_local';
+
 ii=ii+1;
 parserList.name{ii}='RBR (txt,dat,rsk)';
 parserList.wildcard{ii}={'*.txt', '*.dat', '*.rsk'};
@@ -142,6 +148,12 @@ parserList.name{ii}='WQM (dat)';
 parserList.wildcard{ii}={'*.dat'};
 parserList.message{ii}='Choose WQM files:';
 parserList.parser{ii}='WQMParse';
+
+ii=ii+1;
+parserList.name{ii}='InsituMarineOptics sensors (log)';
+parserList.wildcard{ii}={'*.log'};
+parserList.message{ii}='Choose IMO files:';
+parserList.parser{ii}='IMOParse';
 
 end
 
