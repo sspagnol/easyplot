@@ -71,11 +71,11 @@ parserList.wildcard{ii}={'*.prf'};
 parserList.message{ii}='Choose Nortek *.prf files:';
 parserList.parser{ii}='aquadoppProfilerParse';
 
-% ii=ii+1;
-% parserList.name{ii}='Nortek Vector (vec)';
-% parserList.wildcard{ii}={'*.vec'};
-% parserList.message{ii}='Choose Nortek *.vec files:';
-% parserList.parser{ii}='vectorParse_local';
+ii=ii+1;
+parserList.name{ii}='Nortek Vector (vec)';
+parserList.wildcard{ii}={'*.vec'};
+parserList.message{ii}='Choose Nortek *.vec files:';
+parserList.parser{ii}='vectorParse';
 
 ii=ii+1;
 parserList.name{ii}='RBR (txt,dat,rsk)';
