@@ -255,6 +255,9 @@ end
 function sam = add_EP_PSAL(sam)
 %add_EP_PSAL Calculate simplified PSAL value
 
+% data set already contains salinity
+if getVar(sam.variables, 'PSAL'), return; end
+
 cndcIdx       = getVar(sam.variables, 'CNDC');
 tempIdx       = getVar(sam.variables, 'TEMP');
 
@@ -279,9 +282,6 @@ end
 
 % cndc, temp, and pres/pres_rel or nominal depth not present in data set
 if ~(cndcIdx && tempIdx && (isPresVar || isDepthInfo)), exit; end
-
-% data set already contains salinity
-if getVar(sam.variables, 'PSAL'), exit; end
 
 cndc = sam.variables{cndcIdx}.data;
 temp = sam.variables{tempIdx}.data;
