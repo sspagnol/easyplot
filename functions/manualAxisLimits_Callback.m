@@ -1,5 +1,5 @@
 %%
-function manualAxisLimits_Callback(hObject,eventdata)
+function manualAxisLimits_Callback(hObject,eventdata,hObjectGUIdata)
 %manualAxisLimits_Callback : bring up requestor for uses to select axis
 %limits
 %
