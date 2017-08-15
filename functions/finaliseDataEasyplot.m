@@ -142,6 +142,10 @@ if sampleInterval<eps
 end
 
 nt=round(((sam.dimensions{idTime}.data(end)-sam.dimensions{idTime}.data(1)))/(sampleInterval/24/3600) +1);
+if nt > 1e10
+    warning('Too many data points for lowpass filtering.');
+    return;
+end
 %if length(dataset.XDATA.data)~=nt
 if length(sam.dimensions{idTime}.data)~=nt
     avec=0:nt-1;
@@ -208,7 +212,8 @@ if candoLpf
         rawData=sam.variables{ii}.data;
         meansignal=nanmean(rawData);
         % interpolate onto clean time data
-        newRawData=interp1(sam.dimensions{idTime}.data,rawData-meansignal,filterTime,'linear',0.0);
+        [qdata, index] = unique(sam.dimensions{idTime}.data); 
+        newRawData=interp1(qdata,rawData(index)-meansignal,filterTime,'linear',0.0);
         newRawData(isnan(newRawData))=0; % this should never be the case but...
         
         % butterworth low pass filter with 40h cutoff, using
