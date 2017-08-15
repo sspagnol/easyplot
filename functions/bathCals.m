@@ -12,17 +12,29 @@ function bathCals(userData)
 % Rebecca Cowley <rebecca.cowley@csiro.au>
 % October, 2015
 
+hg2flag = ~verLessThan('matlab', '8.4.0');
+
 %
 dat = userData.treePanelData;
 %Get the instrument list:
-itemp = cellfun(@(x) x, dat(:,4));
-instModels = dat(itemp,1);
-instSerials = dat(itemp,2);
-iSet     = true(size(instModels));
-instList = strcat(instModels, '# ', instSerials);
-instList = regexprep(instList,'#',' ');
+% itemp = cellfun(@(x) x, dat(:,4));
+% instModels = dat(itemp,1);
+% instSerials = dat(itemp,2);
+% iSet     = true(size(instModels));
+% instList = strcat(instModels, '# ', instSerials);
+% instList = regexprep(instList,'#',' ');
 
-%create the dialog box
+%Get the instrument list: use sample_data structures
+instSerials = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data, 'UniformOutput', false)'; 
+instModels = cellfun(@(x) x.meta.instrument_model, userData.sample_data, 'UniformOutput', false)'; 
+%iSet = true(size(instModels));
+iSet = cellfun(@(x) getVar(x.variables, 'TEMP') ~= 0, userData.sample_data, 'UniformOutput', false)';
+iSet=[iSet{:}]';
+%instList = cellfun(@(x) strcat(x.meta.instrument_model, ' #', x.meta.instrument_serial_no), userData.sample_data, 'UniformOutput', false)';
+instList = strcat(instModels, '# ', instSerials);
+
+%create the dialog box, get index into  sample_data of reference
+%instrument
 [refinst,ok] = listdlg('PromptString','Choose the reference instrument',...
     'SelectionMode','single','ListString',instList,'Name',...
     'Reference instrument');
@@ -57,7 +69,7 @@ for k = 1:numel(instList)
     setCheckboxes(k) = uicontrol(...
         'Style',    'checkbox',...
         'String',   instList{k},...
-        'Value',    1, ...
+        'Value',    iSet(k), ...
         'UserData', k);
 end
 
@@ -123,7 +135,7 @@ plotcals;
         data = userData.sample_data;
         data(refinst) = [];
         data = data(iSet);
-        instModels = instModels(iSet);
+        %instModels = instModels(iSet);
         %plot calibration data for all temperature ranges by time:
         f1 = figure;
         clf;
@@ -140,21 +152,30 @@ plotcals;
         clear('h2');
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
         rmins = [];
+
         % handles of plot that potentially be created
-        h1 = NaN(size(data));
-        h2 = NaN(size(data));
-        hh1 = NaN(size(data));
-        hh2 = NaN(size(data));
+        if hg2flag
+            h1 = gobjects(size(data));
+            h2 = gobjects(size(data));
+            hh1 = gobjects(size(data));
+            hh2 = gobjects(size(data));
+        else
+            h1 = NaN(size(data));
+            h2 = NaN(size(data));
+            hh1 = NaN(size(data));
+            hh2 = NaN(size(data));
+        end
         
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
+            if ~any(data{ii}.plotThisVar), continue; end
             instTemp = data{ii}.variables{data{ii}.plotThisVar}.data;
             igIns1 = instTime >= tmin1 & instTime <= tmax1;
             if isfield(userData,'calx2')
                 igIns2 = instTime >= tmin2 & instTime <= tmax2;
             end
-            if sum(igIns1) > 10
+            if sum(igIns1) > 5
                 %need the largest time diff between ref and each ins as timebase:
                 insdif = nanmedian(diff(instTime));
                 if refTimeDiff >= insdif

@@ -20,7 +20,7 @@ switch strType
     case 'pc'
         %baseDIR=[driveLetter '\AIMS'];
         %AODNbaseDir=[driveLetter '\AIMS'];
-        ITBdir = 'imos-toolbox-2.5-aims';
+        ITBdir = 'imos-toolbox';
         %EPdir = 'easyplot'; % easyplot folder name
         thisFilepath = mfilename('fullpath');
         [baseDIR, EPdir] = fileparts(EPpath);
