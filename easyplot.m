@@ -62,6 +62,13 @@ gData = guidata(hFig);
 userData=getappdata(hFig,'UserData');
 userData.output = hObject;
 
+% add menu items
+m=uimenu(hFig,'Label','Easyplot');
+uimenu(m,'Label','Use QC flags','Callback',@useQCflags_Callback);
+uimenu(m,'Label','Save Image','Callback',@saveImage_Callback);
+uimenu(m,'Label','Quit','Callback',@exit_Callback,...
+    'Separator','on','Accelerator','Q');
+
 % white background
 set(gData.figure1,'Color',[1 1 1]);
 % create easyplot toolbar
@@ -73,6 +80,9 @@ userData.xMin=NaN;
 userData.xMax=NaN;
 userData.yMin=NaN;
 userData.yMax=NaN;
+
+% if plot IMOS netcdf files, plot using raw/good qc flags
+userData.plotQC = false;
 
 % old path for easier importing
 [userData.EPdir, name, ext] = fileparts(mfilename('fullpath'));

@@ -13,7 +13,7 @@ userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 
 try
-    useQCflags = logical(gData.plotQC.Value);
+    useQCflags = userData.plotQC;
 catch
     useQCflags = false;
 end

@@ -16,7 +16,7 @@ gData = guidata(theParent);
 set(gData.progress, 'String', '');
 
 try
-    useQCflags = logical(gData.plotQC.Value);
+    useQCflags = userData.plotQC;
 catch
     useQCflags = false;
 end

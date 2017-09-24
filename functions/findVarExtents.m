@@ -8,8 +8,6 @@ rawFlag   = imosQCFlag('raw', qcSet, 'flag');
 goodFlag  = imosQCFlag('good', qcSet, 'flag');
 goodFlags = [rawFlag, goodFlag];
 
-%useQCflags = logical(gData.plotQC.Value);
-
 if isempty(sample_data)
     dataLimits.RAW.xMinRAW = floor(now);
     dataLimits.RAW.xMaxRAW = floor(now)+1;
