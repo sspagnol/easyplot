@@ -1,13 +1,13 @@
 function bathCals(userData)
-% plot the bath calibration information from the post-retrieval on board
+% BATHCALS plot the bath calibration information from the post-retrieval on board
 % calibration bath.
+%
 % Return plots of the difference from the reference SBE unit and a table of
 % means and standard deviations over the period selected.
 %
 % Inputs:
 %       userData  contains all the data relevant to the instruments
 %                   loaded
-%       gData     data from the input gui that called this routine
 %
 % Rebecca Cowley <rebecca.cowley@csiro.au>
 % October, 2015
@@ -15,14 +15,7 @@ function bathCals(userData)
 hg2flag = ~verLessThan('matlab', '8.4.0');
 
 %
-dat = userData.treePanelData;
-%Get the instrument list:
-% itemp = cellfun(@(x) x, dat(:,4));
-% instModels = dat(itemp,1);
-% instSerials = dat(itemp,2);
-% iSet     = true(size(instModels));
-% instList = strcat(instModels, '# ', instSerials);
-% instList = regexprep(instList,'#',' ');
+%dat = userData.treePanelData;
 
 %Get the instrument list: use sample_data structures
 instSerials = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data, 'UniformOutput', false)'; 
@@ -111,7 +104,7 @@ uiwait(f);
 % and we know the reference unit ('refinst').
 plotcals;
 
-
+%%
     function plotcals
         %PLOTCALS plot the bath calibration data as a comparison
         %return the handle to the figure, h

@@ -65,9 +65,20 @@ userData.output = hObject;
 % add menu items
 m=uimenu(hFig,'Label','Easyplot');
 uimenu(m,'Label','Use QC flags','Callback',@useQCflags_Callback);
+uimenu(m,'Label','Do Bath Calibrations','Callback',@BathCals_Callback);
 uimenu(m,'Label','Save Image','Callback',@saveImage_Callback);
 uimenu(m,'Label','Quit','Callback',@exit_Callback,...
     'Separator','on','Accelerator','Q');
+
+% % Create the UICONTEXTMENU
+% uic = uicontextmenu(hFig);
+% % Create the parent menu
+% bathcalmenu = uimenu(uic,'label','Bath Calibrations');
+% % Create the submenus
+% m1 = uimenu(bathcalmenu,'label','Select Points',...
+%                'Callback',@selectPoints_Callback);
+% set(hFig, 'UIContextMenu', uic);
+% uic.HandleVisibility = 'off';
 
 % white background
 set(gData.figure1,'Color',[1 1 1]);

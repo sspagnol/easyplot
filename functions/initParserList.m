@@ -96,6 +96,12 @@ parserList.message{ii}='Choose RDI 000/PD0 files:';
 parserList.parser{ii}='workhorseParse';
 
 ii=ii+1;
+parserList.name{ii}='VMDAS/WinRiverII RDI (000,PD0)';
+parserList.wildcard{ii}={'*.000', '*.PD0'};
+parserList.message{ii}='Choose RDI 000/PD0 files:';
+parserList.parser{ii}='workhorseParse_local';
+
+ii=ii+1;
 parserList.name{ii}='SBE37 (asc)';
 parserList.wildcard{ii}={'*.asc'};
 parserList.message{ii}='Choose SBE37 files:';
