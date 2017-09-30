@@ -64,6 +64,9 @@ userData.output = hObject;
 
 % add menu items
 m=uimenu(hFig,'Label','Easyplot');
+sm1=uimenu(m,'Label','Plot Vars As...');
+    uimenu(sm1,'Label','VARS_OVERLAY','Callback',@plotType_Callback);
+    uimenu(sm1,'Label','VARS_STACKED','Callback',@plotType_Callback);
 uimenu(m,'Label','Use QC flags','Callback',@useQCflags_Callback);
 uimenu(m,'Label','Do Bath Calibrations','Callback',@BathCals_Callback);
 uimenu(m,'Label','Save Image','Callback',@saveImage_Callback);
@@ -92,6 +95,9 @@ userData.xMax=NaN;
 userData.yMin=NaN;
 userData.yMax=NaN;
 
+% default single plot with any selected variables
+userData.plotType = 'VARS_OVERLAY';
+
 % if plot IMOS netcdf files, plot using raw/good qc flags
 userData.plotQC = false;
 
@@ -111,12 +117,15 @@ userData.parserList=initParserList;
 
 userData.firstPlot = true;
 
-axesInfo.Linked = gData.axes1;
+userData.plotVarNames = {};
+userData.axisHandles(1) = axes(gData.plotPanel);
+axesInfo.Linked = userData.axisHandles(1);
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 axesInfo.XLabel = 'Time (UTC)';
 % why does axes UserData get wiped somewhere later?
-axH=handle(gData.axes1);
+%axH=handle(gData.axes1);
+axH = userData.axisHandles(1);
 set(axH, 'UserData', axesInfo);
 set(axH, 'XLim', [floor(now) floor(now)+1]);
 userData.axesInfo=axesInfo;
@@ -138,7 +147,7 @@ set(p,'ActionPostCallback',@updateDateLabel);
 set(hFig, 'WindowKeyPressFcn', @keyPressCallback);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
-xlabel(gData.axes1,'Time (UTC)');
+xlabel(axH,'Time (UTC)');
 
 %hoverlines( handles.figure1 );
 
@@ -163,7 +172,7 @@ userData.jtable = createTreeTable(gData, userData);
 setappdata(hFig, 'UserData', userData);
 
 % Call once to ensure proper formatting
-updateDateLabel(hFig,struct('Axes', axH), true);
+%updateDateLabel(hFig,struct('Axes', axH), true);
 
 end
 
@@ -190,3 +199,28 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 delete(hObject);
 end
 
+% --- Executes when user attempts to close figure1.
+function plotType_Callback(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+theParent = ancestor(hObject,'figure');
+userData=getappdata(theParent, 'UserData');
+gData = guidata(theParent);
+
+oldPlotType = userData.plotType;
+userData.plotType = hObject.Label;
+
+if strcmp(userData.plotType, oldPlotType)
+    set(hObject,'Checked','on');
+else 
+    set(hObject,'Checked','on');
+    iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), hObject.Parent.Children);
+    set(hObject.Parent.Children(iCheckOff),'Checked','off');
+end
+[userData.sample_data] = markPlotVar(userData.sample_data, userData.plotVarNames);
+setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+plotData(ancestor(hObject,'figure'));
+
+end

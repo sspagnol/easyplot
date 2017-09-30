@@ -12,6 +12,7 @@ gData = guidata(theParent);
 if isfield(userData, 'sample_data')
     
     plotVar = chooseVar(userData.sample_data);
+    userData.plotVarNames = {plotVar};
     userData.sample_data = markPlotVar(userData.sample_data, plotVar);
     userData.treePanelData = generateTreeData(userData.sample_data);
     %setappdata(theParent, 'UserData', userData);

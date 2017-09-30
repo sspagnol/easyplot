@@ -2,6 +2,10 @@
 function [sample_data] = markPlotVar(sample_data, plotVar)
 %MARKPLOTVAR Create cell array of plotted data for treeTable data
 
+if ~iscell(plotVar)
+    plotVar = {plotVar};
+end
+
 for ii=1:numel(sample_data)
     sample_data{ii}.plotThisVar = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
     sample_data{ii}.plotThisVar = sample_data{ii}.plotThisVar(:);

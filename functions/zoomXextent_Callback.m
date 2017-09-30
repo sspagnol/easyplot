@@ -19,22 +19,25 @@ catch
 end
 
 if isfield(userData,'sample_data')
-    dataLimits=findVarExtents(userData.sample_data);
-    if useQCflags
-       theLimits = dataLimits.QC;
-    else
-        theLimits = dataLimits.RAW;
-    end
-    userData.xMin = theLimits.xMin;
-    userData.xMax = theLimits.xMax;
-    userData.yMin = theLimits.yMin;
-    userData.yMax = theLimits.yMax;
+    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
+    %     if useQCflags
+    %        theLimits = dataLimits.QC;
+    %     else
+    %         theLimits = dataLimits.RAW;
+    %     end
+    userData.xMin = dataLimits.TIME.RAW.xMin;
+    userData.xMax = dataLimits.TIME.RAW.xMax;
+    %userData.yMin = theLimits.yMin;
+    %userData.yMax = theLimits.yMax;
     if ~isnan(userData.xMin) || ~isnan(userData.xMax)
-        set(gData.axes1,'XLim',[userData.xMin userData.xMax]);
+        set(gca,'XLim',[userData.xMin userData.xMax]);
     end
     setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-    updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
+    for ii = 1:numel(userData.axisHandles)
+        updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles{ii}), true);
+    end
 end
+
 end
 
 

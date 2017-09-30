@@ -39,7 +39,7 @@ else %called as a listener XLim event
     %disp('updateDateLabel listener');
     userData=getappdata(get(eventData.AffectedObject,'Parent'), 'UserData');
     axesInfo = userData.axesInfo;
-    axH = handle(gData.axes1);
+    axH = handle(gca);
     %If I ever figure out why UserData wasn't being passed on
     %ax1=get(hParent,'CurrentAxes');
     %axesInfo = get(ax1,'UserData'); %
@@ -65,6 +65,7 @@ end
 
 %if keepLimits
 datetick(axH, 'x', 'keeplimits');
+%datetick(axH, 'x');
 %else
 %    datetick(ax1, 'x');
 %end
@@ -101,10 +102,15 @@ elseif any(labels(1,:) == ':') % Tick format is HH:MM
     newlabels(ind) = cellstr(datestr(ticks(ind), [axesInfo.mdformat '-'])); % Add month/day to ticks where day changes
     labels = strcat(newlabels, labels);
 end
-for ii=1:numel(axesInfo.Linked)
-    if ishghandle(axesInfo.Linked(ii))
-        set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
-    end
+% for ii=1:numel(axesInfo.Linked)
+%     if ishghandle(axesInfo.Linked(ii))
+%         set(axesInfo.Linked(ii), 'XTick', ticks, 'XTickLabel', labels);
+%     end
+% end
+
+children = findobj(gData.plotPanel,'Type','axes');
+for ii=1:numel(children)
+    set(children(ii), 'XTick', ticks, 'XTickLabel', labels);
 end
 
 end

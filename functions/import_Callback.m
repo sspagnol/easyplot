@@ -156,7 +156,7 @@ else
     
     if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
-        
+        userData.plotVarNames = {plotVar};
         userData.sample_data = markPlotVar(userData.sample_data, plotVar);
         userData.treePanelData = generateTreeData(userData.sample_data);
         setappdata(ancestor(hObject,'figure'), 'UserData', userData);
