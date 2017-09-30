@@ -8,7 +8,7 @@ function printInfo(hObject, eventdata)
 theParent=ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
-axH = gData.axes1;
+axH = gca;
 
 % is the current pointer within the bounds of the axes?
 if localInBounds(axH)

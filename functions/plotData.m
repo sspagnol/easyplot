@@ -42,7 +42,7 @@ gData = guidata(hFig);
 % VARS_SINGLE : subplot per var, not implemented yet
 switch upper(userData.plotType)
     case 'VARS_OVERLAY'
-        userData.plotVarNames
+        %userData.plotVarNames
         nSubPlots = 1;
         for ii=1:numel(userData.sample_data) % loop over files
             userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.plotThisVar));
@@ -52,7 +52,7 @@ switch upper(userData.plotType)
         end
         
     case 'VARS_STACKED'
-        userData.plotVarNames
+        %userData.plotVarNames
         nSubPlots = numel(userData.plotVarNames);
         for ii=1:numel(userData.sample_data) % loop over files
             userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.plotThisVar));

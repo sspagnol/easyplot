@@ -57,7 +57,7 @@ if isfield(userData,'sample_data')
     setappdata(ancestor(hObject,'figure'), 'UserData', userData);
     
     for ii = 1:numel(userData.axisHandles)
-        updateDateLabel(gData.figure1,struct('Axes', userData.axisHandles{ii}), true);
+        updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles{ii}), true);
     end
     
     

@@ -61,7 +61,7 @@ if strcmp(selectionType,'normal')
     set(gData.axes1,'XLim',newXLimits);
     %1 guidata(theParent, gData);
     setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-    updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
+    updateDateLabel(gData.plotPanel,struct('Axes', gData.axes1), true);
     drawnow;
 end
 

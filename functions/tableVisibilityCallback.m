@@ -45,13 +45,6 @@ for ii=1:numel(userData.sample_data) % loop over files
                 strcmp(userData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable)
             userData.sample_data{ii}.plotThisVar(jj) = plotTheVar;
-            if plotTheVar
-                userData.plotVarNames{end+1} = userData.sample_data{ii}.variables{jj}.name;
-                userData.plotVarNames = sort(unique(userData.plotVarNames));
-            else
-                iVars = ~cellfun(@(x) any(strcmp(x,theVariable)), userData.plotVarNames);
-                userData.plotVarNames = userData.plotVarNames(iVars);
-            end
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,4);
                 userData.sample_data{ii}.variables{jj}.iSlice = 1;
@@ -70,11 +63,22 @@ for ii=1:numel(userData.sample_data) % loop over files
         end
     end
 end
+
+% gather up list of variables that will be plotted
+plotVarNames = {};
+for ii=1:numel(userData.sample_data) % loop over files
+    iVars = find(userData.sample_data{ii}.plotThisVar)';
+    if ~isempty(iVars)
+        markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
+        plotVarNames = {plotVarNames{:} markedVarNames{:}};
+    end
+end
+plotVarNames = sort(unique(plotVarNames));
+userData.plotVarNames = plotVarNames;
+
 % model = getOriginalModel(handles.jtable);
 % model.groupAndRefresh;
 % handles.jtable.repaint;
-
-[userData.sample_data] = markPlotVar(userData.sample_data, userData.plotVarNames);
 
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);
 plotData(ancestor(hObject,'figure'));

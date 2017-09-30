@@ -10,28 +10,30 @@ userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 
 if isfield(userData, 'sample_data')
-    
+    oldPlotVarNames = userData.plotVarNames;
     plotVar = chooseVar(userData.sample_data);
-    userData.plotVarNames = {plotVar};
-    userData.sample_data = markPlotVar(userData.sample_data, plotVar);
-    userData.treePanelData = generateTreeData(userData.sample_data);
-    %setappdata(theParent, 'UserData', userData);
-    
-    %     %model = handles.jtable.getModel.getActualModel;
-    %     model = getOriginalModel(handles.jtable);
-    %     model.groupAndRefresh;
-    %     handles.jtable.repaint;
-    
-    % surely I don't have to delete and recreate jtable
-    %     if isfield(handles,'jtable')
-    %         %delete(handles.jtable);
-    %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-    %     end
-    userData.jtable = createTreeTable(gData,userData);
-    
-    setappdata(theParent, 'UserData', userData);
-    plotData(theParent);
-    zoomYextent_Callback(hObject);
+    if ~isempty(plotVar)
+        userData.plotVarNames = {plotVar};
+        userData.sample_data = markPlotVar(userData.sample_data, plotVar);
+        userData.treePanelData = generateTreeData(userData.sample_data);
+        %setappdata(theParent, 'UserData', userData);
+        
+        %     %model = handles.jtable.getModel.getActualModel;
+        %     model = getOriginalModel(handles.jtable);
+        %     model.groupAndRefresh;
+        %     handles.jtable.repaint;
+        
+        % surely I don't have to delete and recreate jtable
+        %     if isfield(handles,'jtable')
+        %         %delete(handles.jtable);
+        %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
+        %     end
+        userData.jtable = createTreeTable(gData,userData);
+        
+        setappdata(theParent, 'UserData', userData);
+        plotData(theParent);
+        zoomYextent_Callback(hObject);
+    end
 end
 
 end

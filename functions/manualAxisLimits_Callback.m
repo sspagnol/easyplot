@@ -23,7 +23,7 @@ end
 
 
 if isfield(userData,'sample_data')
-    dataLimits=findVarExtents(userData.sample_data);
+    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
     % dialog figure
     f = figure('Name',        'Enter limits', ...
         'Visible',     'off',...
@@ -129,7 +129,7 @@ end
             set(gData.axes1,'YLim',[userData.yMin userData.yMax]);
         end
         setappdata(ancestor(source,'figure'), 'UserData', userData);
-        updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
+        updateDateLabel(gData.plotPanel,struct('Axes', gData.axes1), true);
         delete(f);
     end
 
@@ -146,7 +146,7 @@ end
                 userData.xMin = xMin;
                 set(gData.axes1,'XLim',[userData.xMin userData.xMax]);
                 setappdata(theParent, 'UserData', userData);
-                updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
+                updateDateLabel(gData.plotPanel,struct('Axes', gData.axes1), true);
             else
                 set(startDateUI,'String',datestr(userData.xMin,31));
                 errordlg(['There must be a ' num2str(tEps) ' minute difference between start/end date.']);
@@ -165,7 +165,7 @@ end
                 userData.xMax = xMax;
                 set(gData.axes1,'XLim',[userData.xMin userData.xMax]);
                 setappdata(theParent, 'UserData', userData);
-                updateDateLabel(gData.figure1,struct('Axes', gData.axes1), true);
+                updateDateLabel(gData.plotPanel,struct('Axes', gData.axes1), true);
             else
                 set(endDateUI,'String',datestr(userData.xMax,31));
                 errordlg(['There must be a ' num2str(tEps) ' minute difference between start/end date.']);

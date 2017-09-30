@@ -24,7 +24,7 @@ zoomFactor = 0.9;
 panFactor = 0.02;
 
 theYLabel = get(get(gca, 'YLabel'),'String');
-if any(cell2mat(regexpi(theYLabel, {'PRES', 'DEPTH'})))
+if any(cell2mat(regexpi(theYLabel{1}, {'PRES', 'DEPTH'})))
     panFactor = -panFactor;
 end
 

@@ -219,7 +219,7 @@ else
     iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), hObject.Parent.Children);
     set(hObject.Parent.Children(iCheckOff),'Checked','off');
 end
-[userData.sample_data] = markPlotVar(userData.sample_data, userData.plotVarNames);
+
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);
 plotData(ancestor(hObject,'figure'));
 
