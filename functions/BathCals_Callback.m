@@ -11,7 +11,7 @@ gData = guidata(theParent);
 
 if isfield(userData, 'sample_data')
     plotVar = 'TEMP';
-    userData.sample_data = markPlotVar(userData.sample_data, plotVar);
+    userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
     userData.treePanelData = generateTreeData(userData.sample_data);
     userData.jtable = createTreeTable(gData,userData);
     

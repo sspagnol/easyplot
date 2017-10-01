@@ -11,57 +11,46 @@ theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 
+if ~isfield(userData,'sample_data'), return; end
+
 try
     useQCflags = userData.plotQC;
 catch
     useQCflags = false;
 end
+useFlags = 'RAW';
+if useQCflags, useFlags='QC'; end
 
-if isfield(userData,'sample_data')
-    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
-    switch upper(userData.plotType)
-        case 'VARS_OVERLAY'
-            yMin = NaN;
-            yMax = NaN;
-            for ii=1:numel(userData.plotVarNames)
-                theVar = char(userData.plotVarNames{ii});
-                if useQCflags
-                    yMin = min(yMin, dataLimits.(theVar).QC.yMin);
-                    yMax = max(yMax, dataLimits.(theVar).QC.yMax);
-                else
-                    yMin = min(yMin, dataLimits.(theVar).RAW.yMin);
-                    yMax = max(yMax, dataLimits.(theVar).RAW.yMax);
-                end
-            end
-            theLimits.yMin = yMin;
-            theLimits.yMax = yMax;
-            
-        case 'VARS_STACKED'
-            gca
-            theVar = x;
-            if useQCflags
-                theLimits = dataLimits.(theVar).QC;
-            else
-                theLimits = dataLimits.(theVar).RAW;
-            end
-    end
-    userData.xMin = dataLimits.TIME.RAW.xMin;
-    userData.xMax = dataLimits.TIME.RAW.xMax;
-    userData.yMin = theLimits.yMin;
-    userData.yMax = theLimits.yMax;
-    
-    if ~isnan(userData.yMin) || ~isnan(userData.yMax)
-        set(gca,'YLim',[userData.yMin userData.yMax]);
-    end
+dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
+axH = gca;
+switch upper(userData.plotType)
+    case 'VARS_OVERLAY'
+        yMin = NaN;
+        yMax = NaN;
+        theLimits = dataLimits.MULTI.(useFlags);
         
-    setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-    
-    for ii = 1:numel(userData.axisHandles)
-        updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles{ii}), true);
-    end
-    
-    
+    case 'VARS_STACKED'
+        % have made choice that y-zoom is applied to last plot to have
+        % focus
+        theVar = axH.Tag;
+        theLimits = dataLimits.(theVar).(useFlags);
 end
+
+userData.xMin = dataLimits.TIME.RAW.xMin;
+userData.xMax = dataLimits.TIME.RAW.xMax;
+userData.yMin = theLimits.yMin;
+userData.yMax = theLimits.yMax;
+
+if ~isnan(userData.yMin) || ~isnan(userData.yMax)
+    set(axH,'YLim',[userData.yMin userData.yMax]);
+end
+
+setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+
+for ii = 1:numel(userData.axisHandles)
+    updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+end
+
 end
 
 

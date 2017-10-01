@@ -26,7 +26,7 @@ elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
         %disp('updateDateLabel callback')
         axH = eventData.Axes; % On which axes has the zoom/pan occurred
-        userData=getappdata(source, 'UserData');
+        userData=getappdata(theParent, 'UserData');
         axesInfo = userData.axesInfo;
         keepLimits=true;
         %set(source,'Interruptible','off');

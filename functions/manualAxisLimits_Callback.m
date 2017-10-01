@@ -15,93 +15,120 @@ userData=getappdata(theParent, 'UserData');
 gData = guidata(theParent);
 set(gData.progress, 'String', '');
 
+if ~isfield(userData,'sample_data')
+    return
+end
+
 try
     useQCflags = userData.plotQC;
 catch
     useQCflags = false;
 end
+useFlags = 'RAW';
+if useQCflags, useFlags='QC'; end
 
+dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 
-if isfield(userData,'sample_data')
-    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
-    % dialog figure
-    f = figure('Name',        'Enter limits', ...
-        'Visible',     'off',...
-        'MenuBar',     'none',...
-        'Resize',      'off',...
-        'WindowStyle', 'Modal',...
-        'NumberTitle', 'off');
-    
-    % create widgets
-    startDateTxt = uicontrol('Style','text', 'String','Start Date');
-    endDateTxt   = uicontrol('Style','text', 'String','End Date');
-    yMinTxt = uicontrol('Style','text', 'String','Y min value');
-    yMaxTxt = uicontrol('Style','text', 'String','Y max value');
-    startDateUI = uicontrol('Style','edit', 'String',datestr(userData.xMin,31));
-    endDateUI   = uicontrol('Style','edit', 'String',datestr(userData.xMax,31));
-    yMinUI = uicontrol('Style','edit', 'String',num2str(userData.yMin));
-    yMaxUI = uicontrol('Style','edit', 'String',num2str(userData.yMax));
-    confirmButton = uicontrol('Style', 'pushbutton', 'String', 'Ok');
-    cancelButton  = uicontrol('Style', 'pushbutton', 'String', 'Cancel');
-    
-    % use normalized units
-    set(f,             'Units', 'normalized');
-    set(startDateTxt,   'Units', 'normalized');
-    set(endDateTxt,     'Units', 'normalized');
-    set(yMinTxt,        'Units', 'normalized');
-    set(yMaxTxt,        'Units', 'normalized');
-    set(startDateUI,   'Units', 'normalized');
-    set(endDateUI,     'Units', 'normalized');
-    set(yMinUI,        'Units', 'normalized');
-    set(yMaxUI,        'Units', 'normalized');
-    set(cancelButton,  'Units', 'normalized');
-    set(confirmButton, 'Units', 'normalized');
-    
-    % position figure and widgets
-    set(f,             'Position', [0.40, 0.46, 0.25, 0.20]);
-    set(cancelButton,  'Position', [0.00, 0.00, 0.50, 0.20 ]);
-    set(confirmButton, 'Position', [0.50, 0.00, 0.50, 0.20 ]);
-    set(startDateTxt,   'Position', [0.00, 0.80, 0.50, 0.20 ]);
-    set(endDateTxt,     'Position', [0.00, 0.60, 0.50, 0.20 ]);
-    set(yMinTxt,        'Position', [0.00, 0.40, 0.50, 0.20 ]);
-    set(yMaxTxt,        'Position', [0.00, 0.20, 0.50, 0.20 ]);
-    set(startDateUI,   'Position', [0.50, 0.80, 0.50, 0.20 ]);
-    set(endDateUI,     'Position', [0.50, 0.60, 0.50, 0.20 ]);
-    set(yMinUI,        'Position', [0.50, 0.40, 0.50, 0.20 ]);
-    set(yMaxUI,        'Position', [0.50, 0.20, 0.50, 0.20 ]);
-    
-    % enable use of return/escape to confirm/cancel dialog
-    %set(f, 'WindowKeyPressFcn', @keyPressCallback);
-    
-    % reset back to pixel units
-    set(f,             'Units', 'pixels');
-    set(startDateTxt,   'Units', 'pixels');
-    set(endDateTxt,     'Units', 'pixels');
-    set(yMinTxt,        'Units', 'pixels');
-    set(yMaxTxt,        'Units', 'pixels');
-    set(startDateUI,   'Units', 'pixels');
-    set(endDateUI,     'Units', 'pixels');
-    set(yMinUI,        'Units', 'pixels');
-    set(yMaxUI,        'Units', 'pixels');
-    set(cancelButton,  'Units', 'pixels');
-    set(confirmButton, 'Units', 'pixels');
-    
-    % set widget callbacks
-    set(f,             'CloseRequestFcn', @cancelCallback);
-    set(cancelButton,  'Callback',        @cancelCallback);
-    set(confirmButton, 'Callback',        @confirmCallback);
-    set(startDateUI,      'Callback',        @startdateCallback);
-    set(endDateUI,      'Callback',        @enddateCallback);
-    set(yMinUI,      'Callback',        @yminCallback);
-    set(yMaxUI,       'Callback',        @ymaxCallback);
-    
-    tEps = 1;  %1minute minimum diff between start/end date
-    xEps = 1/60/24;
-    yEps = 0.1; %minimum diff between ymin/ymax
-    
-    set(f, 'Visible', 'on');
-    uiwait(f);
+nSubPlots = numel(userData.axisHandles);
+tableData = {};
+switch upper(userData.plotType)
+    case 'VARS_OVERLAY'
+        
+    case 'VARS_STACKED'
+    for ii=1:nSubPlots
+        theVar = char(userData.plotVarNames{ii});
+        tableData{ii,1} = theVar;
+        tableData{ii,2} = dataLimits.(useFlags).yMin;
+        tableData{ii,3} = dataLimits.(useFlags).yMax;
+    end
+    tableData
 end
+
+% dialog figure
+f = figure('Name',        'Enter limits', ...
+    'Visible',     'off',...
+    'MenuBar',     'none',...
+    'Resize',      'off',...
+    'WindowStyle', 'Modal',...
+    'NumberTitle', 'off');
+
+% create widgets
+startDateTxt = uicontrol('Style','text', 'String','Start Date');
+endDateTxt   = uicontrol('Style','text', 'String','End Date');
+yMinTxt = uicontrol('Style','text', 'String','Y min value');
+yMaxTxt = uicontrol('Style','text', 'String','Y max value');
+startDateUI = uicontrol('Style','edit', 'String',datestr(userData.xMin,31));
+endDateUI   = uicontrol('Style','edit', 'String',datestr(userData.xMax,31));
+
+yMinUI = uicontrol('Style','edit', 'String',num2str(userData.yMin));
+yMaxUI = uicontrol('Style','edit', 'String',num2str(userData.yMax));
+t = uitable(f);
+t.Data = tableData;
+t.ColumnName = {'Variable','yMin','yMax'};
+t.ColumnEditable = [false true true];
+t.CellEditCallback = @tableData_Callback;
+
+confirmButton = uicontrol('Style', 'pushbutton', 'String', 'Ok');
+cancelButton  = uicontrol('Style', 'pushbutton', 'String', 'Cancel');
+
+% use normalized units
+set(f,             'Units', 'normalized');
+set(startDateTxt,   'Units', 'normalized');
+set(endDateTxt,     'Units', 'normalized');
+set(yMinTxt,        'Units', 'normalized');
+set(yMaxTxt,        'Units', 'normalized');
+set(startDateUI,   'Units', 'normalized');
+set(endDateUI,     'Units', 'normalized');
+set(yMinUI,        'Units', 'normalized');
+set(yMaxUI,        'Units', 'normalized');
+set(cancelButton,  'Units', 'normalized');
+set(confirmButton, 'Units', 'normalized');
+
+% position figure and widgets
+set(f,             'Position', [0.40, 0.46, 0.25, 0.20]);
+set(cancelButton,  'Position', [0.00, 0.00, 0.50, 0.20 ]);
+set(confirmButton, 'Position', [0.50, 0.00, 0.50, 0.20 ]);
+set(startDateTxt,   'Position', [0.00, 0.80, 0.50, 0.20 ]);
+set(endDateTxt,     'Position', [0.00, 0.60, 0.50, 0.20 ]);
+set(yMinTxt,        'Position', [0.00, 0.40, 0.50, 0.20 ]);
+set(yMaxTxt,        'Position', [0.00, 0.20, 0.50, 0.20 ]);
+set(startDateUI,   'Position', [0.50, 0.80, 0.50, 0.20 ]);
+set(endDateUI,     'Position', [0.50, 0.60, 0.50, 0.20 ]);
+set(yMinUI,        'Position', [0.50, 0.40, 0.50, 0.20 ]);
+set(yMaxUI,        'Position', [0.50, 0.20, 0.50, 0.20 ]);
+
+% enable use of return/escape to confirm/cancel dialog
+%set(f, 'WindowKeyPressFcn', @keyPressCallback);
+
+% reset back to pixel units
+set(f,             'Units', 'pixels');
+set(startDateTxt,   'Units', 'pixels');
+set(endDateTxt,     'Units', 'pixels');
+set(yMinTxt,        'Units', 'pixels');
+set(yMaxTxt,        'Units', 'pixels');
+set(startDateUI,   'Units', 'pixels');
+set(endDateUI,     'Units', 'pixels');
+set(yMinUI,        'Units', 'pixels');
+set(yMaxUI,        'Units', 'pixels');
+set(cancelButton,  'Units', 'pixels');
+set(confirmButton, 'Units', 'pixels');
+
+% set widget callbacks
+set(f,             'CloseRequestFcn', @cancelCallback);
+set(cancelButton,  'Callback',        @cancelCallback);
+set(confirmButton, 'Callback',        @confirmCallback);
+set(startDateUI,      'Callback',        @startdateCallback);
+set(endDateUI,      'Callback',        @enddateCallback);
+set(yMinUI,      'Callback',        @yminCallback);
+set(yMaxUI,       'Callback',        @ymaxCallback);
+
+tEps = 1;  %1minute minimum diff between start/end date
+xEps = 1/60/24;
+yEps = 0.1; %minimum diff between ymin/ymax
+
+set(f, 'Visible', 'on');
+uiwait(f);
+
 
 %%
     function keyPressCallback(source,ev)

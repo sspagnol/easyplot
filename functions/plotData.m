@@ -14,15 +14,12 @@ if ~isempty(hash.get(hObject))
     return;
 end
 hash.put(hObject,1);
-
 if isempty(hObject), return; end
 
 hFig = ancestor(hObject,'figure');
-
 if isempty(hFig), return; end
 
 userData = getappdata(hFig, 'UserData');
-
 if isempty(userData.sample_data), return; end
 
 % retrieve good flag values
@@ -99,6 +96,13 @@ for ii=1:numel(userData.sample_data) % loop over files
     for jj = iVars
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         hAx(ihAx) = subplot(nSubPlots,1,userData.sample_data{ii}.axisIndex(jj));
+        switch upper(userData.plotType)
+            case 'VARS_OVERLAY'
+                hAx(ihAx).Tag = 'MULTI';
+                
+            case 'VARS_STACKED'
+                hAx(ihAx).Tag = userData.sample_data{ii}.variables{jj}.name;
+        end
         
         if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
             lineStyle='none';
@@ -161,18 +165,21 @@ linkaxes(hAx,'x');
 
 varNames=unique(varNames);
 dataLimits=findVarExtents(userData.sample_data,varNames);
+useFlags = 'RAW';
+if useQCflags, useFlags='QC'; end
 
 for ii = 1:nSubPlots
     theVar = char(userData.plotVarNames{ii});
-    if useQCflags
-        theLimits = dataLimits.(theVar).QC;
-    else
-        theLimits = dataLimits.(theVar).RAW;
-    end
     userData.xMin = dataLimits.TIME.RAW.xMin;
     userData.xMax = dataLimits.TIME.RAW.xMax;
-    userData.yMin = theLimits.yMin;
-    userData.yMax = theLimits.yMax;
+    switch upper(userData.plotType)
+        case 'VARS_OVERLAY'
+            userData.yMin = dataLimits.MULTI.(useFlags).yMin;
+            userData.yMax = dataLimits.MULTI.(useFlags).yMax;
+        case 'VARS_STACKED'
+            userData.yMin = dataLimits.(theVar).(useFlags).yMin;
+            userData.yMax = dataLimits.(theVar).(useFlags).yMax;
+    end
     
     if userData.firstPlot
         set(hAx(ii),'XLim',[userData.xMin userData.xMax]);
@@ -242,7 +249,7 @@ end
 
 userData.legend_h = legend_h;
 set(gData.progress,'String','Done');
-
+userData.axisHandles = hAx;
 setappdata(hFig, 'UserData', userData);
 
 drawnow;

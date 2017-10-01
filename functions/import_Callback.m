@@ -87,9 +87,8 @@ else
         userData.sample_data={};
     end
     iFailed=0;
-    notLoaded=false;
     nFiles = length(FILEnames);
-    for ii=1:nFiles
+     for ii=1:nFiles
         theFile = char([FILEnames{ii} FILEexts{ii}]);
         if isempty(FILEpaths{ii})
             theFullFile = which([FILEnames{ii} FILEexts{ii}]);
@@ -97,8 +96,17 @@ else
             theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
         % skip any files the user has already imported
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
-        if notLoaded
+        isLoaded = cell2mat(cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false));
+        if ~isempty(isLoaded)
+            for kk=1:numel(userData.sample_data)
+                if ~isLoaded(kk)
+                    userData.sample_data{kk}.isNew = false;
+                end
+            end
+        end
+        
+        %notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
+        if ~any(isLoaded)
             try
                 set(gData.progress,'String',strcat({'Loading : '}, theFile));
                 drawnow;
@@ -114,6 +122,7 @@ else
                     tmpStruct = finaliseDataEasyplot(structs, theFullFile);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
+                    userData.sample_data{end}.isNew = true;
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
@@ -122,6 +131,7 @@ else
                         tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
+                        userData.sample_data{end}.isNew = true;
                     end
                 end
                 clear('structs');
@@ -156,8 +166,9 @@ else
     
     if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
-        userData.plotVarNames = {plotVar};
-        userData.sample_data = markPlotVar(userData.sample_data, plotVar);
+        isNew=cellfun(@(x) x.isNew, userData.sample_data);
+        userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
+        userData.plotVarNames = sort(unique({userData.plotVarNames{:} plotVar}));
         userData.treePanelData = generateTreeData(userData.sample_data);
         setappdata(ancestor(hObject,'figure'), 'UserData', userData);
         %         if isfield(handles,'jtable')
