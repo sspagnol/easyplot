@@ -88,7 +88,6 @@ if ~isempty(children)
 end
 
 varNames={};
-%allVarInd=cellfun(@(x) cellfun(@(y) getVar(x.variables, char(y)), varName,'UniformOutput',false), handles.sample_data,'UniformOutput',false);
 hAx=gobjects(nSubPlots,1);
 legendStr = cell(nSubPlots,1);
 for ii=1:numel(userData.sample_data) % loop over files
