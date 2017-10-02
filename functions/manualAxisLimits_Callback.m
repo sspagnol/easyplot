@@ -88,16 +88,16 @@ set(confirmButton, 'Units', 'normalized');
 % position figure and widgets
 set(f,             'Position', [0.40, 0.46, 0.25, 0.25]);
 
-set(startDateTxt,   'Position', [0.00, 0.50, 0.50, 0.20 ]);
-set(startDateUI,   'Position', [0.50, 0.50, 0.50, 0.20 ]);
-set(endDateTxt,     'Position', [0.00, 0.00, 0.50, 0.20 ]);
-set(endDateUI,     'Position', [0.50, 0.00, 0.50, 0.20 ]);
+set(startDateTxt,   'Position', [0.00, 0.50, 0.50, 0.50 ]);
+set(startDateUI,   'Position', [0.50, 0.50, 0.50, 0.50 ]);
+set(endDateTxt,     'Position', [0.00, 0.00, 0.50, 0.50 ]);
+set(endDateUI,     'Position', [0.50, 0.00, 0.50, 0.50 ]);
 
 set(t, 'Position', [0.00, 0.00, 1.00, 1.00 ]);
 %t.Position(3:4) = t.Extent(3:4);
 
-set(cancelButton,  'Position', [0.00, 0.00, 0.50, 0.50 ]);
-set(confirmButton, 'Position', [0.50, 0.00, 0.50, 0.50 ]);
+set(cancelButton,  'Position', [0.00, 0.00, 0.50, 1.00 ]);
+set(confirmButton, 'Position', [0.50, 0.00, 0.50, 1.00 ]);
 
 % enable use of return/escape to confirm/cancel dialog
 %set(f, 'WindowKeyPressFcn', @keyPressCallback);
@@ -118,8 +118,8 @@ set(confirmButton, 'Units', 'pixels');
 set(f,             'CloseRequestFcn', @cancelCallback);
 set(cancelButton,  'Callback',        @cancelCallback);
 set(confirmButton, 'Callback',        @confirmCallback);
-set(startDateUI,      'Callback',        @startdateCallback);
-set(endDateUI,      'Callback',        @enddateCallback);
+set(startDateUI,   'Callback',        @startdateCallback);
+set(endDateUI,     'Callback',        @enddateCallback);
 
 tEps = 1;  %1minute minimum diff between start/end date
 xEps = 1/60/24;
@@ -183,7 +183,7 @@ uiwait(f);
         try
             xMin = datenum(get(startDateUI, 'String'));
             if xMin < dataLimits.TIME.RAW.xMax-xEps
-                userData.xMin = xMin;
+                userData.plotLimits.TIME.xMin = xMin;
                 for ii=1:numel(userData.axisHandles)
                     set(userData.axisHandles(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
                     updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
@@ -191,11 +191,11 @@ uiwait(f);
                 %setappdata(theParent, 'UserData', userData);
                 
             else
-                set(startDateUI,'String',datestr(userData.xMin,31));
+                set(startDateUI,'String',datestr(userData.plotLimits.TIME.xMin,31));
                 errordlg(['There must be a ' num2str(tEps) ' minute difference between start/end date.']);
             end
         catch me
-            set(startDateUI,'String',datestr(userData.xMin,31));
+            set(startDateUI,'String',datestr(userData.plotLimits.TIME.xMin,31));
             errordlg('Unable to parse start date.');
         end
     end
@@ -206,7 +206,7 @@ uiwait(f);
         try
             xMax = datenum(get(endDateUI, 'String'));
             if xMax > dataLimits.TIME.RAW.xMin+xEps
-                userData.xMax = xMax;
+                userData.plotLimits.TIME.xMax = xMax;
                 for ii=1:numel(userData.axisHandles)
                     set(userData.axisHandles(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
                     updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
@@ -214,7 +214,7 @@ uiwait(f);
                 setappdata(theParent, 'UserData', userData);
                 
             else
-                set(endDateUI,'String',datestr(userData.xMax,31));
+                set(endDateUI,'String',datestr(userData.plotLimits.TIME.xMax,31));
                 errordlg(['There must be a ' num2str(tEps) ' minute difference between start/end date.']);
             end
         catch

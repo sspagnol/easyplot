@@ -10,6 +10,9 @@ function zoomXextent_Callback(hObject, eventdata, oldHandles)
 
 theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
+
+if ~isfield(userData,'sample_data'), return; end
+
 gData = guidata(theParent);
 
 try
@@ -18,25 +21,20 @@ catch
     useQCflags = false;
 end
 
-if isfield(userData,'sample_data')
-    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
-    %     if useQCflags
-    %        theLimits = dataLimits.QC;
-    %     else
-    %         theLimits = dataLimits.RAW;
-    %     end
-    userData.xMin = dataLimits.TIME.RAW.xMin;
-    userData.xMax = dataLimits.TIME.RAW.xMax;
-    %userData.yMin = theLimits.yMin;
-    %userData.yMax = theLimits.yMax;
-    if ~isnan(userData.xMin) || ~isnan(userData.xMax)
-        set(gca,'XLim',[userData.xMin userData.xMax]);
-    end
-    setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-    for ii = 1:numel(userData.axisHandles)
-        updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
-    end
+dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
+userData.plotLimits.TIME.xMin = dataLimits.TIME.RAW.xMin;
+userData.plotLimits.TIME.xMax = dataLimits.TIME.RAW.xMax;
+
+if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax)
+    set(gca,'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
 end
+
+setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+
+for ii = 1:numel(userData.axisHandles)
+    updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+end
+
 
 end
 

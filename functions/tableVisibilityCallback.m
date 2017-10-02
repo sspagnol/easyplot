@@ -1,5 +1,5 @@
 %%
-function tableVisibilityCallback(hModel,hEvent, hObject)
+function tableVisibilityCallback(hModel, hEvent, hObject)
 % TABLEVISIBILITYCALLBACK callback for treeTable visibility column
 %
 % Inputs:

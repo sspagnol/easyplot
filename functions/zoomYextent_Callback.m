@@ -9,9 +9,10 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % handles    structure with handles and user data (see GUIDATA)
 theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
 
 if ~isfield(userData,'sample_data'), return; end
+
+gData = guidata(theParent);
 
 try
     useQCflags = userData.plotQC;
@@ -27,6 +28,7 @@ switch upper(userData.plotType)
     case 'VARS_OVERLAY'
         yMin = NaN;
         yMax = NaN;
+        theVar = 'MULTI';
         theLimits = dataLimits.MULTI.(useFlags);
         
     case 'VARS_STACKED'
@@ -36,13 +38,15 @@ switch upper(userData.plotType)
         theLimits = dataLimits.(theVar).(useFlags);
 end
 
-userData.xMin = dataLimits.TIME.RAW.xMin;
-userData.xMax = dataLimits.TIME.RAW.xMax;
-userData.yMin = theLimits.yMin;
-userData.yMax = theLimits.yMax;
+userData.plotLimits.TIME.xMin = dataLimits.TIME.RAW.xMin;
+userData.plotLimits.TIME.xMax = dataLimits.TIME.RAW.xMax;
+userData.plotLimits.MULTI.yMin = theLimits.yMin;
+userData.plotLimits.MULTI.yMax = theLimits.yMax;
+userData.plotLimits.(theVar).yMin = theLimits.yMin;
+userData.plotLimits.(theVar).yMax = theLimits.yMax;
 
-if ~isnan(userData.yMin) || ~isnan(userData.yMax)
-    set(axH,'YLim',[userData.yMin userData.yMax]);
+if ~isnan(theLimits.yMin) || ~isnan(theLimits.yMax)
+    set(axH,'YLim',[theLimits.yMin theLimits.yMax]);
 end
 
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);

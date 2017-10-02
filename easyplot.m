@@ -90,10 +90,10 @@ set(gData.figure1,'Toolbar','figure');
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
 % data min/max
-userData.xMin=NaN;
-userData.xMax=NaN;
-userData.yMin=NaN;
-userData.yMax=NaN;
+userData.plotLimits.TIME.xMin=NaN;
+userData.plotLimits.TIME.xMax=NaN;
+userData.plotLimits.MULTI.yMin=NaN;
+userData.plotLimits.MULTI.yMax=NaN;
 
 % default single plot with any selected variables
 userData.plotType = 'VARS_OVERLAY';

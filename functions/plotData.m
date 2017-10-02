@@ -125,7 +125,7 @@ for ii=1:numel(userData.sample_data) % loop over files
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 % 1D var
                 ydataVar = userData.sample_data{ii}.variables{jj}.data;
-                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags');
+                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
                     varFlags = userData.sample_data{ii}.variables{jj}.flags;
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
@@ -138,7 +138,7 @@ for ii=1:numel(userData.sample_data) % loop over files
                 % 2D var
                 iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
                 ydataVar = userData.sample_data{ii}.variables{jj}.data(:,iSlice);
-                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags');
+                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
                     varFlags = userData.sample_data{ii}.variables{jj}.flags(:,iSlice);
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
@@ -163,26 +163,28 @@ end
 linkaxes(hAx,'x');
 
 varNames=unique(varNames);
-dataLimits=findVarExtents(userData.sample_data,varNames);
+dataLimits=findVarExtents(userData.sample_data, varNames);
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
 for ii = 1:nSubPlots
     theVar = char(userData.plotVarNames{ii});
-    userData.xMin = dataLimits.TIME.RAW.xMin;
-    userData.xMax = dataLimits.TIME.RAW.xMax;
+    %userData.plotLimits.TIME.xMin = dataLimits.TIME.RAW.xMin;
+    %userData.plotLimits.TIME.xMax = dataLimits.TIME.RAW.xMax;
     switch upper(userData.plotType)
         case 'VARS_OVERLAY'
-            userData.yMin = dataLimits.MULTI.(useFlags).yMin;
-            userData.yMax = dataLimits.MULTI.(useFlags).yMax;
+            userData.plotLimits.MULTI.yMin = dataLimits.MULTI.(useFlags).yMin;
+            userData.plotLimits.MULTI.yMax = dataLimits.MULTI.(useFlags).yMax;
         case 'VARS_STACKED'
-            userData.yMin = dataLimits.(theVar).(useFlags).yMin;
-            userData.yMax = dataLimits.(theVar).(useFlags).yMax;
+            if ~isfield(userData.plotLimits, theVar)
+                userData.plotLimits.(theVar).yMin = dataLimits.(theVar).(useFlags).yMin;
+                userData.plotLimits.(theVar).yMax = dataLimits.(theVar).(useFlags).yMax;
+            end
     end
     
     if userData.firstPlot
-        set(hAx(ii),'XLim',[userData.xMin userData.xMax]);
-        set(hAx(ii),'YLim',[userData.yMin userData.yMax]);
+%        set(hAx(ii),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+%        set(hAx(ii),'YLim',[userData.plotLimits.MULTI.yMin userData.plotLimits.MULTI.yMax]);
         userData.firstPlot=false;
     end
     
@@ -199,6 +201,9 @@ for ii = 1:nSubPlots
                     catch e, uom = '';
                     end
                     ylabelStr = makeYlabel( short_name, long_name, uom );
+                    %ii
+                    %hAx(ii)
+                    %ylabelStr
                     ylabel(hAx(ii), ylabelStr);
                 else
                     ylabel(hAx,'Multiple Variables');
@@ -211,6 +216,9 @@ for ii = 1:nSubPlots
                 catch e, uom = '';
                 end
                 ylabelStr = makeYlabel( short_name, long_name, uom );
+                %ii
+                %hAx(ii)
+                %ylabelStr
                 ylabel(hAx(ii), ylabelStr);
         end
     end

@@ -40,10 +40,10 @@ if isfield(userData, 'sample_data')
     
     userData.sample_data={};
     userData.firstPlot=true;
-    userData.xMin=NaN;
-    userData.xMax=NaN;
-    userData.yMin=NaN;
-    userData.yMax=NaN;
+    userData.plotLimits.TIME.xMin=NaN;
+    userData.plotLimits.TIME.xMax=NaN;
+    userData.plotLimits.MULTI.yMin=NaN;
+    userData.plotLimits.MULTI.yMax=NaN;
     setappdata(theParent, 'UserData', userData);
 end
 
