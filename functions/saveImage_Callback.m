@@ -15,8 +15,7 @@ if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
     if isequal(FILENAME,0) || isequal(PATHNAME,0)
         disp('No file selected.');
     else
-        %print(handles.axes1,'-dpng','-r300',fullfile(PATHNAME,FILENAME));
-        export_fig(fullfile(PATHNAME,FILENAME),'-png',gData.axes1);
+        export_fig(fullfile(PATHNAME,FILENAME),'-png',gData.plotPanel);
     end
     %uiresume(handles.figure1);
 end

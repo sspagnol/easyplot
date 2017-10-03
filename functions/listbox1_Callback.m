@@ -37,10 +37,8 @@ if strcmp(selectionType,'open')
             %         end
             userData.jtable = createTreeTable(gData, userData);
             userData.firstPlot=true;
-            setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-            plotData(ancestor(hObject,'figure'));
-            %        set(handles.axes1,'XLim',[handles.xMin handles.xMax]);
-            %        set(handles.axes1,'YLim',[handles.yMin handles.yMax]);
+            setappdata(theParent, 'UserData', userData);
+            plotData(theParent);
             % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
             
             %drawnow;
@@ -56,12 +54,10 @@ if strcmp(selectionType,'normal')
     iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
     idTime  = getVar(userData.sample_data{iFile}.dimensions, 'TIME');
     newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
-    %xlim(handles.axes1, newXLimits);
-    zoom(gData.axes1,'reset');
-    set(gData.axes1,'XLim',newXLimits);
-    %1 guidata(theParent, gData);
-    setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-    updateDateLabel(gData.plotPanel,struct('Axes', gData.axes1), true);
+    zoom(gca,'reset');
+    set(gca,'XLim',newXLimits);
+    setappdata(theParent, 'UserData', userData);
+    updateDateLabel(gData.plotPanel,struct('Axes', gca), true);
     drawnow;
 end
 

@@ -31,10 +31,10 @@ end
 
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);
 
-for ii = 1:numel(userData.axisHandles)
-    updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+children = findobj(gData.plotPanel,'Type','axes');
+for ii = 1:numel(children)
+    updateDateLabel(gData.plotPanel,struct('Axes', children(ii)), true);
 end
-
 
 end
 

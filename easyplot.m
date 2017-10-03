@@ -118,22 +118,11 @@ userData.parserList=initParserList;
 userData.firstPlot = true;
 
 userData.plotVarNames = {};
-userData.axisHandles(1) = axes(gData.plotPanel);
-axesInfo.Linked = userData.axisHandles(1);
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 axesInfo.XLabel = 'Time (UTC)';
-% why does axes UserData get wiped somewhere later?
-%axH=handle(gData.axes1);
-axH = userData.axisHandles(1);
-set(axH, 'UserData', axesInfo);
-set(axH, 'XLim', [floor(now) floor(now)+1]);
 userData.axesInfo=axesInfo;
 %set(axH,'ButtonDownFcn',@updateAxisManual)
-
-% Couldn't get easyplot to function correctly so pulled in code from
-% dynamicDateTick into easyplot and modified as required.
-%dynamicDateTicks(handles.axes1, [], 'dd-mmm','UseDataTipCursor',false);
 
 % Tried a callback on zoom/pan and XLim listener but that just cause
 % massive confusion. At the moment just call updateDateLabel as required,
@@ -146,10 +135,6 @@ set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
 set(hFig, 'WindowKeyPressFcn', @keyPressCallback);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
-
-xlabel(axH,'Time (UTC)');
-
-%hoverlines( handles.figure1 );
 
 % custome data tip with nicely formatted date
 dcm_h = datacursormode(gData.figure1);

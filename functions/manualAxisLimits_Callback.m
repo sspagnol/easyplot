@@ -1,6 +1,6 @@
 %%
 function manualAxisLimits_Callback(hObject,eventdata,hObjectGUIdata)
-%manualAxisLimits_Callback : bring up requestor for uses to select axis
+%manualAxisLimits_Callback Bring up requestor for uses to select axis
 %limits
 %
 % --- Executes on button press in manualAxisLimits.
@@ -29,7 +29,11 @@ if useQCflags, useFlags='QC'; end
 
 dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 
-nSubPlots = numel(userData.axisHandles);
+nSubPlots = numel(userData.plotVarNames);
+axH = findobj(gData.plotPanel,'Type','axes');
+
+indVarAxH = arrayfun(@(x) find(strcmp({axH.Tag},x)), userData.plotVarNames, 'UniformOutput', false);
+indVarAxH = [indVarAxH{:}];
 tableData = {};
 switch upper(userData.plotType)
     case 'VARS_OVERLAY'
@@ -45,12 +49,12 @@ switch upper(userData.plotType)
             tableData{ii,2} = dataLimits.(theVar).(useFlags).yMin;
             tableData{ii,3} = dataLimits.(theVar).(useFlags).yMax;
         end
-        tableData
+        %tableData
 end
 
 % dialog figure
 f = figure('Name',        'Enter limits', ...
-    'Visible',     'on',...
+    'Visible',     'off',...
     'MenuBar',     'none',...
     'Resize',      'off',...
     'WindowStyle', 'Modal',...
@@ -87,15 +91,12 @@ set(confirmButton, 'Units', 'normalized');
 
 % position figure and widgets
 set(f,             'Position', [0.40, 0.46, 0.25, 0.25]);
-
 set(startDateTxt,   'Position', [0.00, 0.50, 0.50, 0.50 ]);
 set(startDateUI,   'Position', [0.50, 0.50, 0.50, 0.50 ]);
 set(endDateTxt,     'Position', [0.00, 0.00, 0.50, 0.50 ]);
 set(endDateUI,     'Position', [0.50, 0.00, 0.50, 0.50 ]);
-
 set(t, 'Position', [0.00, 0.00, 1.00, 1.00 ]);
 %t.Position(3:4) = t.Extent(3:4);
-
 set(cancelButton,  'Position', [0.00, 0.00, 0.50, 1.00 ]);
 set(confirmButton, 'Position', [0.50, 0.00, 0.50, 1.00 ]);
 
@@ -108,9 +109,7 @@ set(startDateTxt,   'Units', 'pixels');
 set(endDateTxt,     'Units', 'pixels');
 set(startDateUI,   'Units', 'pixels');
 set(endDateUI,     'Units', 'pixels');
-
 set(t,  'Units', 'pixels');
-
 set(cancelButton,  'Units', 'pixels');
 set(confirmButton, 'Units', 'pixels');
 
@@ -126,7 +125,7 @@ xEps = 1/60/24;
 yEps = 0.1; %minimum diff between ymin/ymax
 
 set(f, 'Visible', 'on');
-uiwait(f);
+%uiwait(f);
 
 %%
     function keyPressCallback(source,ev)
@@ -151,21 +150,21 @@ uiwait(f);
             case 'VARS_OVERLAY'
                 theVar = 'MULTI';
                 if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
-                    set(userData.axisHandles(1),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+                    set(axH(1),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
                 end
                 
             case 'VARS_STACKED'
-                for ii=1:numel(userData.axisHandles)
+                for ii=1:numel(axH)
                     theVar = char(userData.plotVarNames{ii});
                     if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
-                        set(userData.axisHandles(ii),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+                        set(axH(ii),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
                     end
                 end
         end
             
-        for ii=1:numel(userData.axisHandles)
-            set(userData.axisHandles(ii),'XLim',[dataLimits.TIME.RAW.yMin dataLimits.TIME.RAW.yMax]);
-            updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+        for ii=1:numel(axH)
+            set(axH(ii),'XLim',[dataLimits.TIME.RAW.yMin dataLimits.TIME.RAW.yMax]);
+            updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
         end
         setappdata(ancestor(source,'figure'), 'UserData', userData);
         delete(f);
@@ -184,9 +183,9 @@ uiwait(f);
             xMin = datenum(get(startDateUI, 'String'));
             if xMin < dataLimits.TIME.RAW.xMax-xEps
                 userData.plotLimits.TIME.xMin = xMin;
-                for ii=1:numel(userData.axisHandles)
-                    set(userData.axisHandles(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
-                    updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+                for ii=1:numel(axH)
+                    set(axH(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
+                    updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
                 end
                 %setappdata(theParent, 'UserData', userData);
                 
@@ -207,9 +206,9 @@ uiwait(f);
             xMax = datenum(get(endDateUI, 'String'));
             if xMax > dataLimits.TIME.RAW.xMin+xEps
                 userData.plotLimits.TIME.xMax = xMax;
-                for ii=1:numel(userData.axisHandles)
-                    set(userData.axisHandles(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
-                    updateDateLabel(gData.plotPanel,struct('Axes', userData.axisHandles(ii)), true);
+                for ii=1:numel(axH)
+                    set(axH(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
+                    updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
                 end
                 setappdata(theParent, 'UserData', userData);
                 
@@ -218,59 +217,30 @@ uiwait(f);
                 errordlg(['There must be a ' num2str(tEps) ' minute difference between start/end date.']);
             end
         catch
-            set(endDateUI,'String',datestr(userData.xMax,31));
+            set(endDateUI,'String',datestr(userData.dataLimits.TIME.xMax,31));
             errordlg('Unable to parse end date.');
         end
     end
 
 %%
-    function yminCallback(source,ev)
-        %yminCallback Called when the ymin value is changed.
-        yMin = str2num(get(yMinUI, 'String'));
-        if yMin < userData.yMax-yEps
-            userData.yMin = yMin;
-            set(gData.axes1,'YLim',[userData.yMin userData.yMax]);
-            setappdata(theParent, 'UserData', userData);
-        else
-            set(yMinUI, 'String', num2str(userData.yMin));
-            errordlg(['There must be a ' num2str(yEps) 'difference between ymin/ymax.']);
-        end
-    end
-
-%%
-    function ymaxCallback(source,ev)
-        %ymaxCallback Called when the ymax value is changed.
-        yMax = str2num(get(yMaxUI, 'String'));
-        if yMax > userData.yMin+yEps
-            userData.yMax = yMax;
-            set(gData.axes1,'YLim',[userData.yMin userData.yMax]);
-            setappdata(theParent, 'UserData', userData);
-        else
-            set(yMaxUI, 'String', num2str(userData.yMax));
-            errordlg(['There must be a ' num2str(yEps) 'difference between ymin/ymax.']);
-        end
-    end
-
-%%
     function tableData_Callback(hObject,callbackdata)
-        disp('tableDataCallback');
         iRow = callbackdata.Indices(1);
         iCol = callbackdata.Indices(2);
-        axH = userData.axisHandles(iRow);
+        aH = axH(iRow);
         switch iCol
             case 2 % yMin
-                if callbackdata.NewData > hObject.Data{iRow,3}
+                if callbackdata.NewData > hObject.Data{iRow,3} - yEps
                     hObject.Data{iRow,iCol} = callbackdata.PreviousData;
                     return
                 end
-                set(userData.axisHandles(iRow), 'YLim', [callbackdata.NewData hObject.Data{iRow,3}]);
+                set(aH, 'YLim', [callbackdata.NewData hObject.Data{iRow,3}]);
                 
             case 3 % yMax
-                if callbackdata.NewData < hObject.Data{iRow,2}
+                if callbackdata.NewData < hObject.Data{iRow,2} + yEps
                     hObject.Data{iRow,iCol} = callbackdata.PreviousData;
                     return
                 end
-                set(userData.axisHandles(iRow), 'YLim', [hObject.Data{iRow,2} callbackdata.NewData ]);
+                set(aH, 'YLim', [hObject.Data{iRow,2} callbackdata.NewData ]);
         end
     end
 end

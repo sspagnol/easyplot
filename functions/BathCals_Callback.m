@@ -27,8 +27,13 @@ uic = uicontextmenu(theParent);
 bathcalmenu = uimenu(uic,'label','Bath Calibrations');
 % Create the submenus
 m1 = uimenu(bathcalmenu,'label','Select Points',...
-               'Callback',@selectPoints_Callback);
-set(gData.axes1, 'UIContextMenu', uic);
+    'Callback',@selectPoints_Callback);
+
+children = findobj(gData.plotPanel,'Type','axes');
+for ii=1:numel(children)
+    set(children(ii), 'UIContextMenu', uic);
+end
+
 %uic.HandleVisibility = 'off';
 %theParent.uic.HandleVisibility = 'on';
 

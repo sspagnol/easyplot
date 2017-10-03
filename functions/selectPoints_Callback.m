@@ -12,7 +12,7 @@ theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
 
 gData = guidata(theParent);
-axH = gData.axes1;
+axH = gca;
 [x,y,ph1] = select_points(axH);
 
 userData.calx = x;

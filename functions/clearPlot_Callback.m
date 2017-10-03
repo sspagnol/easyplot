@@ -12,13 +12,10 @@ gData = guidata(theParent);
 % clear plot
 if isfield(userData, 'sample_data')
     % clear plots
-    children = get(gData.axes1, 'Children');
+    children = get(gData.plotPanel, 'Children');
     delete(children);
-    set(gData.listbox1,'String', '');
     
-    % clear legend
-    legend(gData.axes1,'off')
-    userData.legend_h = [];
+    set(gData.listbox1,'String', '');
     
     % reset jtable
     % how do I reset contents of handles.jtable?
@@ -40,10 +37,10 @@ if isfield(userData, 'sample_data')
     
     userData.sample_data={};
     userData.firstPlot=true;
-    userData.plotLimits.TIME.xMin=NaN;
-    userData.plotLimits.TIME.xMax=NaN;
-    userData.plotLimits.MULTI.yMin=NaN;
-    userData.plotLimits.MULTI.yMax=NaN;
+    userData.plotLimits.TIME.RAW.xMin=NaN;
+    userData.plotLimits.TIME.RAW.xMax=NaN;
+    userData.plotLimits.MULTI.RAW.yMin=NaN;
+    userData.plotLimits.MULTI.RAW.yMax=NaN;
     setappdata(theParent, 'UserData', userData);
 end
 
