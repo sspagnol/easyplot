@@ -226,7 +226,7 @@ set(f, 'Visible', 'on');
     function tableData_Callback(hObject,callbackdata)
         iRow = callbackdata.Indices(1);
         iCol = callbackdata.Indices(2);
-        aH = axH(iRow);
+        aH = axH(indVarAxH(strcmp(tableData{iRow,1},userData.plotVarNames)));
         switch iCol
             case 2 % yMin
                 if callbackdata.NewData > hObject.Data{iRow,3} - yEps
