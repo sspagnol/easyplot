@@ -36,6 +36,7 @@ gData = guidata(hFig);
 % VARS_OVERLAY : one plot with all vars
 % VARS_STACKED : subplots with common vars per subplot
 % VARS_SINGLE : subplot per var, not implemented yet
+% for each marked variable assign it an subplot/axis number
 switch upper(userData.plotType)
     case 'VARS_OVERLAY'
         %userData.plotVarNames
@@ -43,7 +44,7 @@ switch upper(userData.plotType)
         for ii=1:numel(userData.sample_data) % loop over files
             userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.plotThisVar));
             iVars = find(userData.sample_data{ii}.plotThisVar)';
-            markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
+            %markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
             userData.sample_data{ii}.axisIndex(iVars) = 1;
         end
         
@@ -62,37 +63,79 @@ switch upper(userData.plotType)
 end
 
 
-%%
+%% determine QC use
 try
     useQCflags = userData.plotQC;
 catch
     useQCflags = false;
 end
+useFlags = 'RAW';
+if useQCflags, useFlags='QC'; end
 
-%Create a string for legend
+%% create list of variable names that will be plotted
+varNames={};
+for ii=1:numel(userData.sample_data)
+    iVars = find(userData.sample_data{ii}.plotThisVar)';
+    for jj = iVars
+        theVar = userData.sample_data{ii}.variables{jj}.name;
+        varNames{end+1}=theVar;
+    end
+end
+varNames=unique(varNames);
+userData.dataLimits=findVarExtents(userData.sample_data, varNames);
+
+%% Create a string for legend
 legendStr={};
 
+%% delete old plots
 children = findobj(gData.plotPanel,'Type','axes');
 if ~isempty(children)
+    xlimits = get(children(1), 'XLim');
+    userData.plotLimits.TIME.xMin = xlimits(1);
+    userData.plotLimits.TIME.xMax = xlimits(2);
     delete(children);
 end
 
-varNames={};
+%%
+% loop over sample_data and plot the marked variables into previously
+% calculated subplot/axis number
+%varNames={};
 hAx=gobjects(nSubPlots,1);
 legendStr = cell(nSubPlots,1);
-for ii=1:numel(userData.sample_data) % loop over files
+for ii=1:numel(userData.sample_data)
     iVars = find(userData.sample_data{ii}.plotThisVar)';
     for jj = iVars
+        theVar = userData.sample_data{ii}.variables{jj}.name;
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         hAx(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',gData.plotPanel);
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',gData.plotPanel);
         %axes(hAx(ihAx));
+        % for each subplot set a tag and xlim/ylim
         switch upper(userData.plotType)
             case 'VARS_OVERLAY'
                 hAx(ihAx).Tag = 'MULTI';
+                if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                    set(hAx(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                else
+                    set(hAx(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                end
+                if ~isfield(userData.plotLimits, 'MULTI')
+                    userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
+                    userData.plotLimits.MULTI.yMax = userData.dataLimits.MULTI.(useFlags).yMax;
+                end
                 
             case 'VARS_STACKED'
-                hAx(ihAx).Tag = userData.sample_data{ii}.variables{jj}.name;
+                hAx(ihAx).Tag = theVar;
+                if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                    set(hAx(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                else
+                    set(hAx(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                end
+                if ~isfield(userData.plotLimits, theVar)
+                    userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
+                    userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
+                end
+                set(hAx(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
         end
         
         if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
@@ -103,13 +146,13 @@ for ii=1:numel(userData.sample_data) % loop over files
             markerStyle='none';
         end
         
-        if strfind(userData.sample_data{ii}.variables{jj}.name, 'EP_LPF')
+        if strfind(theVar, 'EP_LPF')
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'LPFTIME');
         else
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
         
-        instStr=strcat(userData.sample_data{ii}.variables{jj}.name, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
         %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
         %[PATHSTR,NAME,EXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
         tagStr = [userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt];
@@ -145,41 +188,18 @@ for ii=1:numel(userData.sample_data) % loop over files
         end
         hold(hAx(ihAx),'on');
         legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
-        varNames{end+1}=userData.sample_data{ii}.variables{jj}.name;
+        %varNames{end+1}=theVar;
         set(gData.progress,'String',strcat('Plot : ', instStr));
         %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
         %drawnow;
     end
 end
 
+%% link all/any subplot axes
 linkaxes(hAx,'x');
 
-varNames=unique(varNames);
-userData.dataLimits=findVarExtents(userData.sample_data, varNames);
-useFlags = 'RAW';
-if useQCflags, useFlags='QC'; end
-
+%% set ylabels and legends
 for ii = 1:nSubPlots
-    theVar = char(userData.plotVarNames{ii});
-    %userData.plotLimits.TIME.xMin = dataLimits.TIME.RAW.xMin;
-    %userData.plotLimits.TIME.xMax = dataLimits.TIME.RAW.xMax;
-    switch upper(userData.plotType)
-        case 'VARS_OVERLAY'
-            userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
-            userData.plotLimits.MULTI.yMax = userData.dataLimits.MULTI.(useFlags).yMax;
-        case 'VARS_STACKED'
-            if ~isfield(userData.plotLimits, theVar)
-                userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
-                userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
-            end
-    end
-    
-    if userData.firstPlot
-        set(hAx(ii),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
-        set(hAx(ii),'YLim',[userData.dataLimits.MULTI.RAW.yMin userData.dataLimits.MULTI.RAW.yMax]);
-        userData.firstPlot=false;
-    end
-    
     if isempty(varNames)
         ylabel(hAx(ii),'No Variables');
         %    elseif numel(varNames)==1
@@ -242,9 +262,10 @@ for ii = 1:nSubPlots
     
     % legendflex still has problems
     %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
-    
-    updateDateLabel(hFig,struct('Axes', hAx(ii)), true);
 end
+
+%% update xlabels (linked so only have to do one)
+updateDateLabel(hFig,struct('Axes', hAx(1)), true);
 
 set(gData.progress,'String','Done');
 setappdata(hFig, 'UserData', userData);

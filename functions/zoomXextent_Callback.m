@@ -30,11 +30,7 @@ if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax
 end
 
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-
-children = findobj(gData.plotPanel,'Type','axes');
-for ii = 1:numel(children)
-    updateDateLabel(gData.plotPanel,struct('Axes', children(ii)), true);
-end
+updateDateLabel(gData.plotPanel,struct('Axes',gca), true);
 
 end
 
