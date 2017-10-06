@@ -57,7 +57,7 @@ for ii=1:numel(sample_data)
                 yData = sample_data{ii}.variables{jj}.data;
             else
                 iSlice=sample_data{ii}.variables{jj}.iSlice;
-                yData = sample_data{ii}.variables{jj}.data(:,iSlice);
+                yData = double(sample_data{ii}.variables{jj}.data(:,iSlice));
             end
             dataLimits.(theVar).RAW.yMin=min(min(yData), dataLimits.(theVar).RAW.yMin);
             dataLimits.(theVar).RAW.yMax=max(max(yData), dataLimits.(theVar).RAW.yMax);
