@@ -115,14 +115,9 @@ for ii=1:numel(sam.variables)
     QC.xMin = RAW.xMin;
     QC.xMax = RAW.xMax;
     
-    %    if isvector(sam.variables{ii}.data)
-    yData = sam.variables{ii}.data;
+    yData = double(sam.variables{ii}.data);
     RAW.yMin=min(min(yData), RAW.yMin);
     RAW.yMax=max(max(yData), RAW.yMax);
-    %     else
-    %         iSlice=sam.variables{ii}.iSlice;
-    %         yData = sam.variables{ii}.data(:,iSlice);
-    %     end
     
     if isIMOS
         if isfield(sam.variables{ii}, 'flags')

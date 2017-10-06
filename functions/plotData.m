@@ -153,6 +153,7 @@ for ii=1:numel(userData.sample_data)
         end
         
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        instStr = regexprep(instStr, '[^ -~]', '\_'); %only printable ascii characters
         %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
         %[PATHSTR,NAME,EXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
         tagStr = [userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt];

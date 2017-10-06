@@ -85,8 +85,11 @@ uimenu(m,'Label','Quit','Callback',@exit_Callback,...
 
 % white background
 set(gData.figure1,'Color',[1 1 1]);
+
 % create easyplot toolbar
 set(gData.figure1,'Toolbar','figure');
+set(gData.figure1, 'ToolBar', 'none');
+
 %hpt = uipushtool(ht,'CData',icon,'TooltipString','Hello')
 
 % data min/max

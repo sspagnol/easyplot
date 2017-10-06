@@ -54,7 +54,7 @@ for ii=1:numel(sample_data)
             dataLimits.TIME.QC.xMax = dataLimits.TIME.RAW.xMax;
             
             if isvector(sample_data{ii}.variables{jj}.data)
-                yData = sample_data{ii}.variables{jj}.data;
+                yData = double(sample_data{ii}.variables{jj}.data);
             else
                 iSlice=sample_data{ii}.variables{jj}.iSlice;
                 yData = double(sample_data{ii}.variables{jj}.data(:,iSlice));
