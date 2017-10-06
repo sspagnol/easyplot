@@ -80,15 +80,16 @@ userData.oldPathname=thePath;
 if isequal(FILEnames,0) || isequal(thePath,0)
     disp('No file selected.');
 else
-    %     if ischar(FILEnames)
-    %         FILEnames = {FILEnames};
-    %     end
     if ~isfield(userData,'sample_data')
         userData.sample_data={};
     end
+    for kk=1:numel(userData.sample_data)
+        userData.sample_data{kk}.isNew = false;
+    end
+    
     iFailed=0;
     nFiles = length(FILEnames);
-     for ii=1:nFiles
+    for ii=1:nFiles
         theFile = char([FILEnames{ii} FILEexts{ii}]);
         if isempty(FILEpaths{ii})
             theFullFile = which([FILEnames{ii} FILEexts{ii}]);
@@ -96,20 +97,21 @@ else
             theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
         % skip any files the user has already imported
-        isLoaded = cell2mat(cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false));
-        if ~isempty(isLoaded)
-            for kk=1:numel(userData.sample_data)
-                if ~isLoaded(kk)
-                    userData.sample_data{kk}.isNew = false;
-                end
-            end
-        end
+%        isLoaded = cell2mat(cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false));
+%         if ~isempty(isLoaded)
+%             for kk=1:numel(userData.sample_data)
+%                 if ~isLoaded(kk)
+%                     userData.sample_data{kk}.isNew = false;
+%                 end
+%             end
+%         end
         
-        %notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
-        if ~any(isLoaded)
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
+%        if ~any(isLoaded)
+        if notLoaded
             try
                 set(gData.progress,'String',strcat({'Loading : '}, theFile));
-                drawnow;
+                %drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 % adopt similar code layout as imos-toolbox importManager
                 % get parser for the filetype
@@ -136,12 +138,12 @@ else
                 end
                 clear('structs');
                 set(gData.progress,'String',strcat({'Loaded : '}, theFile));
-                drawnow;
+                %drawnow;
             catch ME
                 astr=['Importing file ', theFile, ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
                 set(gData.progress,'String',astr);
-                drawnow;
+                %drawnow;
                 setappdata(hFig, 'UserData', userData);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
                 iFailed=1;
@@ -152,7 +154,7 @@ else
         else
             disp(['File ' theFile ' already loaded.']);
             set(gData.progress,'String',strcat({'Already loaded : '}, theFile));
-            drawnow;
+            %drawnow;
         end
     end
     
@@ -162,7 +164,7 @@ else
     %setappdata(hFig, 'UserData', userData);
     set(gData.progress,'String','Finished importing.');
     setappdata(hFig, 'UserData', userData);
-    drawnow;
+    %drawnow;
     
     if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
@@ -170,7 +172,7 @@ else
         userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
         userData.plotVarNames = sort(unique({userData.plotVarNames{:} plotVar}));
         userData.treePanelData = generateTreeData(userData.sample_data);
-        setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+        %ssetappdata(ancestor(hObject,'figure'), 'UserData', userData);
         %         if isfield(handles,'jtable')
         %             %delete(handles.jtable);
         %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
