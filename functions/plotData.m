@@ -62,7 +62,6 @@ switch upper(userData.plotType)
         disp('help');
 end
 
-
 %% determine QC use
 try
     useQCflags = userData.plotQC;
