@@ -103,10 +103,12 @@ hAx=gobjects(nSubPlots,1);
 legendStr = cell(nSubPlots,1);
 for ii=1:numel(userData.sample_data)
     iVars = find(userData.sample_data{ii}.plotThisVar)';
+    legendString = {};
     for jj = iVars
         theVar = userData.sample_data{ii}.variables{jj}.name;
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         hAx(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',gData.plotPanel);
+        grid(hAx(ihAx),'on');
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',gData.plotPanel);
         %axes(hAx(ihAx));
         % for each subplot set a tag and xlim/ylim
@@ -152,7 +154,7 @@ for ii=1:numel(userData.sample_data)
         end
         
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model,'-',userData.sample_data{ii}.meta.instrument_serial_no);
-        instStr = regexprep(instStr, '[^ -~]', '\_'); %only printable ascii characters
+        instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         %disp(['Size : ' num2str(size(handles.sample_data{ii}.variables{jj}.data))]);
         %[PATHSTR,NAME,EXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
         tagStr = [userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt];
@@ -165,7 +167,7 @@ for ii=1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                hLine = line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
                     'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', instStr);
@@ -178,91 +180,94 @@ for ii=1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                hLine = line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
                     'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', instStr);
             end
+            userData.sample_data{ii}.variables{jj}.hLine = hLine;
         catch
             error('PLOTDATA: plot failed.');
         end
         hold(hAx(ihAx),'on');
-        legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
-        %varNames{end+1}=theVar;
         set(gData.progress,'String',strcat('Plot : ', instStr));
-        %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-        %drawnow;
     end
 end
 
 %% link all/any subplot axes
 linkaxes(hAx,'x');
 
+updateYlabels( hFig );
+
+updateLineColour( hFig );
+
+updateLegends( hFig );
+
 %% set ylabels and legends
-for ii = 1:nSubPlots
-    if isempty(varNames)
-        ylabel(hAx(ii),'No Variables');
-        %    elseif numel(varNames)==1
-    else
-        switch upper(userData.plotType)
-            case 'VARS_OVERLAY'
-                if numel(varNames)==1
-                    short_name = char(varNames{ii});
-                    long_name = imosParameters( short_name, 'long_name' );
-                    try      uom = ['(' imosParameters(short_name, 'uom') ')'];
-                    catch e, uom = '';
-                    end
-                    ylabelStr = makeYlabel( short_name, long_name, uom );
-                    %ii
-                    %hAx(ii)
-                    %ylabelStr
-                    ylabel(hAx(ii), ylabelStr);
-                else
-                    ylabel(hAx,'Multiple Variables');
-                end
-                
-            case 'VARS_STACKED'
-                short_name = char(varNames{ii});
-                long_name = imosParameters( short_name, 'long_name' );
-                try      uom = ['(' imosParameters(short_name, 'uom') ')'];
-                catch e, uom = '';
-                end
-                ylabelStr = makeYlabel( short_name, long_name, uom );
-                %ii
-                %hAx(ii)
-                %ylabelStr
-                ylabel(hAx(ii), ylabelStr);
-        end
-    end
+%for ii = 1:nSubPlots
+%     if isempty(varNames)
+%         ylabel(hAx(ii),'No Variables');
+%         %    elseif numel(varNames)==1
+%     else
+%         switch upper(userData.plotType)
+%             case 'VARS_OVERLAY'
+%                 if numel(varNames)==1
+%                     short_name = char(varNames{ii});
+%                     long_name = imosParameters( short_name, 'long_name' );
+%                     try      uom = ['(' imosParameters(short_name, 'uom') ')'];
+%                     catch e, uom = '';
+%                     end
+%                     ylabelStr = makeYlabel( short_name, long_name, uom );
+%                     %ii
+%                     %hAx(ii)
+%                     %ylabelStr
+%                     ylabel(hAx(ii), ylabelStr);
+%                 else
+%                     ylabel(hAx,'Multiple Variables');
+%                 end
+%                 
+%             case 'VARS_STACKED'
+%                 short_name = char(varNames{ii});
+%                 long_name = imosParameters( short_name, 'long_name' );
+%                 try      uom = ['(' imosParameters(short_name, 'uom') ')'];
+%                 catch e, uom = '';
+%                 end
+%                 ylabelStr = makeYlabel( short_name, long_name, uom );
+%                 %ii
+%                 %hAx(ii)
+%                 %ylabelStr
+%                 ylabel(hAx(ii), ylabelStr);
+%         end
+%     end
     
-    grid(hAx(ii),'on');
+%    grid(hAx(ii),'on');
     
-    h = findobj(hAx(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
-    
-    % mapping = round(linspace(1,64,length(h)))';
-    % colors = colormap('jet');
-    %   func = @(x) colorspace('RGB->Lab',x);
-    %   c = distinguishable_colors(25,'w',func);
-    cfunc = @(x) colorspace('RGB->Lab',x);
-    colors = distinguishable_colors(length(h),'white',cfunc);
-    for jj = 1:length(h)
-        %dstrings{jj} = get(h(jj),'DisplayName');
-        try
-            %set(h(jj),'Color',colors( mapping(j),: ));
-            set(h(jj),'Color',colors(jj,:));
-        catch e
-            fprintf('Error changing plot colours in plot %s \n',get(gcf,'Name'));
-            disp(e.message);
-        end
-    end
+%     h = findobj(hAx(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
+%     
+%     % mapping = round(linspace(1,64,length(h)))';
+%     % colors = colormap('jet');
+%     %   func = @(x) colorspace('RGB->Lab',x);
+%     %   c = distinguishable_colors(25,'w',func);
+%     cfunc = @(x) colorspace('RGB->Lab',x);
+%     colors = distinguishable_colors(length(h),'white',cfunc);
+%     for jj = 1:length(h)
+%         %dstrings{jj} = get(h(jj),'DisplayName');
+%         try
+%             %set(h(jj),'Color',colors( mapping(j),: ));
+%             set(h(jj),'Color',colors(jj,:));
+%         catch e
+%             fprintf('Error changing plot colours in plot %s \n',get(gcf,'Name'));
+%             disp(e.message);
+%         end
+%     end
     
     %[legend_h,object_h,plot_h,text_str]=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
-    [legend_h,object_h,plot_h,text_str]=legend(hAx(ii),legendStr{ii});
-    set(legend_h, 'FontSize', 8);
+%     [legend_h,object_h,plot_h,text_str]=legend(hAx(ii),legendStr{ii});
+%     set(legend_h, 'FontSize', 8);
     
     % legendflex still has problems
     %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
-end
+%end
 
 %% update xlabels (linked so only have to do one)
 updateDateLabel(hFig,struct('Axes', hAx(1)), true);

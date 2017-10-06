@@ -13,7 +13,7 @@ hAx = findobj(gData.plotPanel,'Type','axes');
 
 for ii = 1:numel(hAx)
     h = findobj(hAx(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
-    
+
     % mapping = round(linspace(1,64,length(h)))';
     % colors = colormap('jet');
     %   func = @(x) colorspace('RGB->Lab',x);
