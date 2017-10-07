@@ -190,91 +190,29 @@ for ii=1:numel(userData.sample_data)
             error('PLOTDATA: plot failed.');
         end
         hold(hAx(ihAx),'on');
+        legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
+        hAx(ihAx).UserData.legendStrings = legendStr{ihAx};
         set(gData.progress,'String',strcat('Plot : ', instStr));
     end
 end
 
-%% link all/any subplot axes
 linkaxes(hAx,'x');
 
+%% update y labels
 updateYlabels( hFig );
 
+%% update line colours
 updateLineColour( hFig );
 
+%% update legends
 updateLegends( hFig );
-
-%% set ylabels and legends
-%for ii = 1:nSubPlots
-%     if isempty(varNames)
-%         ylabel(hAx(ii),'No Variables');
-%         %    elseif numel(varNames)==1
-%     else
-%         switch upper(userData.plotType)
-%             case 'VARS_OVERLAY'
-%                 if numel(varNames)==1
-%                     short_name = char(varNames{ii});
-%                     long_name = imosParameters( short_name, 'long_name' );
-%                     try      uom = ['(' imosParameters(short_name, 'uom') ')'];
-%                     catch e, uom = '';
-%                     end
-%                     ylabelStr = makeYlabel( short_name, long_name, uom );
-%                     %ii
-%                     %hAx(ii)
-%                     %ylabelStr
-%                     ylabel(hAx(ii), ylabelStr);
-%                 else
-%                     ylabel(hAx,'Multiple Variables');
-%                 end
-%                 
-%             case 'VARS_STACKED'
-%                 short_name = char(varNames{ii});
-%                 long_name = imosParameters( short_name, 'long_name' );
-%                 try      uom = ['(' imosParameters(short_name, 'uom') ')'];
-%                 catch e, uom = '';
-%                 end
-%                 ylabelStr = makeYlabel( short_name, long_name, uom );
-%                 %ii
-%                 %hAx(ii)
-%                 %ylabelStr
-%                 ylabel(hAx(ii), ylabelStr);
-%         end
-%     end
-    
-%    grid(hAx(ii),'on');
-    
-%     h = findobj(hAx(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
-%     
-%     % mapping = round(linspace(1,64,length(h)))';
-%     % colors = colormap('jet');
-%     %   func = @(x) colorspace('RGB->Lab',x);
-%     %   c = distinguishable_colors(25,'w',func);
-%     cfunc = @(x) colorspace('RGB->Lab',x);
-%     colors = distinguishable_colors(length(h),'white',cfunc);
-%     for jj = 1:length(h)
-%         %dstrings{jj} = get(h(jj),'DisplayName');
-%         try
-%             %set(h(jj),'Color',colors( mapping(j),: ));
-%             set(h(jj),'Color',colors(jj,:));
-%         catch e
-%             fprintf('Error changing plot colours in plot %s \n',get(gcf,'Name'));
-%             disp(e.message);
-%         end
-%     end
-    
-    %[legend_h,object_h,plot_h,text_str]=legend(hAx,legendStr,'Location','Best', 'FontSize', 8);
-%     [legend_h,object_h,plot_h,text_str]=legend(hAx(ii),legendStr{ii});
-%     set(legend_h, 'FontSize', 8);
-    
-    % legendflex still has problems
-    %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
-%end
 
 %% update xlabels (linked so only have to do one)
 updateDateLabel(hFig,struct('Axes', hAx(1)), true);
 
+%% update progress string and save UserData
 set(gData.progress,'String','Done');
 setappdata(hFig, 'UserData', userData);
-
 drawnow;
 
 % release rentrancy flag

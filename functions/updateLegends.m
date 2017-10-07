@@ -9,12 +9,7 @@ gData = guidata(hFig);
 hAx = findobj(gData.plotPanel,'Type','axes');
 
 for ii = 1:numel(hAx)
-    legendStrings = {};
-    hLines = findobj(hAx(ii),'Type','line');
-    for jj = 1:numel(hLines)
-       legendStrings{end+1} = strrep(hLines(jj).Tag,'_','\_');
-    end
-    [hLegend, ~, ~, ~] = legend(hAx(ii), legendStrings);
+    [hLegend, ~, ~, ~] = legend(hAx(ii), hAx(ii).UserData.legendStrings);
     set(hLegend, 'FontSize', 8);
     
     % legendflex still has problems
