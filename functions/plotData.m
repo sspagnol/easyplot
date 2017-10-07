@@ -32,6 +32,56 @@ goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
 figure(hFig); %make figure current
 gData = guidata(hFig);
 
+%% create list of variable names that will be plotted, delete plots as required
+varNames={};
+varDeleteNames={};
+plotVarCounter = struct;
+hLine = gobjects(0);
+for ii=1:numel(userData.sample_data)
+    iPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
+    iNewPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
+    iDeletePlotVars = find(userData.sample_data{ii}.variablePlotStatus == -1)';
+    if ~isempty(iPlotVars)
+        for jj = iPlotVars
+            theVar = userData.sample_data{ii}.variables{jj}.name;
+            if isfield (plotVarCounter, theVar)
+                plotVarCounter.(theVar) = plotVarCounter.(theVar) + 1;
+            else
+                plotVarCounter.(theVar) = 1;
+            end
+            varNames{end+1}=theVar;
+        end
+    end
+    if ~isempty(iDeletePlotVars)
+        for jj = iDeletePlotVars
+            theVar = userData.sample_data{ii}.variables{jj}.name;
+            if isfield (plotVarCounter, theVar)
+                plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
+            else
+                plotVarCounter.(theVar) = 0;
+            end
+            
+            delete(userData.sample_data{ii}.variables{jj}.hLine);
+            
+            varDeleteNames{end+1}=theVar;
+            userData.sample_data{ii}.variablePlotStatus(jj) = 0;
+        end
+    end
+end
+varNames=unique(varNames);
+varDeleteNames=unique(varDeleteNames);
+
+if ~isempty(varDeleteNames)
+    updateLegends( hFig );
+    % if overlay plot that still has other plots on it
+    if  strcmpi(userData.plotType,'VARS_OVERLAY') & any(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))
+        return
+    end
+    if  strcmpi(userData.plotType,'VARS_STACKED') & all(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))
+        return
+    end
+end
+
 %% testing number of subplots calculation
 % VARS_OVERLAY : one plot with all vars
 % VARS_STACKED : subplots with common vars per subplot
@@ -42,8 +92,8 @@ switch upper(userData.plotType)
         %userData.plotVarNames
         nSubPlots = 1;
         for ii=1:numel(userData.sample_data) % loop over files
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.plotThisVar));
-            iVars = find(userData.sample_data{ii}.plotThisVar)';
+            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.variablePlotStatus));
+            iVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
             %markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
             userData.sample_data{ii}.axisIndex(iVars) = 1;
         end
@@ -52,8 +102,8 @@ switch upper(userData.plotType)
         %userData.plotVarNames
         nSubPlots = numel(userData.plotVarNames);
         for ii=1:numel(userData.sample_data) % loop over files
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.plotThisVar));
-            iVars = find(userData.sample_data{ii}.plotThisVar)';
+            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.variablePlotStatus));
+            iVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
             markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
             userData.sample_data{ii}.axisIndex(iVars) = cell2mat(arrayfun(@(x) find(strcmp(x,userData.plotVarNames)), markedVarNames, 'UniformOutput', false));
         end
@@ -71,16 +121,8 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
-%% create list of variable names that will be plotted
-varNames={};
-for ii=1:numel(userData.sample_data)
-    iVars = find(userData.sample_data{ii}.plotThisVar)';
-    for jj = iVars
-        theVar = userData.sample_data{ii}.variables{jj}.name;
-        varNames{end+1}=theVar;
-    end
-end
-varNames=unique(varNames);
+
+% data limits for those variables
 userData.dataLimits=findVarExtents(userData.sample_data, varNames);
 
 %% Create a string for legend
@@ -88,6 +130,7 @@ legendStr={};
 
 %% delete old plots
 children = findobj(gData.plotPanel,'Type','axes');
+
 if ~isempty(children)
     xlimits = get(children(1), 'XLim');
     userData.plotLimits.TIME.xMin = xlimits(1);
@@ -101,8 +144,8 @@ end
 %varNames={};
 graphs=gobjects(nSubPlots,1);
 legendStr = cell(nSubPlots,1);
-for ii=1:numel(userData.sample_data)
-    iVars = find(userData.sample_data{ii}.plotThisVar)';
+for ii = 1:numel(userData.sample_data)
+    iVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
     legendString = {};
     for jj = iVars
         theVar = userData.sample_data{ii}.variables{jj}.name;
@@ -111,6 +154,7 @@ for ii=1:numel(userData.sample_data)
         grid(graphs(ihAx),'on');
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',gData.plotPanel);
         %axes(hAx(ihAx));
+        grid(hAx(ihAx),'on');
         % for each subplot set a tag and xlim/ylim
         switch upper(userData.plotType)
             case 'VARS_OVERLAY'
@@ -196,6 +240,7 @@ for ii=1:numel(userData.sample_data)
     end
 end
 
+%% link all/any subplot axes
 linkaxes(graphs,'x');
 
 %% update y labels
@@ -213,6 +258,7 @@ updateDateLabel(hFig,struct('Axes', graphs(1)), true);
 %% update progress string and save UserData
 set(gData.progress,'String','Done');
 setappdata(hFig, 'UserData', userData);
+% is this needed?
 drawnow;
 
 % release rentrancy flag

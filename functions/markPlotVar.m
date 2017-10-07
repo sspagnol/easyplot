@@ -8,8 +8,8 @@ end
 
 for ii=1:numel(sample_data)
     if iSamples(ii)
-        sample_data{ii}.plotThisVar = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
-        sample_data{ii}.plotThisVar = sample_data{ii}.plotThisVar(:);
+        sample_data{ii}.variablePlotStatus = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
+        sample_data{ii}.variablePlotStatus = double(sample_data{ii}.variablePlotStatus(:));
     end
     for jj=1:numel(sample_data{ii}.variables)
         sample_data{ii}.variables{jj}.iSlice=1;

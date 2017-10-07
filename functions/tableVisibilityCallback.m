@@ -35,8 +35,11 @@ if isempty(theSerial)
     theSerial = '';
 end
 theVariable   = hModel.getValueAt(modifiedRow,2);
-plotTheVar = hModel.getValueAt(modifiedRow,3);
+plotTheVar = double(hModel.getValueAt(modifiedRow,3));
 iSlice = hModel.getValueAt(modifiedRow,4);
+
+% if deselecting mark it as -1
+if plotTheVar == 0, plotTheVar = -1; end
 
 % update flags/values in userData.sample_data
 for ii=1:numel(userData.sample_data) % loop over files
@@ -44,7 +47,7 @@ for ii=1:numel(userData.sample_data) % loop over files
         if strcmp(userData.sample_data{ii}.meta.instrument_model, theModel) && ...
                 strcmp(userData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable)
-            userData.sample_data{ii}.plotThisVar(jj) = plotTheVar;
+            userData.sample_data{ii}.variablePlotStatus(jj) = plotTheVar;
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,4);
                 userData.sample_data{ii}.variables{jj}.iSlice = 1;
@@ -67,7 +70,7 @@ end
 % gather up list of variables that will be plotted
 plotVarNames = {};
 for ii=1:numel(userData.sample_data) % loop over files
-    iVars = find(userData.sample_data{ii}.plotThisVar)';
+    iVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
     if ~isempty(iVars)
         markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
         plotVarNames = {plotVarNames{:} markedVarNames{:}};
@@ -81,9 +84,8 @@ userData.plotVarNames = plotVarNames;
 % handles.jtable.repaint;
 
 setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+
 plotData(ancestor(hObject,'figure'));
-% not sure user always want rezoom on y
-%zoomYextent_Callback(hObject);
 
 % release rentrancy flag
 hash.remove(hObject);

@@ -18,7 +18,7 @@ if localInBounds(axH)
     
     for ii=1:numel(userData.sample_data) % loop over files
         for jj=1:numel(userData.sample_data{ii}.variables)
-            if userData.sample_data{ii}.plotThisVar(jj)
+            if userData.sample_data{ii}.variablePlotStatus(jj) > 0
                 idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
                 tData=userData.sample_data{ii}.dimensions{idTime}.data;
                 [index,distance]=near(tData,currentPosition(1),1);

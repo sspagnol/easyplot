@@ -45,7 +45,7 @@ dataLimits.TIME.QC.yMax = NaN;
 %%
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if sample_data{ii}.plotThisVar(jj)
+        if sample_data{ii}.variablePlotStatus(jj) > 0
             theVar = sample_data{ii}.variables{jj}.name;
             
             dataLimits.TIME.RAW.xMin = min(dataLimits.TIME.RAW.xMin, sample_data{ii}.variables{jj}.LIMITS.RAW.xMin);

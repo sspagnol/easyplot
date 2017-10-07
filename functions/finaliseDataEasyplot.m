@@ -76,16 +76,17 @@ sam = add_EP_PSAL(sam);
 
 % update isPlottableVar, must be done last
 sam.isPlottableVar = false(1,numel(sam.variables));
-sam.plotThisVar = false(1,numel(sam.variables));
+% plot status, -1=delete, 0=not plotted, 1=plot
+sam.variablePlotStatus = zeros(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
     isEmptyDim = isempty(sam.variables{kk}.dimensions);
     isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data(:)));
     if ~isEmptyDim && isData
         sam.isPlottableVar(kk) = true;
-        sam.plotThisVar(kk) = false;
+        sam.variablePlotStatus(kk) = 0;
     end
 end
-sam.plotThisVar = sam.plotThisVar(:);
+sam.variablePlotStatus = sam.variablePlotStatus(:);
 
 % calculate data limits
 for ii=1:numel(sam.variables)
