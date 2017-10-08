@@ -31,9 +31,13 @@ dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 
 nSubPlots = numel(userData.plotVarNames);
 axH = findobj(gData.plotPanel,'Type','axes');
+if length(axH) == 1
+    indVarAxH = 1;
+else
+    indVarAxH = arrayfun(@(x) find(strcmp({axH.Tag},x)), userData.plotVarNames, 'UniformOutput', false);
+    indVarAxH = [indVarAxH{:}];
+end
 
-indVarAxH = arrayfun(@(x) find(strcmp({axH.Tag},x)), userData.plotVarNames, 'UniformOutput', false);
-indVarAxH = [indVarAxH{:}];
 tableData = {};
 switch upper(userData.plotType)
     case 'VARS_OVERLAY'
@@ -226,7 +230,11 @@ set(f, 'Visible', 'on');
     function tableData_Callback(hObject,callbackdata)
         iRow = callbackdata.Indices(1);
         iCol = callbackdata.Indices(2);
-        aH = axH(indVarAxH(strcmp(tableData{iRow,1},userData.plotVarNames)));
+        if length(axH) == 1
+            aH = axH;
+        else
+            aH = axH(indVarAxH(strcmp(tableData{iRow,1},userData.plotVarNames)));
+        end
         switch iCol
             case 2 % yMin
                 if callbackdata.NewData > hObject.Data{iRow,3} - yEps
