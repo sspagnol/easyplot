@@ -6,10 +6,10 @@ hFig = ancestor(hObject,'figure');
 if isempty(hFig), return; end
 
 gData = guidata(hFig);
-hAx = findobj(gData.plotPanel,'Type','axes');
+graphs = findobj(gData.plotPanel,'Type','axes');
 
-for ii = 1:numel(hAx)
-    [hLegend, ~, ~, ~] = legend(hAx(ii), hAx(ii).UserData.legendStrings);
+for ii = 1:numel(graphs)
+    [hLegend, ~, ~, ~] = legend(graphs(ii), graphs(ii).UserData.legendStrings);
     set(hLegend, 'FontSize', 8);
     
     % legendflex still has problems

@@ -99,7 +99,7 @@ end
 % loop over sample_data and plot the marked variables into previously
 % calculated subplot/axis number
 %varNames={};
-hAx=gobjects(nSubPlots,1);
+graphs=gobjects(nSubPlots,1);
 legendStr = cell(nSubPlots,1);
 for ii=1:numel(userData.sample_data)
     iVars = find(userData.sample_data{ii}.plotThisVar)';
@@ -107,18 +107,18 @@ for ii=1:numel(userData.sample_data)
     for jj = iVars
         theVar = userData.sample_data{ii}.variables{jj}.name;
         ihAx = userData.sample_data{ii}.axisIndex(jj);
-        hAx(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',gData.plotPanel);
-        grid(hAx(ihAx),'on');
+        graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',gData.plotPanel);
+        grid(graphs(ihAx),'on');
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',gData.plotPanel);
         %axes(hAx(ihAx));
         % for each subplot set a tag and xlim/ylim
         switch upper(userData.plotType)
             case 'VARS_OVERLAY'
-                hAx(ihAx).Tag = 'MULTI';
+                graphs(ihAx).Tag = 'MULTI';
                 if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
-                    set(hAx(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                    set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
                 else
-                    set(hAx(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
                 end
                 if ~isfield(userData.plotLimits, 'MULTI')
                     userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
@@ -126,17 +126,17 @@ for ii=1:numel(userData.sample_data)
                 end
                 
             case 'VARS_STACKED'
-                hAx(ihAx).Tag = theVar;
+                graphs(ihAx).Tag = theVar;
                 if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
-                    set(hAx(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                    set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
                 else
-                    set(hAx(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
                 end
                 if ~isfield(userData.plotLimits, theVar)
                     userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
                     userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
                 end
-                set(hAx(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
+                set(graphs(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
         end
         
         if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
@@ -167,7 +167,7 @@ for ii=1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                hLine = line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
                     'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', instStr);
@@ -180,7 +180,7 @@ for ii=1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                hLine = line('Parent',hAx(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
                     'YData',ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle,...
                     'DisplayName', instStr, 'Tag', instStr);
@@ -189,14 +189,14 @@ for ii=1:numel(userData.sample_data)
         catch
             error('PLOTDATA: plot failed.');
         end
-        hold(hAx(ihAx),'on');
+        hold(graphs(ihAx),'on');
         legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
-        hAx(ihAx).UserData.legendStrings = legendStr{ihAx};
+        graphs(ihAx).UserData.legendStrings = legendStr{ihAx};
         set(gData.progress,'String',strcat('Plot : ', instStr));
     end
 end
 
-linkaxes(hAx,'x');
+linkaxes(graphs,'x');
 
 %% update y labels
 updateYlabels( hFig );
@@ -208,7 +208,7 @@ updateLineColour( hFig );
 updateLegends( hFig );
 
 %% update xlabels (linked so only have to do one)
-updateDateLabel(hFig,struct('Axes', hAx(1)), true);
+updateDateLabel(hFig,struct('Axes', graphs(1)), true);
 
 %% update progress string and save UserData
 set(gData.progress,'String','Done');

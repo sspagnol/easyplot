@@ -127,12 +127,12 @@ elseif any(labels(1,:) == ':') % Tick format is HH:MM
     labels=cellfun(@(x) x(~cellfun(@isempty,x)), labels, 'UniformOutput', false);
 end
 
-children = findobj(gData.plotPanel,'Type','axes');
-for ii=1:numel(children)
+graphs = findobj(gData.plotPanel,'Type','axes');
+for ii=1:numel(graphs)
     %set(children(ii), 'XTick', ticks, 'XTickLabel', labels);
     
     % multiline xlabels
-    ht = my_xticklabels(children(ii), ticks, labels);
+    ht = my_xticklabels(graphs(ii), ticks, labels);
     %ht = fix_xticklabels(children(ii));
 end
 

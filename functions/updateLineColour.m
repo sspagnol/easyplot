@@ -9,10 +9,10 @@ userData = getappdata(hFig, 'UserData');
 if isempty(userData.sample_data), return; end
 
 gData = guidata(hFig);
-hAx = findobj(gData.plotPanel,'Type','axes');
+graphs = findobj(gData.plotPanel,'Type','axes');
 
-for ii = 1:numel(hAx)
-    h = findobj(hAx(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
+for ii = 1:numel(graphs)
+    h = findobj(graphs(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
 
     % mapping = round(linspace(1,64,length(h)))';
     % colors = colormap('jet');
