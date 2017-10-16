@@ -135,6 +135,6 @@ for ii=1:numel(graphs)
     ht = my_xticklabels(graphs(ii), ticks, labels);
     %ht = fix_xticklabels(children(ii));
 end
-
+guidata(theParent,gData);
 end
 

@@ -22,6 +22,7 @@ hash.put(hObject,1);
 if ishghandle(hObject)
     userData=getappdata(ancestor(hObject,'figure'), 'UserData');
 else
+    hash.remove(hObject);
     disp('I am stuck in tableVisibilityCallback');
     return;
 end
@@ -35,19 +36,23 @@ if isempty(theSerial)
     theSerial = '';
 end
 theVariable   = hModel.getValueAt(modifiedRow,2);
-plotTheVar = double(hModel.getValueAt(modifiedRow,3));
+plotStatus = double(hModel.getValueAt(modifiedRow,3));
 iSlice = hModel.getValueAt(modifiedRow,4);
 
 % if deselecting mark it as -1
-if plotTheVar == 0, plotTheVar = -1; end
+if plotStatus == 0
+    plotStatus = -1;
+else
+    plotStatus = 2;
+end
 
-% update flags/values in userData.sample_data
+% update flags/values in userData.sample_data for the matching instrument
 for ii=1:numel(userData.sample_data) % loop over files
-    for jj=1:numel(userData.sample_data{ii}.variables)
+    for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
         if strcmp(userData.sample_data{ii}.meta.instrument_model, theModel) && ...
                 strcmp(userData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable)
-            userData.sample_data{ii}.variablePlotStatus(jj) = plotTheVar;
+            userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,4);
                 userData.sample_data{ii}.variables{jj}.iSlice = 1;
@@ -66,18 +71,6 @@ for ii=1:numel(userData.sample_data) % loop over files
         end
     end
 end
-
-% gather up list of variables that will be plotted
-plotVarNames = {};
-for ii=1:numel(userData.sample_data) % loop over files
-    iVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
-    if ~isempty(iVars)
-        markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
-        plotVarNames = {plotVarNames{:} markedVarNames{:}};
-    end
-end
-plotVarNames = sort(unique(plotVarNames));
-userData.plotVarNames = plotVarNames;
 
 % model = getOriginalModel(handles.jtable);
 % model.groupAndRefresh;

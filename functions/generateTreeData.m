@@ -12,7 +12,7 @@ for ii=1:numel(sample_data)
         treePanelData{kk,2} = regexprep(sample_data{ii}.meta.instrument_serial_no, '[^ -~]', '%');
         %treePanelData{kk,2} = sample_data{ii}.meta.instrument_serial_no;
         treePanelData{kk,3} = sample_data{ii}.variables{jj}.name;
-        treePanelData{kk,4} = sample_data{ii}.plotThisVar(jj);
+        treePanelData{kk,4} = sample_data{ii}.variablePlotStatus(jj) > 0;
         treePanelData{kk,5} = sample_data{ii}.variables{jj}.iSlice;
         kk=kk+1;
         %end

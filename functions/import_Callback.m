@@ -23,6 +23,7 @@ parserList=userData.parserList;
 
 iParse=menu('Choose instrument type',parserList.name);
 if iParse < 1 % no instrument chosen
+    hash.remove(hObject);
     return;
 end
 

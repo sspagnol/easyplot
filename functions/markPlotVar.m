@@ -8,8 +8,12 @@ end
 
 for ii=1:numel(sample_data)
     if iSamples(ii)
-        sample_data{ii}.variablePlotStatus = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
-        sample_data{ii}.variablePlotStatus = double(sample_data{ii}.variablePlotStatus(:));
+        variablePlotStatus = cellfun(@(x) any(strcmp(x.name,plotVar)), sample_data{ii}.variables);
+        old_variablePlotStatus = sample_data{ii}.variablePlotStatus;
+        sample_data{ii}.variablePlotStatus = double(variablePlotStatus(:)); % convert logical to double
+        % if a new plot (variablePlotStatus=1) but was n't plotted before
+        % (old_variablePlotStatus=0) then mark as new plot (=2)
+        sample_data{ii}.variablePlotStatus((sample_data{ii}.variablePlotStatus + old_variablePlotStatus) == 1) = 2;
     end
     for jj=1:numel(sample_data{ii}.variables)
         sample_data{ii}.variables{jj}.iSlice=1;
