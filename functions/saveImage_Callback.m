@@ -8,6 +8,8 @@ function saveImage_Callback(hObject, eventdata, oldHandles)
 
 hFig = ancestor(hObject,'figure');
 userData=getappdata(hFig, 'UserData');
+msgPanel = findobj(hFig, 'Tag','msgPanel');
+msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
 plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
@@ -16,6 +18,7 @@ if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
         disp('No file selected.');
     else
         export_fig(fullfile(PATHNAME,FILENAME),'-png',plotPanel);
+        set(msgPanelText,'String','Exported PNG file.');
     end
     %uiresume(handles.figure1);
 end
@@ -29,6 +32,7 @@ switch ButtonName
         % open it
         set(hFig,'CreateFcn','openfig_Callback(gcbo)');
         saveas(plotPanel, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\_ep\.fig','ignorecase')), 'fig');
+        set(msgPanelText,'String','Exported FIG file.');
 end % switch
 
 end
