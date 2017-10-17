@@ -11,6 +11,7 @@ msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
 filelistPanel= findobj(hFig, 'Tag','filelistPanel');
 filelistPanelListbox  = findobj(filelistPanel, 'Tag','filelistPanelListbox');
 treePanel = findobj(hFig, 'Tag','treePanel');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
