@@ -1,9 +1,9 @@
 %%
-function jtable = createTreeTable(gData, userData)
+function jtable = createTreeTable(panel, userData)
 
 %'IconFilenames'  => filepath strings      (default={leafIcon,folderClosedIcon,folderOpenIcon}
 
-jtable = treeTable(gData.treePanel, ...
+jtable = treeTable(panel, ...
     userData.treePanelHeader,...
     userData.treePanelData,...
     'IconFilenames',{[],[],[]},...
@@ -20,6 +20,6 @@ renderer = jtable.getColumnModel.getColumn(1).getCellRenderer;
 renderer.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
 jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
 
-set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, gData.figure1});
+set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, panel});
 
 end

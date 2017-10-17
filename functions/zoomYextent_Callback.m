@@ -7,12 +7,12 @@ function zoomYextent_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to zoomYextent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
 
 if ~isfield(userData,'sample_data'), return; end
 
-gData = guidata(theParent);
+plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 try
     useQCflags = userData.plotQC;
@@ -41,12 +41,7 @@ if ~isnan(theLimits.yMin) || ~isnan(theLimits.yMax)
     set(axH,'YLim',[theLimits.yMin theLimits.yMax]);
 end
 
-setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-
-% children = findobj(gData.plotPanel,'Type','axes');
-% for ii = 1:numel(children)
-%     updateDateLabel(gData.plotPanel,struct('Axes', children(ii)), true);
-% end
+setappdata(hFig, 'UserData', userData);
 
 end
 

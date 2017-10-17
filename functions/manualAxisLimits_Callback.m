@@ -10,10 +10,14 @@ function manualAxisLimits_Callback(hObject,eventdata,hObjectGUIdata)
 % handles    structure with handles and user data (see GUIDATA)
 
 %%
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
-set(gData.progress, 'String', '');
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+
+msgPanel = findobj(hFig, 'Tag','msgPanel');
+msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+
+set(msgPanelText, 'String', '');
 
 if ~isfield(userData,'sample_data')
     return
@@ -30,7 +34,7 @@ if useQCflags, useFlags='QC'; end
 dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 
 nSubPlots = numel(userData.plotVarNames);
-axH = findobj(gData.plotPanel,'Type','axes');
+axH = findobj(plotPanel,'Type','axes');
 if length(axH) == 1
     indVarAxH = 1;
 else
@@ -168,7 +172,7 @@ set(f, 'Visible', 'on');
             
         for ii=1:numel(axH)
             set(axH(ii),'XLim',[dataLimits.TIME.RAW.yMin dataLimits.TIME.RAW.yMax]);
-            updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
+            updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
         end
         setappdata(ancestor(source,'figure'), 'UserData', userData);
         delete(f);
@@ -189,7 +193,7 @@ set(f, 'Visible', 'on');
                 userData.plotLimits.TIME.xMin = xMin;
                 for ii=1:numel(axH)
                     set(axH(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
-                    updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
+                    updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
                 end
                 %setappdata(theParent, 'UserData', userData);
                 
@@ -212,9 +216,9 @@ set(f, 'Visible', 'on');
                 userData.plotLimits.TIME.xMax = xMax;
                 for ii=1:numel(axH)
                     set(axH(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
-                    updateDateLabel(gData.plotPanel,struct('Axes', axH(ii)), true);
+                    updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
                 end
-                setappdata(theParent, 'UserData', userData);
+                setappdata(hFig, 'UserData', userData);
                 
             else
                 set(endDateUI,'String',datestr(userData.plotLimits.TIME.xMax,31));

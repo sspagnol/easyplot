@@ -1,19 +1,24 @@
 %% --- Executes on selection change in listbox1.
-function listbox1_Callback(hObject, eventdata, oldHandles)
-% hObject    handle to listbox1 (see GCBO)
+function filelist_Callback(hObject, eventdata, oldHandles)
+% hObject    handle to filelistPanel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+
+msgPanel = findobj(hFig, 'Tag','msgPanel');
+msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+filelistPanel= findobj(hFig, 'Tag','filelistPanel');
+filelistPanelListbox  = findobj(filelistPanel, 'Tag','filelistPanelListbox');
+treePanel = findobj(hFig, 'Tag','treePanel');
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
-selectionType=get(gData.figure1,'SelectionType');
+selectionType=get(hFig, 'SelectionType');
 % If double click
 if strcmp(selectionType,'open')
-    index_selected = get(gData.listbox1,'Value');
-    file_list = get(gData.listbox1,'String');
+    index_selected = get(filelistPanelListbox,'Value');
+    file_list = get(filelistPanelListbox,'String');
     % Item selected in list box
     filename = file_list{index_selected};
     
@@ -26,8 +31,8 @@ if strcmp(selectionType,'open')
             iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
             userData.sample_data(iFile)=[];
             %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-            set(gData.listbox1,'Value',1); % Matlab workaround, add this line so that the list can be changed
-            set(gData.listbox1,'String', getFilelistNames(userData.sample_data));
+            set(filelistPanelListbox,'Value',1); % Matlab workaround, add this line so that the list can be changed
+            set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data));
             userData.treePanelData = generateTreeData(userData.sample_data);
             %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
             % surely I don't have to delete and recreate jtable
@@ -35,10 +40,10 @@ if strcmp(selectionType,'open')
             %             %delete(handles.jtable);
             %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
             %         end
-            userData.jtable = createTreeTable(gData, userData);
+            userData.jtable = createTreeTable(treePanel, userData);
             userData.firstPlot=true;
-            setappdata(theParent, 'UserData', userData);
-            plotData(theParent);
+            setappdata(hFig, 'UserData', userData);
+            plotData(plotPanel);
             % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
             
             %drawnow;
@@ -47,8 +52,8 @@ if strcmp(selectionType,'open')
 end
 
 if strcmp(selectionType,'normal')
-    index_selected = get(gData.listbox1,'Value');
-    file_list = get(gData.listbox1,'String');
+    index_selected = get(filelistPanelListbox,'Value');
+    file_list = get(filelistPanelListbox,'String');
     % Item selected in list box
     filename = file_list{index_selected};
     iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
@@ -56,8 +61,8 @@ if strcmp(selectionType,'normal')
     newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
     zoom(gca,'reset');
     set(gca,'XLim',newXLimits);
-    setappdata(theParent, 'UserData', userData);
-    updateDateLabel(gData.plotPanel,struct('Axes', gca), true);
+    setappdata(hFig, 'UserData', userData);
+    updateDateLabel(plotPanel,struct('Axes', gca), true);
     drawnow;
 end
 

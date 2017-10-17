@@ -1,66 +1,22 @@
 function varargout = easyplot(varargin)
 %EASYPLOT MATLAB code for oceanographic field data viewing using
 %imos-toolbox parser routines.
-%      EASYPLOT, by itself, creates a new EASYPLOT or raises the existing
-%      singleton*.
-%
-%      H = EASYPLOT returns the handle to a new EASYPLOT or the handle to
-%      the existing singleton*.
-%
-%      EASYPLOT('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in EASYPLOT.M with the given input arguments.
-%
-%      EASYPLOT('Property','Value',...) creates a new EASYPLOT or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before easyplot_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to easyplot_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help easyplot
+% window figure
+hFig = figure(...
+    'Name',        'Easyplot', ...
+    'Visible',     'on',...
+    'Color',       [1 1 1],...
+    'MenuBar',     'none',...
+    'ToolBar',     'figure',...
+    'Resize',      'on',...
+    'WindowStyle', 'Normal',...
+    'NumberTitle', 'off',...
+    'Tag',         'mainWindow');
 
-% Last Modified by GUIDE v2.5 16-Mar-2017 08:21:15
-
-% Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
-gui_State = struct('gui_Name',       mfilename, ...
-    'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @easyplot_OpeningFcn, ...
-    'gui_OutputFcn',  @easyplot_OutputFcn, ...
-    'gui_LayoutFcn',  [] , ...
-    'gui_Callback',   []);
-if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
-end
-
-if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
-else
-    gui_mainfcn(gui_State, varargin{:});
-end
-% End initialization code - DO NOT EDIT
-
-end
-
-
-%% --- Executes just before easyplot is made visible.
-function easyplot_OpeningFcn(hObject, eventdata, userData, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to easyplot (see VARARGIN)
-
-% Choose default command line output for easyplot
-hFig=ancestor(hObject,'figure');
-gData = guidata(hFig);
+set(hFig,'CloseRequestFcn',@exit_Callback);
 
 userData=getappdata(hFig,'UserData');
-userData.output = hObject;
 
 % add menu items
 m=uimenu(hFig,'Label','Easyplot');
@@ -73,23 +29,9 @@ uimenu(m,'Label','Save Image','Callback',@saveImage_Callback);
 uimenu(m,'Label','Quit','Callback',@exit_Callback,...
     'Separator','on','Accelerator','Q');
 
-% % Create the UICONTEXTMENU
-% uic = uicontextmenu(hFig);
-% % Create the parent menu
-% bathcalmenu = uimenu(uic,'label','Bath Calibrations');
-% % Create the submenus
-% m1 = uimenu(bathcalmenu,'label','Select Points',...
-%                'Callback',@selectPoints_Callback);
-% set(hFig, 'UIContextMenu', uic);
-% uic.HandleVisibility = 'off';
-
-% white background
-set(gData.figure1,'Color',[1 1 1]);
-
 % modify easyplot toolbar
-set(gData.figure1,'Toolbar','figure');
-%set(gData.figure1, 'ToolBar', 'none');
-hToolbar = findall(gcf,'tag','FigureToolBar');
+set(hFig,'Toolbar','figure');
+hToolbar = findall(hFig,'tag','FigureToolBar');
 %get(findall(hToolbar),'tag')
 
 % change toolbar button 'Standard.FileOpen' callback
@@ -145,6 +87,79 @@ hEPmanualAxisLimitsButton = uipushtool(hToolbar,'CData',img, ...
     'TooltipString', 'Manual Axis Limits', ...
     'ClickedCallback', 'manualAxisLimits_Callback(gcbf)');
 
+%
+% message panel
+msgPanel = uipanel(...
+    'Parent',     hFig,...
+    'BorderType', 'line', ...
+    'Tag',        'msgPanel');
+
+% file list display
+filelistPanel = uipanel(...
+    'Parent',     hFig,...
+    'BorderType', 'line',...
+    'Tag',        'filelistPanel');
+
+% tree display
+treePanel = uipanel(...
+    'Parent',     hFig,...
+    'BorderType', 'none',...
+    'Tag',        'treePanel');
+
+% plot display
+plotPanel = uipanel(...
+    'Parent',     hFig,...
+    'BorderType', 'none',...
+    'Tag',        'plotPanel');
+
+msgPanelText = uicontrol(msgPanel, 'Style', 'text', 'String', 'Import some files.', 'Tag', 'msgPanelText');
+
+filelistPanelListbox = uicontrol(filelistPanel, 'Style', 'listbox', ...
+    'String', 'No files loaded.', ...
+    'Callback', @filelist_Callback, ...
+    'Tag', 'filelistPanelListbox');
+
+% use normalized units
+set(hFig,           'Units', 'normalized');
+set(msgPanel,       'Units', 'normalized');
+set(msgPanelText,       'Units', 'normalized');
+set(filelistPanel,  'Units', 'normalized');
+set(filelistPanelListbox,  'Units', 'normalized');
+set(treePanel,      'Units', 'normalized');
+set(plotPanel,      'Units', 'normalized');
+
+
+% set window position
+set(hFig, 'Position', [0.1,  0.15, 0.8,  0.7]);
+
+% restrict window to primary screen
+set(hFig, 'Units', 'pixels');
+pos       = get(hFig,  'OuterPosition');
+monitors  = get(0,    'MonitorPositions');
+if pos(3) > monitors(1,3)
+    pos(1) = 1;
+    pos(3) = monitors(1,3);
+    set(hFig, 'OuterPosition', pos);
+end
+set(hFig, 'Units', 'normalized');
+
+% set widget positions
+set(msgPanel,       'Position', posUi2(hFig, 100, 100,   1:5,  1:25,  0));
+set(filelistPanel,  'Position', posUi2(hFig, 100, 100,  6:45,  1:25,  0));
+set(treePanel,      'Position', posUi2(hFig, 100, 100, 45:100,  1:25, 0.01));
+set(plotPanel,      'Position', posUi2(hFig, 100, 100, 1:100, 26:100,  0));
+
+set(msgPanelText,       'Position', posUi2(msgPanel, 100, 100,   1:100,  1:100,  0.01));
+set(filelistPanelListbox,       'Position', posUi2(filelistPanel, 100, 100,   1:100,  1:100,  0.01));
+
+%msgPanel.BackgroundColor = [1 0 0];
+%filelistPanel.BackgroundColor = [0 0 1];
+plotPanel.BackgroundColor = [1 1 1];
+    
+% if ispc && isequal(get(filelistPanel,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(filelistPanel,'BackgroundColor','white');
+% end
+
 % data min/max
 userData.plotLimits.TIME.xMin=NaN;
 userData.plotLimits.TIME.xMax=NaN;
@@ -193,7 +208,7 @@ set(hFig, 'WindowKeyPressFcn', @keyPressCallback);
 %handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 % custome data tip with nicely formatted date
-dcm_h = datacursormode(gData.figure1);
+dcm_h = datacursormode(hFig);
 set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
 % callback for mouse click on plot
@@ -208,60 +223,56 @@ userData.treePanelData{1,5}=0;
 userData.treePanelHeader = {'','Instrument','Variable','Show','Slice'};
 userData.treePanelColumnTypes = {'','char','char','logical','integer'};
 userData.treePanelColumnEditable = {false, false, true, true};
-userData.jtable = createTreeTable(gData, userData);
+userData.jtable = createTreeTable(treePanel, userData);
 
 setappdata(hFig, 'UserData', userData);
 
-% Call once to ensure proper formatting
-%updateDateLabel(hFig,struct('Axes', axH), true);
+%% --- Executes when user attempts to close figure1.
+    function plotType_Callback(hObject, eventdata, handles)
+        % hObject    handle to figure1 (see GCBO)
+        % eventdata  reserved - to be defined in a future version of MATLAB
+        % handles    structure with handles and user data (see GUIDATA)
+        
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        oldPlotType = userData.plotType;
+        userData.plotType = hObject.Label;
+        
+        if strcmp(userData.plotType, oldPlotType)
+            set(hObject,'Checked','on');
+        else
+            set(hObject,'Checked','on');
+            iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), hObject.Parent.Children);
+            set(hObject.Parent.Children(iCheckOff),'Checked','off');
+        end
+        
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
+        
+    end
 
-end
-
-
-%% --- Outputs from this function are returned to the command line.
-function varargout = easyplot_OutputFcn(hObject, eventdata, handles)
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
-varargout{1} = handles.figure1;
-end
-
-
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
-delete(hObject);
-end
-
-% --- Executes when user attempts to close figure1.
-function plotType_Callback(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
-
-oldPlotType = userData.plotType;
-userData.plotType = hObject.Label;
-
-if strcmp(userData.plotType, oldPlotType)
-    set(hObject,'Checked','on');
-else
-    set(hObject,'Checked','on');
-    iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), hObject.Parent.Children);
-    set(hObject.Parent.Children(iCheckOff),'Checked','off');
-end
-
-setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-plotData(ancestor(hObject,'figure'));
+%% --- Executes on button press in exit.
+    function exit_Callback(hObject, eventdata, handles)
+        %EXIT_CALLBACK Easyplot exit
+        %
+        % hObject    handle to exit (see GCBO)
+        % eventdata  reserved - to be defined in a future version of MATLAB
+        % handles    structure with handles and user data (see GUIDATA)
+        
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        userData.ini.startDialog.dataDir=userData.oldPathname;
+        
+        % inelegant code to handle if user double clicked on a '_ep.fig' and stored
+        % EPdir is different to current.
+        [tmpEPdir, ~, ~] = fileparts(which('easyplot'));
+        userData.EPdir = tmpEPdir;
+        struct2ini(fullfile(userData.EPdir,'easyplot.ini'),userData.ini);
+        
+        delete(hFig);
+        
+    end
 
 end

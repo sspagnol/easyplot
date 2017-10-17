@@ -5,9 +5,9 @@ function printInfo(hObject, eventdata)
 % User can visually select a time (via shift + left mouse click), display
 % some info in a table
 
-theParent=ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
+hFig=ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+
 axH = gca;
 
 % is the current pointer within the bounds of the axes?

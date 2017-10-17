@@ -7,8 +7,8 @@ if isempty(hFig), return; end
 userData = getappdata(hFig, 'UserData');
 if isempty(userData.sample_data), return; end
 
-gData = guidata(hFig);
-graphs = findobj(gData.plotPanel,'Type','axes');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+graphs = findobj(plotPanel,'Type','axes');
 
 if numel(graphs) == 1
     % have one axis one one variable

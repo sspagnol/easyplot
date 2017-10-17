@@ -5,15 +5,15 @@ function openfig_Callback(hObject)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+treePanel = findobj(hFig, 'Tag','treePanel');
 
 if isfield(userData, 'sample_data')
     userData.treePanelData = generateTreeData(userData.sample_data);
-    userData.jtable = createTreeTable(gData,userData);
-    setappdata(theParent, 'UserData', userData);
-    plotData(theParent);
+    userData.jtable = createTreeTable(treePanel, userData);
+    setappdata(hFig, 'UserData', userData);
+    plotData(hFig);
     zoomYextent_Callback(hObject);
 end
 

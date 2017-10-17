@@ -5,9 +5,9 @@ function replot_Callback(hObject, eventdata, oldHandles)
 % hObject    handle to replot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+treePanel = findobj(hFig, 'Tag','treePanel');
 
 if isfield(userData, 'sample_data')
     oldPlotVarNames = userData.plotVarNames;
@@ -28,10 +28,10 @@ if isfield(userData, 'sample_data')
         %         %delete(handles.jtable);
         %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
         %     end
-        userData.jtable = createTreeTable(gData,userData);
+        userData.jtable = createTreeTable(treePanel, userData);
         
-        setappdata(theParent, 'UserData', userData);
-        plotData(theParent);
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
         zoomYextent_Callback(hObject);
     end
 end

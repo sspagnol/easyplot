@@ -5,8 +5,9 @@ function updateDateLabel(source, eventData, varargin)
 % Code from dynamicDateTicks
 
 %if isMultipleCall();  return;  end
-theParent = ancestor(source,'figure');
-gData = guidata(theParent);
+hFig = ancestor(source,'figure');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+
 keepLimits=false;
 % The following is mess of code but was of a result of trying to use the
 % call function for setup, callback and listener. Since I'm only doing
@@ -26,7 +27,7 @@ elseif isfield(eventData,'Axes') %called as callback from zoom/pan
     try
         %disp('updateDateLabel callback')
         axH = eventData.Axes; % On which axes has the zoom/pan occurred
-        userData=getappdata(theParent, 'UserData');
+        userData=getappdata(hFig, 'UserData');
         axesInfo = userData.axesInfo;
         keepLimits=true;
         %set(source,'Interruptible','off');
@@ -127,7 +128,7 @@ elseif any(labels(1,:) == ':') % Tick format is HH:MM
     labels=cellfun(@(x) x(~cellfun(@isempty,x)), labels, 'UniformOutput', false);
 end
 
-graphs = findobj(gData.plotPanel,'Type','axes');
+graphs = findobj(plotPanel,'Type','axes');
 for ii=1:numel(graphs)
     %set(children(ii), 'XTick', ticks, 'XTickLabel', labels);
     
@@ -135,6 +136,6 @@ for ii=1:numel(graphs)
     ht = my_xticklabels(graphs(ii), ticks, labels);
     %ht = fix_xticklabels(children(ii));
 end
-guidata(theParent,gData);
+
 end
 

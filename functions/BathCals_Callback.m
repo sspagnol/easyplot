@@ -5,31 +5,33 @@ function BathCals_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %have to first make sure that temperature is plotted:
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
+
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+treePanel = findobj(hFig, 'Tag','treePanel');
 
 if isfield(userData, 'sample_data')
-    plotVar = 'TEMP';
+    plotVar = {'TEMP'};
     userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
     userData.treePanelData = generateTreeData(userData.sample_data);
-    userData.jtable = createTreeTable(gData,userData);
-    
-    setappdata(theParent, 'UserData', userData);
-    plotData(theParent);
+    userData.jtable = createTreeTable(treePanel, userData);
+    userData.plotVarNames = {'TEMP'};
+    setappdata(hFig, 'UserData', userData);
+    plotData(hFig);
     zoomYextent_Callback(hObject);
     zoomXextent_Callback(hObject);
 end
 
 % Create the UICONTEXTMENU
-uic = uicontextmenu(theParent);
+uic = uicontextmenu(hFig);
 % Create the parent menu
 bathcalmenu = uimenu(uic,'label','Bath Calibrations');
 % Create the submenus
 m1 = uimenu(bathcalmenu,'label','Select Points',...
     'Callback',@selectPoints_Callback);
 
-children = findobj(gData.plotPanel,'Type','axes');
+children = findobj(plotPanel,'Type','axes');
 for ii=1:numel(children)
     set(children(ii), 'UIContextMenu', uic);
 end

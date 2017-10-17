@@ -5,7 +5,6 @@ function [ output_args ] = useQCflags_Callback( hObject, eventdata, handles )
 
 theParent = ancestor(hObject,'figure');
 userData=getappdata(theParent, 'UserData');
-gData = guidata(theParent);
 
 if strcmp(get(hObject,'Checked'),'on')
     set(hObject,'Checked','off');

@@ -30,7 +30,10 @@ goodFlag  = imosQCFlag('good', qcSet, 'flag');
 goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
 
 figure(hFig); %make figure current
-gData = guidata(hFig);
+
+msgPanel = findobj(hFig, 'Tag','msgPanel');
+msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 %% create list of variable names that will be plotted, delete plots as required
 varNames={};
@@ -95,10 +98,10 @@ varDeleteNames=sort(unique(varDeleteNames));
 varNewNames=sort(unique(varNewNames));
 
 %%
-graphs = findobj(gData.plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 % require result redoSubplots = true
 redoSubplots = true;
-isEmptyPlotPanel = isempty(gData.plotPanel.Children);
+isEmptyPlotPanel = isempty(plotPanel.Children);
 isAnyEmptyStackedPlots = strcmpi(userData.plotType, 'VARS_STACKED') && any(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
 isAnyEmptyOverlayPlots = strcmpi(userData.plotType, 'VARS_OVERLAY') && all(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
 isPlotTypeChange = strcmpi(userData.plotType,'VARS_STACKED') && (~isempty(graphs) && strcmp(graphs(1).Tag, 'MULTI')) || ...
@@ -130,8 +133,7 @@ end
 %%
 if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     updateDateLabel(hFig,struct('Axes', graphs(1)), true);
-    set(gData.progress,'String','Done');
-    guidata(hFig,gData);
+    set(msgPanelText,'String','Done');
     setappdata(hFig, 'UserData', userData);
     % is this needed?
     drawnow;
@@ -197,7 +199,7 @@ userData.dataLimits=findVarExtents(userData.sample_data, varNames);
 legendStr={};
 
 %% delete old subplots if required
-graphs = findobj(gData.plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 if redoSubplots
     if ~isempty(graphs)
         xlimits = get(graphs(1), 'XLim');
@@ -224,7 +226,7 @@ for ii = 1:numel(userData.sample_data)
         theVar = userData.sample_data{ii}.variables{jj}.name;
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         if redoSubplots
-            graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',gData.plotPanel);
+            graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             grid(graphs(ihAx),'on');
         else
             switch upper(userData.plotType)
@@ -236,7 +238,7 @@ for ii = 1:numel(userData.sample_data)
             end
         end
         
-        %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',gData.plotPanel);
+        %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',plotPanel);
         
         % for each subplot set a tag and xlim/ylim
         switch upper(userData.plotType)
@@ -319,7 +321,7 @@ for ii = 1:numel(userData.sample_data)
         hold(graphs(ihAx),'on');
         legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
         graphs(ihAx).UserData.legendStrings = legendStr{ihAx};
-        set(gData.progress,'String',strcat('Plot : ', instStr));
+        set(msgPanelText,'String',strcat('Plot : ', instStr));
     end
 end
 
@@ -345,7 +347,7 @@ end
 updateDateLabel(hFig,struct('Axes', graphs(1)), true);
 
 %% update progress string and save UserData
-set(gData.progress,'String','Done');
+set(msgPanelText,'String','Done');
 setappdata(hFig, 'UserData', userData);
 % is this needed?
 drawnow;

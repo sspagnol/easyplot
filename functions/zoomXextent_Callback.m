@@ -8,12 +8,12 @@ function zoomXextent_Callback(hObject, eventdata, oldHandles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-theParent = ancestor(hObject,'figure');
-userData=getappdata(theParent, 'UserData');
+hFig = ancestor(hObject,'figure');
+userData=getappdata(hFig, 'UserData');
 
 if ~isfield(userData,'sample_data'), return; end
 
-gData = guidata(theParent);
+plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 try
     useQCflags = userData.plotQC;
@@ -29,8 +29,8 @@ if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax
     set(gca,'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
 end
 
-setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-updateDateLabel(gData.plotPanel,struct('Axes',gca), true);
+setappdata(hFig, 'UserData', userData);
+updateDateLabel(plotPanel,struct('Axes',gca), true);
 
 end
 

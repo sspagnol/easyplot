@@ -17,7 +17,12 @@ hash.put(hObject,1);
 hFig=ancestor(hObject,'figure');
 
 userData=getappdata(hFig,'UserData');
-gData = guidata(hFig);
+
+msgPanel = findobj(hFig, 'Tag','msgPanel');
+msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+filelistPanel= findobj(hFig, 'Tag','filelistPanel');
+filelistPanelListbox  = findobj(filelistPanel, 'Tag','filelistPanelListbox');
+treePanel = findobj(hFig, 'Tag','treePanel');
 
 parserList=userData.parserList;
 
@@ -111,7 +116,7 @@ else
 %        if ~any(isLoaded)
         if notLoaded
             try
-                set(gData.progress,'String',strcat({'Loading : '}, theFile));
+                set(msgPanelText,'String',strcat({'Loading : '}, theFile));
                 %drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 % adopt similar code layout as imos-toolbox importManager
@@ -138,12 +143,12 @@ else
                     end
                 end
                 clear('structs');
-                set(gData.progress,'String',strcat({'Loaded : '}, theFile));
+                set(msgPanelText,'String',strcat({'Loaded : '}, theFile));
                 %drawnow;
             catch ME
                 astr=['Importing file ', theFile, ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
-                set(gData.progress,'String',astr);
+                set(msgPanelText,'String',astr);
                 %drawnow;
                 setappdata(hFig, 'UserData', userData);
                 uiwait(msgbox(astr,'Cannot parse file','warn','modal'));
@@ -154,16 +159,16 @@ else
             end
         else
             disp(['File ' theFile ' already loaded.']);
-            set(gData.progress,'String',strcat({'Already loaded : '}, theFile));
+            set(msgPanelText,'String',strcat({'Already loaded : '}, theFile));
             %drawnow;
         end
     end
     
     %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
     userData.sample_data = timeOffsetPP(userData.sample_data, 'raw', false);
-    set(gData.listbox1,'String', getFilelistNames(userData.sample_data),'Value',1);
+    set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);
     %setappdata(hFig, 'UserData', userData);
-    set(gData.progress,'String','Finished importing.');
+    set(msgPanelText,'String','Finished importing.');
     setappdata(hFig, 'UserData', userData);
     %drawnow;
     
@@ -179,7 +184,7 @@ else
         %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
         %         end
         
-        userData.jtable = createTreeTable(gData, userData);
+        userData.jtable = createTreeTable(treePanel, userData);
         
         %% trying to just change the table data and redraw
         % [data,headers] = getTableData(handles.jtable);

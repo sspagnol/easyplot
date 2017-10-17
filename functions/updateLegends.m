@@ -5,8 +5,8 @@ function updateLegends( hObject )
 hFig = ancestor(hObject,'figure');
 if isempty(hFig), return; end
 
-gData = guidata(hFig);
-graphs = findobj(gData.plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 
 for ii = 1:numel(graphs)
     axes(graphs(ii));
@@ -28,6 +28,6 @@ for ii = 1:numel(graphs)
     % legendflex still has problems
     %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
 end
-guidata(hFig,gData);
+
 end
 

@@ -8,8 +8,8 @@ if isempty(hFig), return; end
 userData = getappdata(hFig, 'UserData');
 if isempty(userData.sample_data), return; end
 
-gData = guidata(hFig);
-graphs = findobj(gData.plotPanel,'Type','axes');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
+graphs = findobj(plotPanel,'Type','axes');
 
 for ii = 1:numel(graphs)
     h = findobj(graphs(ii),'Type','line','-not','tag','legend','-not','tag','Colobar');
