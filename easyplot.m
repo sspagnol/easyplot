@@ -21,7 +21,7 @@ userData=getappdata(hFig,'UserData');
 % add menu items
 m=uimenu(hFig,'Label','Easyplot');
 sm1=uimenu(m,'Label','Plot Vars As...');
-uimenu(sm1,'Label','VARS_OVERLAY','Callback',@plotType_Callback);
+uimenu(sm1,'Label','VARS_OVERLAY','Checked','on','Callback',@plotType_Callback);
 uimenu(sm1,'Label','VARS_STACKED','Callback',@plotType_Callback);
 uimenu(m,'Label','Use QC flags','Callback',@useQCflags_Callback);
 uimenu(m,'Label','Do Bath Calibrations','Callback',@BathCals_Callback);
