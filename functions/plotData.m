@@ -5,6 +5,8 @@ function plotData(hObject)
 % Inputs:
 %   hObject - handle to figure
 
+if isempty(hObject), return; end
+
 % set re-entrancy flag
 persistent hash;
 if isempty(hash)
@@ -14,13 +16,18 @@ if ~isempty(hash.get(hObject))
     return;
 end
 hash.put(hObject,1);
-if isempty(hObject), return; end
 
 hFig = ancestor(hObject,'figure');
-if isempty(hFig), return; end
+if isempty(hFig)
+    hash.remove(hObject);
+    return;
+end
 
 userData = getappdata(hFig, 'UserData');
-if isempty(userData.sample_data), return; end
+if isempty(userData.sample_data)
+    hash.remove(hObject);
+    return; 
+end
 
 % retrieve good flag values
 qcSet     = str2double(readProperty('toolbox.qc_set'));
@@ -196,7 +203,7 @@ if useQCflags, useFlags='QC'; end
 userData.dataLimits=findVarExtents(userData.sample_data, varNames);
 
 %% Create a string for legend
-legendStr={};
+%legendStr={};
 
 %% delete old subplots if required
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
@@ -215,7 +222,7 @@ end
 % calculated subplot/axis number
 %varNames={};
 
-legendStr = cell(nSubPlots,1);
+%legendStr = cell(nSubPlots,1);
 for ii = 1:numel(userData.sample_data)
     iVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
     if redoSubplots
@@ -236,6 +243,7 @@ for ii = 1:numel(userData.sample_data)
                     ihAx = find(strcmp({graphs.Tag}, theVar));
                     axes(graphs(ihAx));
             end
+            grid(graphs(ihAx), 'on');
         end
         
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',plotPanel);
@@ -319,8 +327,8 @@ for ii = 1:numel(userData.sample_data)
             error('PLOTDATA: plot failed.');
         end
         hold(graphs(ihAx),'on');
-        legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
-        graphs(ihAx).UserData.legendStrings = legendStr{ihAx};
+        %legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
+        %graphs(ihAx).UserData.legendStrings = legendStr{ihAx};
         set(msgPanelText,'String',strcat('Plot : ', instStr));
     end
 end
@@ -338,7 +346,7 @@ if redoSubplots
     % update y labels
     updateYlabels( hFig );
     
-    % update legends
+    % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
         axes(graphs(ii));
         graphs(ii).UserData.axesInfo = userData.axesInfo;
