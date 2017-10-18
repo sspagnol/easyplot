@@ -162,6 +162,7 @@ xlims = get(axH,'xlim');
 ticks  = get(axH, 'XTick');
 labels = get(axH, 'XTickLabel');
 labels = cellstr(labels);
+axH.XTickLabel = [];
 
 % Sometimes the first tick can be outside axes limits. If so, remove it & its label
 %if all(ticks(1) < get(axH,'xlim'))
