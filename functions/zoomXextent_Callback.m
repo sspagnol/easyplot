@@ -30,7 +30,6 @@ if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax
 end
 
 setappdata(hFig, 'UserData', userData);
-updateDateLabel(plotPanel,struct('Axes',gca), true);
 
 end
 

@@ -31,6 +31,8 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
+oldPlotLimits = userData.plotLimits;
+
 dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 
 nSubPlots = numel(userData.plotVarNames);
@@ -134,6 +136,7 @@ yEps = 0.1; %minimum diff between ymin/ymax
 
 set(f, 'Visible', 'on');
 %uiwait(f);
+setappdata(hFig, 'UserData', userData);
 
 %%
     function keyPressCallback(source,ev)
@@ -157,23 +160,32 @@ set(f, 'Visible', 'on');
         switch upper(userData.plotType)
             case 'VARS_OVERLAY'
                 theVar = 'MULTI';
-                if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
-                    set(axH(1),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+%                 if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
+%                     set(axH(1),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+%                 end
+                if ~isnan(oldPlotLimits.(theVar).yMin) || ~isnan(oldPlotLimits.(theVar).yMax)
+                    set(axH(1),'YLim',[oldPlotLimits.(theVar).yMin oldPlotLimits.(theVar).yMax]);
                 end
                 
             case 'VARS_STACKED'
                 for ii=1:numel(axH)
                     theVar = char(userData.plotVarNames{ii});
-                    if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
-                        set(axH(ii),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+                    % if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)
+                    %     set(axH(ii),'YLim',[dataLimits.(theVar).(useFlags).yMin dataLimits.(theVar).(useFlags).yMax]);
+                    % end
+                    if ~isnan(oldPlotLimits.(theVar).yMin) || ~isnan(oldPlotLimits.(theVar).yMax)
+                        set(axH(1),'YLim',[oldPlotLimits.(theVar).yMin oldPlotLimits.(theVar).yMax]);
                     end
                 end
         end
             
-        for ii=1:numel(axH)
-            set(axH(ii),'XLim',[dataLimits.TIME.RAW.yMin dataLimits.TIME.RAW.yMax]);
-            updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
-        end
+%         for ii=1:numel(axH)
+%             set(axH(ii),'XLim',[dataLimits.TIME.RAW.yMin dataLimits.TIME.RAW.yMax]);
+%             updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
+%         end
+        %set(axH(1),'XLim',[oldPlotLimits.TIME.yMin oldPlotLimits.TIME.yMax]);
+        updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
+        userData.plotLimits = oldPlotLimits;
         setappdata(ancestor(source,'figure'), 'UserData', userData);
         delete(f);
     end
@@ -181,6 +193,7 @@ set(f, 'Visible', 'on');
 %%
     function confirmCallback(source,ev)
         %CONFIRMCALLBACK Closes the dialog.
+        setappdata(ancestor(source,'figure'), 'UserData', userData);
         delete(f);
     end
 
@@ -189,12 +202,14 @@ set(f, 'Visible', 'on');
         %startdateCallback Called when the startdate value is changed.
         try
             xMin = datenum(get(startDateUI, 'String'));
-            if xMin < dataLimits.TIME.RAW.xMax-xEps
+            if xMin < dataLimits.TIME.RAW.xMax-xEps && xMin < axH(1).XLim(2)-xEps
                 userData.plotLimits.TIME.xMin = xMin;
-                for ii=1:numel(axH)
-                    set(axH(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
-                    updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
-                end
+%                 for ii=1:numel(axH)
+%                     set(axH(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
+%                     updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
+%                 end
+                    set(axH(1),'XLim',[xMin axH(1).XLim(2)]);
+                    updateDateLabel(plotPanel,struct('Axes', axH(1)), true);                
                 %setappdata(theParent, 'UserData', userData);
                 
             else
@@ -212,12 +227,15 @@ set(f, 'Visible', 'on');
         %enddateCallback Called when the enddate value is changed.
         try
             xMax = datenum(get(endDateUI, 'String'));
-            if xMax > dataLimits.TIME.RAW.xMin+xEps
+            if xMax > dataLimits.TIME.RAW.xMin+xEps && xMax > axH(1).XLim(1)-xEps
                 userData.plotLimits.TIME.xMax = xMax;
-                for ii=1:numel(axH)
-                    set(axH(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
-                    updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
-                end
+                %                 for ii=1:numel(axH)
+                %                     set(axH(ii),'XLim',[dataLimits.TIME.RAW.xMin xMax]);
+                %                     updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
+                %                 end
+                set(axH(1),'XLim',[axH(1).XLim(1) xMax]);
+                updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
+                
                 setappdata(hFig, 'UserData', userData);
                 
             else

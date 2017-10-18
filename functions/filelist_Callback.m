@@ -63,7 +63,6 @@ if strcmp(selectionType,'normal')
     zoom(gca,'reset');
     set(gca,'XLim',newXLimits);
     setappdata(hFig, 'UserData', userData);
-    updateDateLabel(plotPanel,struct('Axes', gca), true);
     drawnow;
 end
 

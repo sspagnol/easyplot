@@ -132,7 +132,7 @@ end
 
 %%
 if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
-    updateDateLabel(hFig,struct('Axes', graphs(1)), true);
+    %updateDateLabel(hFig,struct('Axes', graphs(1)), true);
     set(msgPanelText,'String','Done');
     setappdata(hFig, 'UserData', userData);
     % is this needed?
@@ -227,7 +227,7 @@ for ii = 1:numel(userData.sample_data)
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         if redoSubplots
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
-            grid(graphs(ihAx),'on');
+            
         else
             switch upper(userData.plotType)
                 case 'VARS_OVERLAY'
@@ -325,26 +325,29 @@ for ii = 1:numel(userData.sample_data)
     end
 end
 
-%% link all/any subplot axes
-linkaxes(graphs,'x');
-
-%% update y labels
-updateYlabels( hFig );
-
 %% update line colours
 updateLineColour( hFig );
 
-%% update legends
 if redoSubplots
+    % link all/any subplot axes
+    linkaxes(graphs,'x');
+    
+    % not the best when have multiline xticklabels, not sure why yet.
+    %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
+    
+    % update y labels
+    updateYlabels( hFig );
+    
+    % update legends
     for ii=1:length(graphs)
         axes(graphs(ii));
+        graphs(ii).UserData.axesInfo = userData.axesInfo;
+        updateDateLabel([], struct('Axes', graphs(ii)), false);
+        grid(graphs(ii),'on');
         hLegend = legend('show');
         hLegend.FontSize = 8;
     end
 end
-
-%% update xlabels (linked so only have to do one)
-updateDateLabel(hFig,struct('Axes', graphs(1)), true);
 
 %% update progress string and save UserData
 set(msgPanelText,'String','Done');

@@ -195,6 +195,8 @@ axesInfo.XLabel = 'Time (UTC)';
 userData.axesInfo=axesInfo;
 %set(axH,'ButtonDownFcn',@updateAxisManual)
 
+% Wanted slightly different date string layout so pulled apart code from
+% http://au.mathworks.com/matlabcentral/fileexchange/27075-intelligent-dynamic-date-ticks
 % Tried a callback on zoom/pan and XLim listener but that just cause
 % massive confusion. At the moment just call updateDateLabel as required,
 % if I look into this again think I will create seperate callbacks
@@ -205,7 +207,6 @@ p = pan(hFig);
 set(z,'ActionPostCallback',@updateDateLabel);
 set(p,'ActionPostCallback',@updateDateLabel);
 set(hFig, 'WindowKeyPressFcn', @keyPressCallback);
-%handles.lisH=addlistener(handles.axes1, 'XLim', 'PostSet', @updateDateLabel);
 
 % custome data tip with nicely formatted date
 dcm_h = datacursormode(hFig);

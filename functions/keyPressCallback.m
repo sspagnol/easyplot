@@ -92,7 +92,7 @@ switch theChar
         
 end
 
-updateDateLabel(gca, gca, true);
+%updateDateLabel(gca, gca, true);
 
 end
 
