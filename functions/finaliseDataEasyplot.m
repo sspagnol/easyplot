@@ -21,6 +21,12 @@ if exist([sam.meta.parser 'Cleanup'], 'file')
     sam = parserCleanup(sam);
 end
 
+%% for display purposes create a shortened instrument model name
+% if not already done so from cleanup stage
+if ~isfield(sam.meta, 'instrument_model_shortname')
+    sam.meta.instrument_model_shortname = sam.meta.instrument_model;
+end
+
 %% make all dimension names upper case
 for ii=1:numel(sam.dimensions)
     sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);
