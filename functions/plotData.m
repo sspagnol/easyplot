@@ -228,7 +228,7 @@ for ii = 1:numel(userData.sample_data)
         ihAx = userData.sample_data{ii}.axisIndex(jj);
         if redoSubplots
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
-            
+            graphs(ihAx).UserData.axesInfo = userData.axesInfo;
         else
             switch upper(userData.plotType)
                 case 'VARS_OVERLAY'
@@ -237,7 +237,7 @@ for ii = 1:numel(userData.sample_data)
                     ihAx = find(strcmp({graphs.Tag}, theVar));
                     axes(graphs(ihAx));
             end
-            grid(graphs(ihAx), 'on');
+            %grid(graphs(ihAx), 'on');
         end
         
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',plotPanel);
@@ -338,14 +338,11 @@ if redoSubplots
     %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
     % update date labels, only pass one axis and it will update any others
-    % but have to set axesInfo first
-    graphs(1).UserData.axesInfo = userData.axesInfo;
     updateDateLabel([], struct('Axes', graphs(1)), false);
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
         axes(graphs(ii));
         updateYlabel( graphs(ii) );
-        graphs(ii).UserData.axesInfo = userData.axesInfo;
         grid(graphs(ii),'on');
         hLegend = legend('show');
         hLegend.FontSize = 8;
