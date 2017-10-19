@@ -337,15 +337,15 @@ if redoSubplots
     % not the best when have multiline xticklabels, not sure why yet.
     %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
-    % update y labels
-    %updateYlabels( hFig );
-    
+    % update date labels, only pass one axis and it will update any others
+    % but have to set axesInfo first
+    graphs(1).UserData.axesInfo = userData.axesInfo;
+    updateDateLabel([], struct('Axes', graphs(1)), false);
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
         axes(graphs(ii));
         updateYlabel( graphs(ii) );
         graphs(ii).UserData.axesInfo = userData.axesInfo;
-        updateDateLabel([], struct('Axes', graphs(ii)), false);
         grid(graphs(ii),'on');
         hLegend = legend('show');
         hLegend.FontSize = 8;
