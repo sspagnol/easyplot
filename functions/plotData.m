@@ -338,11 +338,12 @@ if redoSubplots
     %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
     % update y labels
-    updateYlabels( hFig );
+    %updateYlabels( hFig );
     
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
         axes(graphs(ii));
+        updateYlabel( graphs(ii) );
         graphs(ii).UserData.axesInfo = userData.axesInfo;
         updateDateLabel([], struct('Axes', graphs(ii)), false);
         grid(graphs(ii),'on');
