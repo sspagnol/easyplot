@@ -137,6 +137,13 @@ elseif isNotP1 || isNotP2 || isNotP3
     redoSubplots = false;
 end
 
+%
+if ~isempty(varNewNames)
+    varNames{end+1} = varNewNames{:};
+    varNames=sort(unique(varNames));
+end
+userData.plotVarNames = varNames;
+
 %%
 if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     %updateDateLabel(hFig,struct('Axes', graphs(1)), true);
@@ -154,13 +161,6 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
         return
     end
 end
-
-if ~isempty(varNewNames)
-    varNames{end+1} = varNewNames{:};
-    varNames=sort(unique(varNames));
-end
-
-userData.plotVarNames = varNames;
 
 %% testing number of subplots calculation
 % VARS_OVERLAY : one plot with all vars
@@ -202,9 +202,6 @@ if useQCflags, useFlags='QC'; end
 % data limits for those variables
 userData.dataLimits=findVarExtents(userData.sample_data, varNames);
 
-%% Create a string for legend
-%legendStr={};
-
 %% delete old subplots if required
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 if redoSubplots
@@ -220,9 +217,6 @@ end
 %%
 % loop over sample_data and plot the marked variables into previously
 % calculated subplot/axis number
-%varNames={};
-
-%legendStr = cell(nSubPlots,1);
 for ii = 1:numel(userData.sample_data)
     iVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
     if redoSubplots
