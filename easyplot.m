@@ -155,7 +155,7 @@ set(filelistPanelListbox,       'Position', posUi2(filelistPanel, 100, 100,   1:
 %msgPanel.BackgroundColor = [1 0 0];
 %filelistPanel.BackgroundColor = [0 0 1];
 plotPanel.BackgroundColor = [1 1 1];
-    
+
 % if ispc && isequal(get(filelistPanel,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
 %     set(filelistPanel,'BackgroundColor','white');
 % end
@@ -182,6 +182,9 @@ try
         userData.oldPathname=thePath;
     end
 end
+if ~isfield(userData.ini.plotting,'doMultilineXLabel')
+    userData.ini.plotting.doMultilineXLabel = false;
+end
 
 % get parser list
 userData.parserList=initParserList;
@@ -192,6 +195,8 @@ userData.plotVarNames = {};
 axesInfo.mdformat = 'dd-mmm';
 axesInfo.Type = 'dateaxes';
 axesInfo.XLabel = 'Time (UTC)';
+axesInfo.doMultilineXLabel = userData.ini.plotting.doMultilineXLabel;
+
 userData.axesInfo=axesInfo;
 %set(axH,'ButtonDownFcn',@updateAxisManual)
 
@@ -263,15 +268,23 @@ setappdata(hFig, 'UserData', userData);
         
         hFig = ancestor(hObject,'figure');
         userData=getappdata(hFig, 'UserData');
-        
-        userData.ini.startDialog.dataDir=userData.oldPathname;
-        
-        % inelegant code to handle if user double clicked on a '_ep.fig' and stored
-        % EPdir is different to current.
-        [tmpEPdir, ~, ~] = fileparts(which('easyplot'));
-        userData.EPdir = tmpEPdir;
-        struct2ini(fullfile(userData.EPdir,'easyplot.ini'),userData.ini);
-        
+        try
+            % save path
+            userData.ini.startDialog.dataDir=userData.oldPathname;
+            % need to convert logical to string for struct2ini
+            if userData.ini.plotting.doMultilineXLabel
+                userData.ini.plotting.doMultilineXLabel = 'true';
+            else
+                userData.ini.plotting.doMultilineXLabel = 'false';
+            end
+            % inelegant code to handle if user double clicked on a '_ep.fig' and stored
+            % EPdir is different to current.
+            [tmpEPdir, ~, ~] = fileparts(which('easyplot'));
+            userData.EPdir = tmpEPdir;
+            struct2ini(fullfile(userData.EPdir,'easyplot.ini'),userData.ini);
+        catch
+            warning('Error writing to easyplot.ini');
+        end
         delete(hFig);
         
     end

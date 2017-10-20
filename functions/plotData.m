@@ -232,10 +232,12 @@ for ii = 1:numel(userData.sample_data)
         else
             switch upper(userData.plotType)
                 case 'VARS_OVERLAY'
-                    axes(graphs(1));
+                    %axes(graphs(1));
+                    set(hFig,'CurrentAxes', graphs(1));
                 case 'VARS_STACKED'
                     ihAx = find(strcmp({graphs.Tag}, theVar));
-                    axes(graphs(ihAx));
+                    %axes(graphs(ihAx));
+                    set(hFig,'CurrentAxes', graphs(ihAx));
             end
             %grid(graphs(ihAx), 'on');
         end
@@ -341,10 +343,11 @@ if redoSubplots
     updateDateLabel([], struct('Axes', graphs(1)), false);
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
-        axes(graphs(ii));
+        %axes(graphs(ii));
+        set(hFig,'CurrentAxes', graphs(ii));
         updateYlabel( graphs(ii) );
         grid(graphs(ii),'on');
-        hLegend = legend('show');
+        hLegend = legend(graphs(ii),'show');
         hLegend.FontSize = 8;
     end
 end

@@ -179,8 +179,8 @@ if ticks(end) > xlims(2)
     labels(end,:) = [];
 end
 
-doMultiline = true;
-if doMultiline
+%doMultiline = false;
+if axesInfo.doMultilineXLabel
     labels = makeLabelsMultiline( ticks, labels, axesInfo.mdformat);
 else
     labels = makeLabels( ticks, labels, axesInfo.mdformat);
@@ -189,7 +189,7 @@ end
 graphs = findobj(plotPanel,'Type','axes');
 for ii=1:numel(graphs)
     grid(graphs(ii), 'on');
-    if doMultiline
+    if axesInfo.doMultilineXLabel
         ht = my_xticklabels(graphs(ii), ticks, labels);
     else
         set(graphs(ii), 'XTick', ticks, 'XTickLabel', labels);
