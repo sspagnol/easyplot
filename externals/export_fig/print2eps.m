@@ -25,7 +25,11 @@ function print2eps(name, fig, export_options, varargin)
 %                    Can be negative as well as positive; Default: 0
 %       crop       - Cropping flag. Deafult: 0
 %       fontswap   - Whether to swap non-default fonts in figure. Default: true
+%       font_space - Character used to separate font-name terms in the EPS output
+%                    e.g. "Courier New" => "Courier-New". Default: ''
+%                    (available only via the struct alternative)
 %       renderer   - Renderer used to generate bounding-box. Default: 'opengl'
+%                    (available only via the struct alternative)
 %       crop_amounts - 4-element vector of crop amounts: [top,right,bottom,left]
 %                    (available only via the struct alternative)
 %   print_options - Additional parameter strings to be passed to the print command
@@ -87,6 +91,8 @@ function print2eps(name, fig, export_options, varargin)
 % 10/06/16: Fixed issue #159: text handles get cleared by Matlab in the print() command
 % 12/06/16: Improved the fix for issue #159 (in the previous commit)
 % 12/06/16: Fixed issue #158: transparent patch color in PDF/EPS
+% 18/09/17: Fixed issue #194: incorrect fonts in EPS/PDF output
+% 18/09/17: Fixed issue #195: relaxed too-tight cropping in EPS/PDF
 %}
 
     options = {'-loose'};
@@ -103,6 +109,8 @@ function print2eps(name, fig, export_options, varargin)
     crop_amounts = nan(1,4);  % auto-crop all 4 sides by default
     if isstruct(export_options)
         try fontswap     = export_options.fontswap;     catch, fontswap = true;     end
+        try font_space   = export_options.font_space;   catch, font_space = '';     end
+        font_space(2:end) = '';
         try bb_crop      = export_options.crop;         catch, bb_crop = 0;         end
         try crop_amounts = export_options.crop_amounts; catch,                      end
         try bb_padding   = export_options.bb_padding;   catch, bb_padding = 0;      end
@@ -125,6 +133,7 @@ function print2eps(name, fig, export_options, varargin)
             bb_padding = 0;
         end
         renderer = '-opengl';
+        font_space = '';
     end
 
     % Construct the filename
@@ -209,7 +218,7 @@ function print2eps(name, fig, export_options, varargin)
 
         % Compute the order to revert fonts later, without the need of a loop
         [update, M] = unique(update(1:c));
-        [M, M] = sort(M);
+        [dummy, M] = sort(M); %#ok<ASGLU>
         update = reshape(update(M), 1, []);
     end
 
@@ -393,8 +402,18 @@ function print2eps(name, fig, export_options, varargin)
     % Replace the font names
     if ~isempty(font_swap)
         for a = 1:size(font_swap, 2)
-            %fstrm = regexprep(fstrm, [font_swap{1,a} '-?[a-zA-Z]*\>'], font_swap{3,a}(~isspace(font_swap{3,a})));
-            fstrm = regexprep(fstrm, font_swap{2,a}, font_swap{3,a}(~isspace(font_swap{3,a})));
+            fontName = font_swap{3,a};
+            %fontName = fontName(~isspace(font_swap{3,a}));
+            if length(fontName) > 29
+                warning('YMA:export_fig:font_name','Font name ''%s'' is longer than 29 characters. This might cause problems in some EPS/PDF readers. Consider using a different font.',fontName);
+            end
+            if isempty(font_space)
+                fontName(fontName==' ') = '';
+            else
+                fontName(fontName==' ') = char(font_space);
+            end
+            %fstrm = regexprep(fstrm, [font_swap{1,a} '-?[a-zA-Z]*\>'], fontName);
+            fstrm = regexprep(fstrm, font_swap{2,a}, fontName);
         end
     end
 
@@ -427,7 +446,7 @@ function print2eps(name, fig, export_options, varargin)
         % 2. Create a bitmap image and use crop_borders to create the relative
         %    bb with respect to the PageBoundingBox
         [A, bcol] = print2array(fig, 1, renderer);
-        [aa, aa, aa, bb_rel] = crop_borders(A, bcol, bb_padding, crop_amounts);
+        [aa, aa, aa, bb_rel] = crop_borders(A, bcol, bb_padding, crop_amounts); %#ok<ASGLU>
 
         % 3. Calculate the new Bounding Box
         pagew = pagebb_matlab(3)-pagebb_matlab(1);
@@ -435,16 +454,16 @@ function print2eps(name, fig, export_options, varargin)
         %bb_new = [pagebb_matlab(1)+pagew*bb_rel(1) pagebb_matlab(2)+pageh*bb_rel(2) ...
         %          pagebb_matlab(1)+pagew*bb_rel(3) pagebb_matlab(2)+pageh*bb_rel(4)];
         bb_new = pagebb_matlab([1,2,1,2]) + [pagew,pageh,pagew,pageh].*bb_rel;  % clearer
-        bb_offset = (bb_new-bb_matlab) + [-1,-1,1,1];  % 1px margin so that cropping is not TOO tight
+        bb_offset = (bb_new-bb_matlab) + [-2,-2,2,2];  % 2px margin so that cropping is not TOO tight (issue #195)
 
         % Apply the bounding box padding
         if bb_padding
             if abs(bb_padding)<1
                 bb_padding = round((mean([bb_new(3)-bb_new(1) bb_new(4)-bb_new(2)])*bb_padding)/0.5)*0.5; % ADJUST BB_PADDING
             end
-            add_padding = @(n1, n2, n3, n4) sprintf(' %d', str2double({n1, n2, n3, n4}) + [-bb_padding -bb_padding bb_padding bb_padding] + bb_offset);
+            add_padding = @(n1, n2, n3, n4) sprintf(' %.0f', str2double({n1, n2, n3, n4}) + bb_offset + bb_padding*[-1,-1,1,1]);
         else
-            add_padding = @(n1, n2, n3, n4) sprintf(' %d', str2double({n1, n2, n3, n4}) + bb_offset); % fix small but noticeable bounding box shift
+            add_padding = @(n1, n2, n3, n4) sprintf(' %.0f', str2double({n1, n2, n3, n4}) + bb_offset); % fix small but noticeable bounding box shift
         end
         fstrm = regexprep(fstrm, '%%BoundingBox:[ ]+([-]?\d+)[ ]+([-]?\d+)[ ]+([-]?\d+)[ ]+([-]?\d+)', '%%BoundingBox:${add_padding($1, $2, $3, $4)}');
     end

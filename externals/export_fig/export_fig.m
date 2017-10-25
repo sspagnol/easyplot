@@ -24,6 +24,9 @@ function [imageData, alpha] = export_fig(varargin)
 %   export_fig ... -clipboard
 %   export_fig ... -update
 %   export_fig ... -nofontswap
+%   export_fig ... -font_space <char>
+%   export_fig ... -linecaps
+%   export_fig ... -noinvert
 %   export_fig(..., handle)
 %
 % This function saves a figure or single axes to one or more vector and/or
@@ -35,10 +38,11 @@ function [imageData, alpha] = export_fig(varargin)
 %   - Improved line and grid line styles
 %   - Anti-aliased graphics (bitmap formats)
 %   - Render images at native resolution (optional for bitmap formats)
-%   - Transparent background supported (pdf, eps, png, tif)
-%   - Semi-transparent patch objects supported (png & tif only)
+%   - Transparent background supported (pdf, eps, png, tiff)
+%   - Semi-transparent patch objects supported (png, tiff)
 %   - RGB, CMYK or grayscale output (CMYK only with pdf, eps, tiff)
 %   - Variable image compression, including lossless (pdf, eps, jpg)
+%   - Optional rounded line-caps (pdf, eps)
 %   - Optionally append to file (pdf, tiff)
 %   - Vector formats: pdf, eps
 %   - Bitmap formats: png, tiff, jpg, bmp, export to workspace
@@ -152,6 +156,11 @@ function [imageData, alpha] = export_fig(varargin)
 %   -nofontswap - option to avoid font swapping. Font swapping is automatically
 %             done in vector formats (only): 11 standard Matlab fonts are
 %             replaced by the original figure fonts. This option prevents this.
+%   -font_space <char> - option to set a spacer character for font-names that
+%             contain spaces, used by EPS/PDF. Default: ''
+%   -linecaps - option to create rounded line-caps (vector formats only).
+%   -noinvert - option to avoid setting figure's InvertHardcopy property to
+%             'off' during output (this solves some problems of empty outputs).
 %   handle -  The handle of the figure, axes or uipanels (can be an array of
 %             handles, but the objects must be in the same figure) to be
 %             saved. Default: gcf.
@@ -233,7 +242,7 @@ function [imageData, alpha] = export_fig(varargin)
 % 11/09/15: Fixed issue #103: magnification must never become negative; also fixed reported error msg in parsing input params
 % 26/09/15: Alert if trying to export transparent patches/areas to non-PNG outputs (issue #108)
 % 04/10/15: Do not suggest workarounds for certain errors that have already been handled previously
-% 01/11/15: Fixed issue #112: use same renderer in print2eps as export_fig (thanks to Jesús Pestana Puerta)
+% 01/11/15: Fixed issue #112: use same renderer in print2eps as export_fig (thanks to JesÃºs Pestana Puerta)
 % 10/11/15: Custom GS installation webpage for MacOS. Thanks to Andy Hueni via FEX
 % 19/11/15: Fixed clipboard export in R2015b (thanks to Dan K via FEX)
 % 21/02/16: Added -c option for indicating specific crop amounts (idea by Cedric Noordam on FEX)
@@ -242,6 +251,12 @@ function [imageData, alpha] = export_fig(varargin)
 % 08/08/16: Enabled exporting transparency to TIF, in addition to PNG/PDF (issue #168)
 % 11/12/16: Added alert in case of error creating output PDF/EPS file (issue #179)
 % 13/12/16: Minor fix to the commit for issue #179 from 2 days ago
+% 22/03/17: Fixed issue #187: only set manual ticks when no exponent is present
+% 09/04/17: Added -linecaps option (idea by Baron Finer, issue #192)
+% 15/09/17: Fixed issue #205: incorrect tick-labels when Ticks number don't match the TickLabels number
+% 15/09/17: Fixed issue #210: initialize alpha map to ones instead of zeros when -transparent is not used
+% 18/09/17: Added -font_space option to replace font-name spaces in EPS/PDF (workaround for issue #194)
+% 18/09/17: Added -noinvert option to solve some export problems with some graphic cards (workaround for issue #197)
 %}
 
     if nargout
@@ -344,7 +359,7 @@ function [imageData, alpha] = export_fig(varargin)
     try
         if ~using_hg2(fig)
             annotationHandles = findall(fig,'Type','hggroup','-and','-property','Units','-and','-not','Units','norm');
-            try  % suggested by Jesús Pestana Puerta (jespestana) 30/9/2015
+            try  % suggested by JesÃºs Pestana Puerta (jespestana) 30/9/2015
                 originalUnits = get(annotationHandles,'Units');
                 set(annotationHandles,'Units','norm');
             catch
@@ -359,7 +374,9 @@ function [imageData, alpha] = export_fig(varargin)
     set(fig,'Units','pixels');
 
     % Set to print exactly what is there
-    set(fig, 'InvertHardcopy', 'off');
+    if options.invert_hardcopy
+        set(fig, 'InvertHardcopy', 'off');
+    end
     % Set the renderer
     switch options.renderer
         case 1
@@ -538,7 +555,7 @@ function [imageData, alpha] = export_fig(varargin)
                 end
                 if options.alpha
                     imageData = A;
-                    alpha = zeros(size(A, 1), size(A, 2), 'single');
+                    alpha = ones(size(A, 1), size(A, 2), 'single');
                 end
             end
             % Save the images
@@ -677,13 +694,28 @@ function [imageData, alpha] = export_fig(varargin)
             end
             % Delete the eps
             delete(tmp_nam);
-            if options.eps
+            if options.eps || options.linecaps
                 try
                     % Generate an eps from the pdf
                     % since pdftops can't handle relative paths (e.g., '..\'), use a temp file
                     eps_nam_tmp = strrep(pdf_nam_tmp,'.pdf','.eps');
                     pdf2eps(pdf_nam, eps_nam_tmp);
-                    movefile(eps_nam_tmp,  [options.name '.eps'], 'f');
+
+                    % Issue #192: enable rounded line-caps
+                    if options.linecaps
+                        fstrm = read_write_entire_textfile(eps_nam_tmp);
+                        fstrm = regexprep(fstrm, '[02] J', '1 J');
+                        read_write_entire_textfile(eps_nam_tmp, fstrm);
+                        if options.pdf
+                            eps2pdf(eps_nam_tmp, pdf_nam, 1, options.append, options.colourspace==2, options.quality, options.gs_options);
+                        end
+                    end
+
+                    if options.eps
+                        movefile(eps_nam_tmp, [options.name '.eps'], 'f');
+                    else  % if options.pdf
+                        try delete(eps_nam_tmp); catch, end
+                    end
                 catch ex
                     if ~options.pdf
                         % Delete the pdf
@@ -870,6 +902,9 @@ function options = default_options()
         'quality',      [], ...
         'update',       false, ...
         'fontswap',     true, ...
+        'font_space',   '', ...
+        'linecaps',     false, ...
+        'invert_hardcopy', true, ...
         'gs_options',   {{}});
 end
 
@@ -960,6 +995,13 @@ function [fig, options] = parse_args(nout, fig, varargin)
                         end
                     case 'nofontswap'
                         options.fontswap = false;
+                    case 'font_space'
+                        options.font_space = varargin{a+1};
+                        skipNext = true;
+                    case 'linecaps'
+                        options.linecaps = true;
+                    case 'noinvert'
+                        options.invert_hardcopy = false;
                     otherwise
                         try
                             wasError = false;
@@ -1271,9 +1313,25 @@ function set_tick_mode(Hlims, ax)
     if ~iscell(M)
         M = {M};
     end
-    M = cellfun(@(c) strcmp(c, 'linear'), M);
-    set(Hlims(M), [ax 'TickMode'], 'manual');
-    %set(Hlims(M), [ax 'TickLabelMode'], 'manual');  % this hides exponent label in HG2!
+    %idx = cellfun(@(c) strcmp(c, 'linear'), M);
+    idx = find(strcmp(M,'linear'));
+    %set(Hlims(idx), [ax 'TickMode'], 'manual');  % issue #187
+    %set(Hlims(idx), [ax 'TickLabelMode'], 'manual');  % this hides exponent label in HG2!
+    for idx2 = 1 : numel(idx)
+        try
+            % Fix for issue #187 - only set manual ticks when no exponent is present
+            hAxes = Hlims(idx(idx2));
+            props = {[ax 'TickMode'],'manual', [ax 'TickLabelMode'],'manual'};
+            if isempty(strtrim(hAxes.([ax 'Ruler']).SecondaryLabel.String))
+                % Fix for issue #205 - only set manual ticks when the Ticks number match the TickLabels number
+                if numel(hAxes.([ax 'Tick'])) == numel(hAxes.([ax 'TickLabel']))
+                    set(hAxes, props{:});  % no exponent and matching ticks, so update both ticks and tick labels to manual
+                end
+            end
+        catch  % probably HG1
+            set(hAxes, props{:});  % revert back to old behavior
+        end
+    end
 end
 
 function change_rgb_to_cmyk(fname)  % convert RGB => CMYK within an EPS file
