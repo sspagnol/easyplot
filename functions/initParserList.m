@@ -150,8 +150,8 @@ parserList.message{ii}='Choose (FL)NTU *.raw files:';
 parserList.parser{ii}='ECOTripletParse';
 
 ii=ii+1;
-parserList.name{ii}='WQM (dat)';
-parserList.wildcard{ii}={'*.dat'};
+parserList.name{ii}='WQM (raw, dat)';
+parserList.wildcard{ii}={'*.dat', '*.raw'};
 parserList.message{ii}='Choose WQM files:';
 parserList.parser{ii}='WQMParse';
 
