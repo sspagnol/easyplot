@@ -184,7 +184,7 @@ setappdata(hFig, 'UserData', userData);
 %             updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
 %         end
         %set(axH(1),'XLim',[oldPlotLimits.TIME.yMin oldPlotLimits.TIME.yMax]);
-        updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
+        %updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
         userData.plotLimits = oldPlotLimits;
         setappdata(ancestor(source,'figure'), 'UserData', userData);
         delete(f);

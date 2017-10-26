@@ -5,13 +5,14 @@ function selectPoints_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %user is ready to choose the area for the bath calibrations:
-zoom('off');
-pan('off');
 
 hFig = ancestor(hObject,'figure');
 userData=getappdata(hFig, 'UserData');
+%zoom('off');
+%pan('off');
 
 axH = gca;
+dragzoom('off');
 [x,y,ph1] = select_points(axH);
 
 userData.calx = x;
@@ -46,6 +47,7 @@ if exist('ph2'), delete(ph2); end
 %axH.UIContextMenu.HandleVisibility = 'off';
 %axH.UIContextMenu.Visible = 'off';
 delete(axH.UIContextMenu);
+dragzoom(axH, 'on');
 
     function [x,y, ph] = select_points(hAx)
         %function [x,y] = select_points

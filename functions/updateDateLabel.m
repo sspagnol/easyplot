@@ -43,7 +43,7 @@ if nargin < 3 || isempty(source) || isempty(axH.XTickLabel)
     datetick(axH, 'x', 'keeplimits');
 end
 
-xlims = get(axH,'xlim');
+xlims = get(axH,'XLim');
 
 % attempt to have better x-tick/label spacing
 % stnj=xlims(1);
@@ -196,6 +196,12 @@ for ii=1:numel(graphs)
     end
 end
 
+% if axesInfo.doMultilineXLabel
+%     ht = my_xticklabels(axH, ticks, labels);
+% else
+%     set(axH, 'XTick', ticks, 'XTickLabel', labels);
+% end
+
     function labels = makeLabels( ticks, labels, mdformat)
         [yr, mo, da] = datevec(ticks); % Extract year & day information (necessary for ticks on the boundary)
         newlabels = cell(size(labels,1), 1); % Initialize cell array of new tick label information
@@ -204,6 +210,7 @@ end
             ind = [1 find(diff(yr))+1];
             newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
             labels = strcat(labels, newlabels);
+            return;
         elseif regexpi(labels{1,:}, '\d\d/\d\d', 'once') % Tick format is mm/dd
             % Change mm/dd to dd/mm if necessary
             labels = datestr(ticks, mdformat);
@@ -211,6 +218,7 @@ end
             ind = [1 find(diff(yr))+1];
             newlabels(ind) = cellstr(datestr(ticks(ind), '-yyyy'));
             labels = strcat(labels, newlabels);
+            return;
         elseif any(labels{1,:} == ':') % Tick format is HH:MM
             % Add month/day/year information to the first tick and month/day to other ticks where the day changes
             ind = find(diff(da))+1;
@@ -222,29 +230,30 @@ end
 
     function labels = makeLabelsMultiline( ticks, labels, mdformat)
         [yr, mo, da] = datevec(ticks); % Extract year & day information (necessary for ticks on the boundary)
-        newlabels = cell(size(labels,1), 1); % Initialize cell array of new tick label information
+        newlabels = cell([size(labels,1), 1]); % Initialize cell array of new tick label information
         if regexpi(labels{1,:}, '[a-z]{3}', 'once') % Tick format is mmm
             % Add year information to first tick & ticks where the year changes
             ind = [1 find(diff(yr))+1];
             newlabels(ind) = cellstr(datestr(ticks(ind), 'yyyy'));
-            labels=cellfun(@(x,y) {x y}, cellstr(labels), newlabels, 'UniformOutput', false);
-            labels=cellfun(@(x) x(~cellfun(@isempty,x)), labels, 'UniformOutput', false);
         elseif regexpi(labels{1,:}, '\d\d/\d\d', 'once') % Tick format is mm/dd
             % Change mm/dd to dd/mm if necessary
             labels = datestr(ticks, mdformat);
             % Add year information to first tick & ticks where the year changes
             ind = [1 find(diff(yr))+1];
             newlabels(ind) = cellstr(datestr(ticks(ind), 'yyyy' ));
-            labels=cellfun(@(x,y) {x y}, cellstr(labels), newlabels, 'UniformOutput', false);
-            labels=cellfun(@(x) x(~cellfun(@isempty,x)), labels, 'UniformOutput', false);
         elseif any(labels{1,:} == ':') % Tick format is HH:MM
             % Add month/day/year information to the first tick and month/day to other ticks where the day changes
             ind = find(diff(da))+1;
             newlabels{1}   = datestr(ticks(1), [mdformat '-yyyy']);
             newlabels(ind) = cellstr(datestr(ticks(ind), mdformat ));
-            labels=cellfun(@(x,y) {x y}, cellstr(labels), newlabels, 'UniformOutput', false);
-            labels=cellfun(@(x) x(~cellfun(@isempty,x)), labels, 'UniformOutput', false);
         end
+        %tic
+        %alabels=cellfun(@(x,y) {x y}, cellstr(labels), ~isempty(newlabels), 'UniformOutput', false);
+        %alabels=cellfun(@(x) x(~cellfun(@isempty,x)), alabels, 'UniformOutput', false);
+        %toc
+        labels = [cellstr(labels), newlabels];
+        ind=~cellfun(@isempty,newlabels);
+        labels{ind} = {alabels{ind} newlabels{ind}};
     end
 
 end

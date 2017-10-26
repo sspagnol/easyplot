@@ -334,15 +334,20 @@ updateLineColour( hFig );
 
 if redoSubplots
     % link all/any subplot axes
+    dragzoom(graphs);
     linkaxes(graphs,'x');
     
+    updateDateLabel([], struct('Axes', graphs(1)), false);
+    
     % not the best when have multiline xticklabels, not sure why yet.
-    %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
+    addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
     % update date labels, only pass one axis and it will update any others
-    updateDateLabel([], struct('Axes', graphs(1)), false);
+    %updateDateLabel([], struct('Axes', graphs(1)), false);
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
+        %notify(graphs(ii),'XLim');
+        
         %axes(graphs(ii));
         set(hFig,'CurrentAxes', graphs(ii));
         updateYlabel( graphs(ii) );

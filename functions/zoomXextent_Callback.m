@@ -32,7 +32,7 @@ end
 setappdata(hFig, 'UserData', userData);
 
 % since don't have listener, update date labels manually
-updateDateLabel(hFig,struct('Axes', gca), true);
+%updateDateLabel(hFig,struct('Axes', gca), true);
 
 end
 
