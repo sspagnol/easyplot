@@ -94,6 +94,13 @@ for kk=1:numel(sam.variables)
 end
 sam.variablePlotStatus = sam.variablePlotStatus(:);
 
+%
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'iSlice')
+        sam.variables{kk}.iSlice = 1;
+    end
+end
+
 % calculate data limits
 for ii=1:numel(sam.variables)
     LIMITS = struct;

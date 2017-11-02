@@ -19,14 +19,16 @@ set(hFig,'CloseRequestFcn',@exit_Callback);
 userData=getappdata(hFig,'UserData');
 
 % add menu items
-m=uimenu(hFig,'Label','Easyplot');
-sm1=uimenu(m,'Label','Plot Vars As...');
-uimenu(sm1,'Label','VARS_OVERLAY','Checked','on','Callback',@plotType_Callback);
-uimenu(sm1,'Label','VARS_STACKED','Callback',@plotType_Callback);
-uimenu(m,'Label','Use QC flags','Callback',@useQCflags_Callback);
-uimenu(m,'Label','Do Bath Calibrations','Callback',@BathCals_Callback);
-uimenu(m,'Label','Save Image','Callback',@saveImage_Callback);
-uimenu(m,'Label','Quit','Callback',@exit_Callback,...
+m=uimenu(hFig, 'Label', 'Easyplot');
+sm1=uimenu(m, 'Label', 'Plot Vars As...');
+uimenu(sm1, 'Label', 'VARS_OVERLAY', 'Checked','on','Callback', @plotType_Callback);
+uimenu(sm1, 'Label', 'VARS_STACKED', 'Callback', @plotType_Callback);
+uimenu(m, 'Label', 'Use QC flags', 'Callback', @useQCflags_Callback);
+uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
+uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback);
+uimenu(m, 'Label', 'Save filelist (YML)', 'Callback', @saveFilelist_Callback);
+uimenu(m, 'Label', 'Save Image', 'Callback', @saveImage_Callback);
+uimenu(m, 'Label', 'Quit', 'Callback', @exit_Callback,...
     'Separator','on','Accelerator','Q');
 
 % modify easyplot toolbar
@@ -288,4 +290,111 @@ setappdata(hFig, 'UserData', userData);
         
     end
 
+%%
+    function loadFilelist_Callback(hObject, eventdata, handles)
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        if ~isfield(userData,'sample_data')
+            userData.sample_data={};
+        end
+        
+        for kk=1:numel(userData.sample_data)
+            userData.sample_data{kk}.isNew = false;
+        end
+        
+        [ymlFileName, ymlPathName, FilterIndex] = uigetfile('*.yml','');
+        ymlData = yml.read(fullfile(ymlPathName,ymlFileName));
+        for ii=1:numel(ymlData.files)
+            theParser = ymlData.files{ii}.parser;
+            theFullFile = ymlData.files{ii}.filename;
+            
+            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFullFile)), userData.sample_data, 'UniformOutput', false))));
+            
+            if notLoaded
+                parser = str2func(theParser);
+                structs = parser( {theFullFile}, 'timeSeries' );
+                isNew = false(size(userData.sample_data));
+                if numel(structs) == 1
+                    % only one struct generated for one raw data file
+                    structs.meta.parser = theParser;
+                    tmpStruct = finaliseDataEasyplot(structs, theFullFile);
+                    userData.sample_data{end+1} = tmpStruct;
+                    clear('tmpStruct');
+                    userData.sample_data{end}.isNew = true;
+                    isNew(end+1) = true;
+                else
+                    % one data set may have generated more than one sample_data struct
+                    % eg AWAC .wpr with waves in .wap etc
+                    for k = 1:length(structs)
+                        structs{k}.meta.parser = theParser;
+                        tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
+                        userData.sample_data{end+1} = tmpStruct;
+                        clear('tmpStruct');
+                        userData.sample_data{end}.isNew = true;
+                        isNew(end+1) = true;
+                    end
+                end
+                if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
+                    plotVar = strtrim(split(ymlData.files{ii}.variables, ','));
+                    userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
+                end
+            end
+        end
+        
+        % data limits for those variables
+        varNames = {};
+        % variables already plotted
+        for ii=1:numel(userData.sample_data)
+            iPlotVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+            if ~isempty(iPlotVars)
+                for jj = iPlotVars
+                    theVar = userData.sample_data{ii}.variables{jj}.name;
+                    varNames{end+1}=theVar;
+                end
+            end
+        end
+        varNames=sort(unique(varNames));
+        userData.plotVarNames = varNames;
+        userData.dataLimits = findVarExtents(userData.sample_data, varNames);
+
+        set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);
+        userData.treePanelData = generateTreeData(userData.sample_data);
+        userData.jtable = createTreeTable(treePanel, userData);
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
+    end
+
+%%
+    function saveFilelist_Callback(hObject, eventdata, handles)
+        hFig = ancestor(hObject,'figure');
+        if isempty(hFig)
+            return;
+        end
+        
+        userData=getappdata(hFig, 'UserData');
+        if isempty(userData.sample_data)
+            return;
+        end
+
+        ymlData = struct;
+        for ii=1:numel(userData.sample_data)
+            tmpStruct = struct;
+            tmpStruct.filename = userData.sample_data{ii}.toolbox_input_file;
+            tmpStruct.parser = userData.sample_data{ii}.meta.parser;
+            plotVars = cellfun(@(x) x.name, userData.sample_data{ii}.variables, 'UniformOutput', false);
+            plotVars = plotVars(logical(userData.sample_data{ii}.variablePlotStatus));
+            plotVars = strjoin(plotVars, ', ');
+            tmpStruct.variables = plotVars;
+            ymlData.files{ii} = tmpStruct;
+        end
+        
+        %ymlData.plottype = userData.plotType;
+        
+        [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
+        yml.write(fullfile(ymlPathName,ymlFileName),ymlData);
+    end
 end
+
+%%
+

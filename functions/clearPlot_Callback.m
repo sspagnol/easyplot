@@ -12,6 +12,7 @@ filelistPanel= findobj(hFig, 'Tag','filelistPanel');
 filelistPanelListbox  = findobj(filelistPanel, 'Tag','filelistPanelListbox');
 
 treePanel = findobj(hFig, 'Tag','treePanel');
+plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 % clear plot
 if isfield(userData, 'sample_data')
@@ -37,7 +38,7 @@ if isfield(userData, 'sample_data')
     %     %model = getOriginalModel(jtable);
     %     model.groupAndRefresh;
     %     handles.jtable.repaint;
-    userData.jtable = createTreeTable(plotPanel, userData);
+    userData.jtable = createTreeTable(treePanel, userData);
     
     userData.sample_data = {};
     userData.firstPlot = true;

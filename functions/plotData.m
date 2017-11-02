@@ -139,7 +139,7 @@ end
 
 %
 if ~isempty(varNewNames)
-    varNames{end+1} = varNewNames{:};
+    varNames = {varNames{:} varNewNames{:}};
     varNames=sort(unique(varNames));
 end
 userData.plotVarNames = varNames;
