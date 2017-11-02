@@ -7,7 +7,7 @@ if ~isempty(userData)
     if isfield(userData,'jtable')
         if toggle
             %disp('Turning ON tableVisibilityCallback');
-            set(handle(getOriginalModel(userData.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, hFig});
+            set(handle(getOriginalModel(userData.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, hFig});
         else
             %disp('Turning OFF tableVisibilityCallback');
             set(handle(getOriginalModel(userData.jtable),'CallbackProperties'), 'TableChangedCallback', []);

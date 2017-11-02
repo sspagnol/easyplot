@@ -20,6 +20,6 @@ renderer = jtable.getColumnModel.getColumn(1).getCellRenderer;
 renderer.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
 jtable.getColumnModel.getColumn(1).setCellRenderer(renderer);
 
-set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, panel});
+set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, panel});
 
 end

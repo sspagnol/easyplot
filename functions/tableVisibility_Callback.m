@@ -1,5 +1,5 @@
 %%
-function tableVisibilityCallback(hModel, hEvent, hObject)
+function tableVisibility_Callback(hModel, hEvent, hObject)
 % TABLEVISIBILITYCALLBACK callback for treeTable visibility column
 %
 % Inputs:
@@ -23,7 +23,7 @@ if ishghandle(hObject)
     userData=getappdata(ancestor(hObject,'figure'), 'UserData');
 else
     hash.remove(hObject);
-    disp('I am stuck in tableVisibilityCallback');
+    disp('I am stuck in tableVisibility_Callback');
     return;
 end
 
@@ -49,7 +49,7 @@ end
 % update flags/values in userData.sample_data for the matching instrument
 for ii=1:numel(userData.sample_data) % loop over files
     for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
-        if strcmp(userData.sample_data{ii}.meta.instrument_model_shortname, theModel) && ...
+        if strcmp([userData.sample_data{ii}.meta.instrument_model_shortname '_' userData.sample_data{ii}.inputFile], theModel) && ...
                 strcmp(userData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
                 strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable)
             userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;

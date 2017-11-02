@@ -45,7 +45,7 @@ if strcmp(selectionType,'open')
             userData.firstPlot=true;
             setappdata(hFig, 'UserData', userData);
             plotData(plotPanel);
-            % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibilityCallback, ancestor(hObject,'figure')});
+            % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, ancestor(hObject,'figure')});
             
             %drawnow;
         end

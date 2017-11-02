@@ -8,7 +8,7 @@ for ii=1:numel(sample_data)
     for jj = [find(sample_data{ii}.isPlottableVar)]
         %if sample_data{ii}.isPlottableVar(jj)
         %  group, variable, visible
-        treePanelData{kk,1} = sample_data{ii}.meta.instrument_model_shortname;
+        treePanelData{kk,1} = [sample_data{ii}.meta.instrument_model_shortname '_' sample_data{ii}.inputFile];
         treePanelData{kk,2} = regexprep(sample_data{ii}.meta.instrument_serial_no, '[^ -~]', '%');
         %treePanelData{kk,2} = sample_data{ii}.meta.instrument_serial_no;
         treePanelData{kk,3} = sample_data{ii}.variables{jj}.name;
