@@ -27,6 +27,9 @@ if ~isfield(sam.meta, 'instrument_model_shortname')
     sam.meta.instrument_model_shortname = sam.meta.instrument_model;
 end
 
+%%
+sam.meta.instrument_serial_no = regexprep(sam.meta.instrument_serial_no, '[^ -~]', '%');
+
 %% make all dimension names upper case
 for ii=1:numel(sam.dimensions)
     sam.dimensions{ii}.name = upper(sam.dimensions{ii}.name);

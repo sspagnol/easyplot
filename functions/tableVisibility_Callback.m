@@ -27,17 +27,26 @@ else
     return;
 end
 
+%treePanelHeader = {'Instrument','File','#','Variable','Show','Slice'};
+idModel = 0;
+idFile = 1;
+idSerial = 2;
+idVariable = 3;
+idShow = 4;
+idSlice = 5;
+
 % Get the modification data, zero indexed
 modifiedRow = get(hEvent,'FirstRow');
 modifiedCol = get(hEvent,'Column');
-theModel   = hModel.getValueAt(modifiedRow,0);
-theSerial   = hModel.getValueAt(modifiedRow,1);
+theModel  = hModel.getValueAt(modifiedRow,idModel);
+theFile   = hModel.getValueAt(modifiedRow,idFile);
+theSerial = hModel.getValueAt(modifiedRow,idSerial);
 if isempty(theSerial)
     theSerial = '';
 end
-theVariable   = hModel.getValueAt(modifiedRow,2);
-plotStatus = double(hModel.getValueAt(modifiedRow,3));
-iSlice = hModel.getValueAt(modifiedRow,4);
+theVariable   = hModel.getValueAt(modifiedRow,idVariable);
+plotStatus = double(hModel.getValueAt(modifiedRow,idShow));
+iSlice = hModel.getValueAt(modifiedRow,idSlice);
 
 % if deselecting mark it as -1
 if plotStatus == 0
@@ -49,20 +58,22 @@ end
 % update flags/values in userData.sample_data for the matching instrument
 for ii=1:numel(userData.sample_data) % loop over files
     for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
-        if strcmp([userData.sample_data{ii}.meta.instrument_model_shortname '_' userData.sample_data{ii}.inputFile], theModel) && ...
-                strcmp(userData.sample_data{ii}.meta.instrument_serial_no, theSerial) &&...
-                strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable)
+        iMatch = strcmp(userData.sample_data{ii}.meta.instrument_model_shortname, theModel) && ...
+            strcmp([userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt], theFile) &&...
+            strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
+            strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable);
+        if iMatch
             userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;
             if isvector(userData.sample_data{ii}.variables{jj}.data)
-                hModel.setValueAt(1,modifiedRow,4);
+                hModel.setValueAt(1,modifiedRow,idSlice);
                 userData.sample_data{ii}.variables{jj}.iSlice = 1;
             else
                 [d1,d2] = size(userData.sample_data{ii}.variables{jj}.data);
                 if iSlice<1
-                    hModel.setValueAt(1,modifiedRow,4);
+                    hModel.setValueAt(1,modifiedRow,idSlice);
                     userData.sample_data{ii}.variables{jj}.iSlice = 1;
                 elseif iSlice>d2
-                    hModel.setValueAt(d2,modifiedRow,4);
+                    hModel.setValueAt(d2,modifiedRow,idSlice);
                     userData.sample_data{ii}.variables{jj}.iSlice = d2;
                 else
                     userData.sample_data{ii}.variables{jj}.iSlice = iSlice;

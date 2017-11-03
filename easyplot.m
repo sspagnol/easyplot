@@ -221,17 +221,6 @@ set(dcm_h, 'UpdateFcn', @customDatacursorText)
 % callback for mouse click on plot
 set(hFig,'WindowButtonDownFcn', @mouseDownListener);
 
-% Dummy treeTable data
-userData.treePanelData{1,1}='None';
-userData.treePanelData{1,2}='None';
-userData.treePanelData{1,3}='None';
-userData.treePanelData{1,4}=false;
-userData.treePanelData{1,5}=0;
-userData.treePanelHeader = {'','Instrument','Variable','Show','Slice'};
-userData.treePanelColumnTypes = {'','char','char','logical','integer'};
-userData.treePanelColumnEditable = {false, false, true, true};
-userData.jtable = createTreeTable(treePanel, userData);
-
 setappdata(hFig, 'UserData', userData);
 
 %% --- Executes when user attempts to close figure1.
@@ -295,6 +284,9 @@ setappdata(hFig, 'UserData', userData);
         hFig = ancestor(hObject,'figure');
         userData=getappdata(hFig, 'UserData');
         
+        msgPanel = findobj(hFig, 'Tag','msgPanel');
+        msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+
         if ~isfield(userData,'sample_data')
             userData.sample_data={};
         end
@@ -303,15 +295,21 @@ setappdata(hFig, 'UserData', userData);
             userData.sample_data{kk}.isNew = false;
         end
         
-        [ymlFileName, ymlPathName, FilterIndex] = uigetfile('*.yml','');
+        [ymlFileName, ymlPathName, ~] = uigetfile('*.yml','');
         ymlData = yml.read(fullfile(ymlPathName,ymlFileName));
-        for ii=1:numel(ymlData.files)
+        nFiles = numel(ymlData.files);
+        for ii = 1:nFiles
             theParser = ymlData.files{ii}.parser;
             theFullFile = ymlData.files{ii}.filename;
+            [pathStr, fileStr, extStr] = fileparts(theFullFile);
+            theFile = [fileStr extStr];
             
             notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFullFile)), userData.sample_data, 'UniformOutput', false))));
             
             if notLoaded
+                set(msgPanelText,'String',strcat({'Loading : '}, theFile));
+                drawnow;
+                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 parser = str2func(theParser);
                 structs = parser( {theFullFile}, 'timeSeries' );
                 isNew = false(size(userData.sample_data));
@@ -336,7 +334,7 @@ setappdata(hFig, 'UserData', userData);
                     end
                 end
                 if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
-                    plotVar = strtrim(split(ymlData.files{ii}.variables, ','));
+                    plotVar = strtrim(strsplit(ymlData.files{ii}.variables, ','));
                     userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
                 end
             end

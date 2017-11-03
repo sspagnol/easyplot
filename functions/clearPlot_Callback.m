@@ -20,25 +20,16 @@ if isfield(userData, 'sample_data')
     children = get(plotPanel, 'Children');
     delete(children);
     
+    % clear file list
     set(filelistPanelListbox,'String', '');
     
-    % reset jtable
-    % how do I reset contents of handles.jtable?
-    %     if isfield(handles,'jtable')
-    %         %delete(handles.jtable);
-    %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-    %     end
-    userData.treePanelData = {};
-    userData.treePanelData{1,1} = 'None';
-    userData.treePanelData{1,2} = 'None';
-    userData.treePanelData{1,3} = 'None';
-    userData.treePanelData{1,4} = false;
-    userData.treePanelData{1,5} = 1;
-    %     model = handles.jtable.getModel.getActualModel;
-    %     %model = getOriginalModel(jtable);
-    %     model.groupAndRefresh;
-    %     handles.jtable.repaint;
-    userData.jtable = createTreeTable(treePanel, userData);
+    % clear tree table
+    % https://undocumentedmatlab.com/blog/treetable#comment-308645
+    jtree = userData.jtable;
+    jtreePanel = jtree.getParent.getParent.getParent;
+    jtreePanelParent = jtreePanel.getParent;
+    jtreePanelParent.remove(jtreePanel);
+    jtreePanelParent.repaint;
     
     userData.sample_data = {};
     userData.firstPlot = true;

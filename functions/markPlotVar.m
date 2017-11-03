@@ -3,7 +3,7 @@ function [sample_data] = markPlotVar(sample_data, plotVar, iSamples)
 %MARKPLOTVAR Create cell array of plotted data for treeTable data
 
 if ~iscell(plotVar)
-    plotVar = {plotVar};
+    plotVar = cellstr(plotVar);
 end
 
 for ii=1:numel(sample_data)
