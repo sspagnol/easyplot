@@ -39,6 +39,6 @@ jtable.getColumnModel.getColumn(2).setMaxWidth(50);
 % model.groupAndRefresh;
 % jtable.repaint;
  
-set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, panel});
+set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableChanged_Callback, panel});
 
 end
