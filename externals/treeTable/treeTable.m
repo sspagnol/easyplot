@@ -139,9 +139,16 @@ function jtable = treeTable(varargin)
           end
           %}
           if shouldGroup
-              model.addGroupColumn(0);
+              % always group on java column 0
+              paramsStruct.columngroupby{1} = true;
+              for colIdx = 0 : length(paramsStruct.columntypes)-1
+                  if paramsStruct.columngroupby{colIdx+1}
+                    model.addGroupColumn(colIdx);
+                  end
+              end
               model.groupAndRefresh;
-              paramsStruct.columntypes(1) = [];
+              % collapse empty column types
+              paramsStruct.columntypes([paramsStruct.columngroupby{:}])=[];
           end
           jtable.setModel(model);
 
@@ -390,6 +397,7 @@ function paramsStruct = processArgs(varargin)
                                       };
         paramsStruct.columntypes = {}; %{'label','logical',{'True','False',''},{'Yes','No'}};
         paramsStruct.columneditable = {true, true, true, true, true};
+        paramsStruct.columngroupby = {true, false, false, false, false};
         paramsStruct.dockinggroup = 'Figures';
         paramsStruct.extra = {};
         paramsStruct.groupable = true;
@@ -444,11 +452,13 @@ function paramsStruct = processArgs(varargin)
         paramsStruct.headers        = cellizeData(paramsStruct.headers);
         paramsStruct.columntypes    = cellizeData(paramsStruct.columntypes);
         paramsStruct.columneditable = cellizeData(paramsStruct.columneditable);
+        paramsStruct.columngroupby  = cellizeData(paramsStruct.columngroupby);
 
         % Start with dummy data, just so that uitable can be initialized (or use supplied data, if available)
         if isempty(paramsStruct.data)
             selector = {'One','Two','Many'};
             paramsStruct.columntypes = {'label','label','char','logical',selector,'double'};
+            paramsStruct.columngroupby = {true, false, false, false, false, false};
             paramsStruct.headers = {'ID','Label','Logical1','Logical2','Selector','Numeric'};  % 5 columns by default
             paramsStruct.data = {1,'M11',true, false,'One', 1011;  ...
                                  1,'M12',true, true, 'Two', 12;   ...
@@ -467,7 +477,8 @@ function paramsStruct = processArgs(varargin)
         [paramsStruct.headers{end+1:numCols}]        = deal(' ');
         [paramsStruct.columntypes{end+1:numCols}]    = deal('char');
         [paramsStruct.columneditable{end+1:numCols}] = deal(true);
-
+        [paramsStruct.columngroupby{end+1:numCols}] = deal(false);
+    
         % TBD - Ensure icon filenames are readable and in the correct format
 
         a=1;
