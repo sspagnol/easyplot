@@ -196,8 +196,9 @@ function sam = add_EP_LPF(sam)
 % filtering need a monotonic time stamp with regular dt and with nan data
 % replaced with mean of time series.
 
-% only do LPF on PRES, PRES_REL
-iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES|PRES_REL')), sam.variables, 'UniformOutput', false)));
+% only do LPF on PRES, PRES_REL. Search is setup such to avoid bursted
+% names
+iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES$|PRES_REL$','once')), sam.variables, 'UniformOutput', false)));
 if isempty(iLpfVars), return; end
 
 % filtering burst data like WQMs can be problematic, totally experimental
