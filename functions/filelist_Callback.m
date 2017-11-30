@@ -29,7 +29,18 @@ if strcmp(selectionType,'open')
             % removing last plot
             clearPlot_Callback(hObject, eventdata, userData);
         else
+            % find sample_data struct associated with filename and delete
+            % any plots
             iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
+            for ii=iFile
+                iDeletePlotVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+                if ~isempty(iDeletePlotVars)
+                    for jj = iDeletePlotVars
+                        delete(userData.sample_data{ii}.variables{jj}.hLine);
+                    end
+                end
+            end
+            % delete sample_data structs
             userData.sample_data(iFile)=[];
             %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
             set(filelistPanelListbox,'Value',1); % Matlab workaround, add this line so that the list can be changed

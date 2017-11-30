@@ -346,17 +346,20 @@ if redoSubplots
     %updateDateLabel([], struct('Axes', graphs(1)), false);
     % update legends, xticklabels and per axis userdata
     for ii=1:length(graphs)
-        %notify(graphs(ii),'XLim');
-        
-        %axes(graphs(ii));
         set(hFig,'CurrentAxes', graphs(ii));
         updateYlabel( graphs(ii) );
         grid(graphs(ii),'on');
-        hLegend = legend(graphs(ii),'show');
-        hLegend.FontSize = 8;
+%        hLegend = legend(graphs(ii),'show');
+%        hLegend.FontSize = 8;
     end
 end
 
+for ii=1:length(graphs)
+    set(hFig,'CurrentAxes', graphs(ii));
+    hLegend = legend(graphs(ii),'show');
+    hLegend.FontSize = 8;
+end
+    
 %% update progress string and save UserData
 set(msgPanelText,'String','Done');
 setappdata(hFig, 'UserData', userData);
