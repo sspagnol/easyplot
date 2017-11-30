@@ -11,6 +11,18 @@ treePanelColumnGroupBy = {true, true, true, false, false, false};
 treePanelColumnTypes = {'', '', '', 'char', 'logical', 'integer'};
 treePanelColumnEditable = {'', '', '', false, true, true};
 
+% I can't work out how to reuse existing jtable and setModelData so just
+% delete the old one
+if isfield(userData, 'jtable') & ~isempty(userData.jtable)
+    % clear tree table
+    % https://undocumentedmatlab.com/blog/treetable#comment-308645
+    jtree = userData.jtable;
+    jtreePanel = jtree.getParent.getParent.getParent;
+    jtreePanelParent = jtreePanel.getParent;
+    jtreePanelParent.remove(jtreePanel);
+    jtreePanelParent.repaint;
+end
+
 jtable = treeTable(panel, ...
     treePanelHeader,...
     userData.treePanelData,...
@@ -40,5 +52,19 @@ jtable.getColumnModel.getColumn(2).setMaxWidth(50);
 % jtable.repaint;
  
 set(handle(getOriginalModel(jtable),'CallbackProperties'), 'TableChangedCallback', {@tableChanged_Callback, panel});
+
+% update model data tests
+%     % doesn't work
+%     %set(userData.jtable, 'Data', userData.treePanelData);
+%     userData.jtable.setModel(javax.swing.table.DefaultTableModel(userData.treePanelData, treePanelHeader));
+%     model = MultiClassTableModel(userData.treePanelData, treePanelHeader)
+%     model = com.jidesoft.grid.DefaultGroupTableModel(model)
+%     userData.jtable.setModel(model);
+%     
+%     model = userData.jtable.getModel.getActualModel;
+%     model.groupAndRefresh;
+%     jtable.repaint;
+%     drawnow; pause(0.05);
+
 
 end

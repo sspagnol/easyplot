@@ -106,35 +106,35 @@ varNewNames=sort(unique(varNewNames));
 
 %%
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
-% require result redoSubplots = true
-redoSubplots = true;
+
+% require || result redoSubplots = true
 isEmptyPlotPanel = isempty(plotPanel.Children);
-isAnyEmptyStackedPlots = strcmpi(userData.plotType, 'VARS_STACKED') && any(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
-isAnyEmptyOverlayPlots = strcmpi(userData.plotType, 'VARS_OVERLAY') && all(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
+% isAnyEmptyStackedPlots = strcmpi(userData.plotType, 'VARS_STACKED') && ...
+%     (any(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter))) || ...
+%     any(arrayfun(@(x) isempty(x.Children), graphs)));
+% isAnyEmptyOverlayPlots = strcmpi(userData.plotType, 'VARS_OVERLAY') && all(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
+isAnyEmptyGraphs = any(arrayfun(@(x) isempty(x.Children), graphs));
 isPlotTypeChange = strcmpi(userData.plotType,'VARS_STACKED') && (~isempty(graphs) && strcmp(graphs(1).Tag, 'MULTI')) || ...
     strcmpi(userData.plotType,'VARS_OVERLAY') && (~isempty(graphs) && ~strcmp(graphs(1).Tag, 'MULTI'));
 isNewSubplot = strcmpi(userData.plotType,'VARS_STACKED') && ...
     (~isempty(varNames) && ~isempty(varNewNames) && ...
     ~any(strcmp(varNewNames, varNames)));
 
-% require result redoSubplots = false
+% require || result redoSubplots = false
 isNotP1 = strcmpi(userData.plotType, 'VARS_OVERLAY') && ... % overlay
     ~isempty(varNames);                                     % have plotted some variable
-% isNotP2 = strcmpi(userData.plotType,'VARS_STACKED') && ~isempty(varNames) && ~isempty(varNewNames) && any(strcmp(varNewNames, varNames));
-% isNotP2 = strcmpi(userData.plotType,'VARS_STACKED') && ...  % stacked
-%     ~isempty(varNames) && ~isempty(varNewNames) && ...      % have non empty old/new vars
-%     any(strcmp(varNewNames, varNames)) && ...               % new var is already plotted
-%     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter))); %
 isNotP2 = strcmpi(userData.plotType,'VARS_STACKED') && ...
     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
 
 isNotP3 = strcmpi(userData.plotType,'VARS_STACKED') && ...
     ~isempty(varNames) && isempty(varNewNames);
 
-if isEmptyPlotPanel || isAnyEmptyStackedPlots || isPlotTypeChange || isNewSubplot
+redoSubplots = false;
+%if isEmptyPlotPanel || isAnyEmptyStackedPlots || isPlotTypeChange || isNewSubplot
+if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot
     redoSubplots = true;
-elseif isNotP1 || isNotP2 || isNotP3
-    redoSubplots = false;
+%elseif isNotP1 || isNotP2 || isNotP3
+%    redoSubplots = false;
 end
 
 %
