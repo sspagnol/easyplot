@@ -1,4 +1,4 @@
-function [imageData, alpha] = export_fig(varargin)
+function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
 %EXPORT_FIG  Exports figures in a publication-quality format
 %
 % Examples:
@@ -257,6 +257,11 @@ function [imageData, alpha] = export_fig(varargin)
 % 15/09/17: Fixed issue #210: initialize alpha map to ones instead of zeros when -transparent is not used
 % 18/09/17: Added -font_space option to replace font-name spaces in EPS/PDF (workaround for issue #194)
 % 18/09/17: Added -noinvert option to solve some export problems with some graphic cards (workaround for issue #197)
+% 08/11/17: Fixed issue #220: exponent is removed in HG1 when TickMode is 'manual' (internal Matlab bug)
+% 08/11/17: Fixed issue #221: alert if the requested folder does not exist
+% 19/11/17: Workaround for issue #207: alert when trying to use transparent bgcolor with -opengl
+% 29/11/17: Workaround for issue #206: warn if exporting PDF/EPS for a figure that contains an image
+% 11/12/17: Fixed issue #230: use OpenGL renderer when exported image contains transparency (also see issue #206)
 %}
 
     if nargout
@@ -389,6 +394,8 @@ function [imageData, alpha] = export_fig(varargin)
             renderer = '-opengl'; % Default for bitmaps
     end
 
+    hImages = findall(fig,'type','image');
+
     % Handle transparent patches
     hasTransparency = ~isempty(findall(fig,'-property','FaceAlpha','-and','-not','FaceAlpha',1));
     hasPatches      = ~isempty(findall(fig,'type','patch'));
@@ -401,6 +408,15 @@ function [imageData, alpha] = export_fig(varargin)
             warning('export_fig:transparency', '%s\nTo export transparent patches/areas to PDF, use the print command:\n print(gcf, ''-dpdf'', ''%s.pdf'');', msg, options.name);
         elseif ~options.png && ~options.tif  % issue #168
             warning('export_fig:transparency', '%s\nTo export the transparency correctly, try using the ScreenCapture utility on the Matlab File Exchange: http://bit.ly/1QFrBip', msg);
+        end
+    elseif ~isempty(hImages)
+        % Fix for issue #230: use OpenGL renderer when exported image contains transparency
+        for idx = 1 : numel(hImages)
+            cdata = get(hImages(idx),'CData');
+            if any(isnan(cdata(:)))
+                hasTransparency = true;
+                break
+            end
         end
     end
 
@@ -651,12 +667,25 @@ function [imageData, alpha] = export_fig(varargin)
                 p2eArgs{end+1} = '-depsc';
             end
             try
+                % Remove background if requested (issue #207)
+                if options.transparent %&& ~isequal(get(fig, 'Color'), 'none')
+                    if options.renderer == 1  % OpenGL
+                        warning('export_fig:openglTransparentBG', '-opengl sometimes fails to produce transparent backgrounds; try -painters instead');
+                    else
+                        originalBgColor = get(fig, 'Color');
+                        set(fig,'Color','none');
+                    end
+                end
                 % Generate an eps
                 print2eps(tmp_nam, fig, options, p2eArgs{:});
+                % {
                 % Remove the background, if desired
-                if options.transparent && ~isequal(get(fig, 'Color'), 'none')
+                if options.transparent %&& ~isequal(get(fig, 'Color'), 'none')
                     eps_remove_background(tmp_nam, 1 + using_hg2(fig));
                 end
+                %}
+                % Restore the figure's previous background color (if modified)
+                try set(fig,'Color',originalBgColor); drawnow; catch, end
                 % Fix colorspace to CMYK, if requested (workaround for issue #33)
                 if options.colourspace == 1  % CMYK
                     % Issue #33: due to internal bugs in Matlab's print() function, we can't use its -cmyk option
@@ -729,6 +758,13 @@ function [imageData, alpha] = export_fig(varargin)
                     delete(pdf_nam);
                 end
             end
+            % Issue #206: warn if the figure contains an image
+            if ~isempty(hImages) && strcmpi(renderer,'-opengl')  % see addendum to issue #206
+                warnMsg = ['exporting images to PDF/EPS may result in blurry images on some viewers. ' ...
+                           'If so, try to change viewer, or increase the image''s CData resolution, or use -opengl renderer, or export via the print function. ' ...
+                           'See <a href="matlab:web(''https://github.com/altmany/export_fig/issues/206'',''-browser'');">issue #206</a> for details.'];
+                warning('export_fig:pdf_eps:blurry_image', warnMsg);
+            end
         end
 
         % Revert the figure or close it (if requested)
@@ -786,7 +822,7 @@ function [imageData, alpha] = export_fig(varargin)
             try
                 error(javachk('awt', 'export_fig -clipboard output'));
             catch
-                warning('export_fig -clipboard output failed: requires Java to work');
+                warning('export_fig:clipboardJava', 'export_fig -clipboard output failed: requires Java to work');
                 return;
             end
             try
@@ -832,7 +868,7 @@ function [imageData, alpha] = export_fig(varargin)
                 % Set clipboard content to the image
                 cb.setContents(imSelection, []);
             catch
-                warning('export_fig -clipboard output failed: %s', lasterr); %#ok<LERR>
+                warning('export_fig:clipboardFailed', 'export_fig -clipboard output failed: %s', lasterr); %#ok<LERR>
             end
         end
 
@@ -1062,6 +1098,8 @@ function [fig, options] = parse_args(nout, fig, varargin)
             else
                 [p, options.name, ext] = fileparts(varargin{a});
                 if ~isempty(p)
+                    % Issue #221: alert if the requested folder does not exist
+                    if ~exist(p,'dir'),  error(['Folder ' p ' does not exist!']);  end
                     options.name = [p filesep options.name];
                 end
                 switch lower(ext)
@@ -1322,14 +1360,19 @@ function set_tick_mode(Hlims, ax)
             % Fix for issue #187 - only set manual ticks when no exponent is present
             hAxes = Hlims(idx(idx2));
             props = {[ax 'TickMode'],'manual', [ax 'TickLabelMode'],'manual'};
+            tickVals = get(hAxes,[ax 'Tick']);
+            tickStrs = get(hAxes,[ax 'TickLabel']);
             if isempty(strtrim(hAxes.([ax 'Ruler']).SecondaryLabel.String))
                 % Fix for issue #205 - only set manual ticks when the Ticks number match the TickLabels number
-                if numel(hAxes.([ax 'Tick'])) == numel(hAxes.([ax 'TickLabel']))
+                if numel(tickVals) == numel(tickStrs)
                     set(hAxes, props{:});  % no exponent and matching ticks, so update both ticks and tick labels to manual
                 end
             end
         catch  % probably HG1
-            set(hAxes, props{:});  % revert back to old behavior
+            % Fix for issue #220 - exponent is removed in HG1 when TickMode is 'manual' (internal Matlab bug)
+            if isequal(tickVals, str2num(tickStrs)') %#ok<ST2NM>
+                set(hAxes, props{:});  % revert back to old behavior
+            end
         end
     end
 end
