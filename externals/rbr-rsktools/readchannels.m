@@ -1,23 +1,26 @@
 function RSK = readchannels(RSK)
 
-% readchannels - Populates the channels table in the RSK structure.
+%READCHANNELS - Populate the channels table.
 %
-% Syntax:  [RSK] = readchannels(RSK)
+% Syntax:  [RSK] = READCHANNELS(RSK)
 %
-% If available the instrumentChannels table is used to read the
-% channels with matching channelID otherwise the channels are read directly
-% from the table.
+% If available, uses the instrumentChannels table to read the channels with
+% matching channelID. Otherwise, directly reads the metadata from the
+% channels table. Only returns non-marine channels, unless it is a
+% EPdesktop file, and enumerates duplicate channel names.
 %
 % Inputs:
-%    RSK - A RSK structure
+%    RSK - RSK structure.
 %
 % Outputs:
-%    RSK - Structure containing channels
+%    RSK - Structure containing channels.
+%
+% See also: readstandardtables, RSKopen.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-29
+% Last revision: 2017-07-10
 
 tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
 
@@ -32,5 +35,8 @@ if any(strcmpi({tables.name}, 'instrumentChannels'))
 else
     RSK.channels = mksqlite('SELECT shortName, longName, units FROM channels ORDER by channels.channelID');
 end
+
+RSK = removenonmarinechannels(RSK);
+RSK = renamechannels(RSK);
 
 end

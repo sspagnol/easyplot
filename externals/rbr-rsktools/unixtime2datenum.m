@@ -1,9 +1,8 @@
 function dnum = unixtime2datenum(utime)
 
-% unixtime2datenum - Convert unix time (i.e. the number of seconds
-%                    since 1970-01-01) MATLAB datenum format
+%UNIXTIME2DATENUM - Convert unix time to MATLAB datenum format.
 %
-% Syntax:  dnum = unixtime2datenum(utime)
+% Syntax:  [dnum] = UNIXTIME2DATENUM(utime)
 % 
 % Converts "unix time", (i.e. POSIX time, the number of seconds since
 % 1970-01-01 00:00:00.000) to MATLAB datenum format.
@@ -12,7 +11,7 @@ function dnum = unixtime2datenum(utime)
 %    utime - Unix time. The number of seconds since 1970-01-01.
 % 
 % Outputs:
-%    dnum - MATLAB datenum
+%    dnum - MATLAB datenum.
 %
 % Example: 
 %    datestr(unixtime2datenum(1.420070400000000e+09))
@@ -26,5 +25,8 @@ function dnum = unixtime2datenum(utime)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
+% Last revision: 2017-06-21
 
 dnum = datenum(1970,1,1,0,0,utime)';
+
+end

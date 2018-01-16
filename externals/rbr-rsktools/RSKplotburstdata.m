@@ -1,39 +1,63 @@
-function hdls = RSKplotburstdata(RSK)
+function handles = RSKplotburstdata(RSK, varargin)
 
-% RSKplotburstdata - Plot summaries of logger burst data
+%RSKplotburstdata - Plot summaries of logger burst data.
 %
-% Syntax:  [hdls] = RSKplotburstdata(RSK)
+% Syntax:  [handles] = RSKplotburstdata(RSK, [OPTIONS])
 % 
-% This generates a plot, similar to the thumbnail plot, only using the
-% full 'burst data' that you read in, rather than just the thumbnail
-% view.  It tries to be intelligent about the subplots and channel
-% names, so you can get an idea of how to do better processing.
+% Generates a plot, similar to the thumbnail plot, only using the
+% full 'burstData' that you read in, rather than just the thumbnail
+% view.
 % 
 % Inputs:
-%    RSK - Structure containing the logger metadata and burst data
+%    [Required] - RSK - Structure containing the logger metadata and
+%                       burstData.
+%
+%    [Optional] - channel - Longname of channel to plots, can be multiple
+%                       in a cell, if no value is given it will plot all
+%                       channels. 
 %
 % Output:
-%     hdls - The line object of the plot.
+%     handles - Line object of the plot.
 %
 % Example: 
 %    RSK = RSKopen('sample.rsk');  
-%    RSK = RSKreadburstdata(RSK);  
-%    RSKplotdata(RSK);  
+%    RSK = RSKreadburstdata(RSK, 'channel', {'Conductivity', 'Temperature', 'Pressure'});  
+%    RSKplotburstdata(RSK);  
 %
-% See also: RSKplotthumbnail, RSKplotdata, RSKreadburstdata
+% See also: RSKreadburstdata, RSKplotthumbnail, RSKplotdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-17
+% Last revision: 2017-06-22
 
-field = 'burstdata';
+p = inputParser;
+addRequired(p, 'RSK', @isstruct);
+addParameter(p, 'channel', 'all');
+parse(p, RSK, varargin{:})
+
+RSK = p.Results.RSK;
+channel = p.Results.channel;
+
+
+
+field = 'burstData';
 if ~isfield(RSK, field)
     disp('You must read a section of burst data in first!');
     disp('Use RSKreadburstdata...')
     return
 end
 
-hdls = channelsubplots(RSK, field);
+
+
+chanCol = [];
+if ~strcmp(channel, 'all')
+    channels = cellchannelnames(RSK, channel);
+    for chan = channels
+        chanCol = [chanCol getchannelindex(RSK, chan{1})];
+    end
+end
+
+handles = channelsubplots(RSK, field, 'chanCol', chanCol);
 
 end

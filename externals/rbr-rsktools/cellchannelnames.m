@@ -1,27 +1,29 @@
-function [chanNames] = cellchannelnames(RSK, channel)
+function chanNames = cellchannelnames(RSK, channel)
 
-% cellchannelnames - Makes a cell containing the channel names
+%CELLCHANNELNAMES - Make a cell of the channel names.
 %
-% Syntax:  [chanNames] = cellchannelnames(RSK, channel)
+% Syntax:  [chanNames] = CELLCHANNELNAMES(RSK, channel)
 %
-% cellchannelnames is used to set up channel names before iterating through
-% many different channels of data fields in a for loop. If the channel
-% entry is 'all', all the channel longNames in the structure are put into a
-% cell. If there is only one channel name it simply puts it in a cell and
-% if there is a few channel names they are kept in a cell.
+% Sets up channel names into a cell to facilitate iterating through many
+% different channels for other functions. If the channel argument is 'all',
+% all the channels.longName in the structure are put into a cell. If there
+% is only one channel name, it simply puts it in a cell, and if there are
+% many channel names, they stay in a cell. 
 %
 % Inputs:
-%    RSK - Structure containing some logger metadata.
+%    RSK - Structure containing some logger metadata
 %
-%    channel - channel names or 'all' 
+%    channel - Channel names or 'all'.
 %
 % Output:
-%    chanNames - A cell containing the channel longName to be looped over.
+%    chanNames - Cell containing the channels' longName.
+%
+% See also: RSKplotprofiles, RSKplotdata, RSKsmooth.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-25
+% Last revision: 2017-06-21
 
 if strcmpi(channel, 'all')
     chanNames = {RSK.channels.longName};

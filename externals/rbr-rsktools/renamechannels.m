@@ -1,46 +1,66 @@
 function RSK = renamechannels(RSK)
 
-% renamechannels - Rename channels that require a more descriptive name
+%RENAMECHANNELS - Renames channels that require a more descriptive
+% name, enumerates duplicate channel long names, and replaces the
+% subscript 2 in dissolved oxygen with a normal 2.
 %
-% Syntax:  [RSK] = renamechannels(RSK)
+% Syntax: [RSK] = RENAMECHANNELS(RSK)
 %
-% renamechannels checks for shortnames that correspond to temperature
-% channels that require a more descriptive name because they are not the
-% main temperature channel. These are doxy, temp04, temp05, temp10 and
-% temp13. 
-%
+% Checks for shortNames that correspond to channels that require a
+% more descriptive name and replaces the longName. These are doxy,
+% temp04, temp05, temp10, temp13 and pres08. Enumerates duplicate
+% longNames.  Replaces the subscript '2' in dissolved oxygen with a
+% normal '2'.
+%    
 % Inputs:
-%    RSK - An RSK structure
+%    RSK - Structure containing metadata.
 %
 % Outputs:
-%    RSK - An RSK structure with decriptive unique channel names if
-%      required.
+%    RSK - Structure with decriptive unique channel names if required. 
+%
+% See also: RSKopen.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-25
+% Last revision: 2017-08-15
 
 shortName = {RSK.channels.shortName};
-
-idx = find(strcmpi(shortName, 'temp04'));
-for ndx = 1:length(idx)
-    RSK.channels(idx(ndx)).longName = ['Temperature' num2str(ndx)];
-end
 
 idx = (strcmpi(shortName, 'temp05') | strcmpi(shortName, 'temp10'));
 if any(idx)
     RSK.channels(idx).longName = 'Pressure Gauge Temperature';
 end
 
-
 idx = strcmpi(shortName, 'temp13');
 if any(idx)
     RSK.channels(idx).longName = 'External Cabled Temperature';
 end
 
-idx = strcmpi(shortName, 'doxy09');
+idx = strncmpi(shortName, 'doxy', 4);
 if any(idx)
-    RSK.channels(idx).longName = 'Dissolved O2';
+    [RSK.channels(idx).longName] = deal('Dissolved O2');
 end
+
+idx = strcmpi(shortName, 'pres08');
+if any(idx)
+    RSK.channels(idx).longName = 'Sea Pressure';
+end
+
+
+
+% Enumerate duplicate longnames.
+longname = {RSK.channels.longName};
+[~, ~, channameidx] = unique(longname, 'stable');
+idx = find(hist(channameidx, unique(channameidx))>1);
+
+for ndup = 1:length(idx)
+    k = 1;
+    duplicates = find(channameidx==idx(ndup));
+    for ndx = duplicates'
+        RSK.channels(ndx).longName = [RSK.channels(ndx).longName '' num2str(k)];
+        k = k+1;
+    end
+end
+
 end

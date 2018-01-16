@@ -1,26 +1,25 @@
 function RSK = readheaderskinny(RSK)
 
-% readheaderskinny - read tables that are populated in an 'skinny' file.
+%READHEADERSKINNY - Read populated tables of a 'skinny' file.
 %
-% Syntax:  [RSK] = readheaderskinny(RSK)
+% Syntax:  [RSK] = READHEADERSKINNY(RSK)
 %
-% readheaderskinny is a RSKtools helper function that opens the
-% non-standard populated tables of 'skinny' files. Only to be used by RSKopen.m.
-% If data is available it will also open geodata.
+% Opens the non-standard populated tables of 'skinny' files. Only to be
+% used by RSKopen.m. If metadata is available, it will open geodata.
 %
-% Note: The data is stored in raw bin file, this file type must be opened in
-%     Ruskin in order to read the data.
+% Note: The data is stored in raw bin file, open this file in Ruskin first
+% to read the data. 
 %
 % Inputs:
-%    RSK - 'skinny' file opened using RSKopen.m
+%    RSK - Structure of 'skinny' file opened using RSKopen.m.
 %
 % Outputs:
-%    RSK - Structure containing the logger metadata and thumbnails
+%    RSK - Structure containing logger metadata and thumbnail.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-29
+% Last revision: 2017-06-21
 
 tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
 

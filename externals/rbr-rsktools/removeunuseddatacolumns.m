@@ -1,19 +1,25 @@
 function dataresults = removeunuseddatacolumns(results)
-% removeunuseddatacolumn -  remove tstamp_1 and datasetId if they are
-%        present. They are not used and are not in all data tables.
+
+%REMOVEUNUSEDDATACOLUMNS - Remove data that is unused, if they are present. 
 %
-% Syntax:  [dataresults] = removeunuseddatacolumns(results)
+% Syntax:  [dataresults] = REMOVEUNUSEDDATACOLUMNS(results)
+%
+% Data queries may contain columns that are unnecessary in the RSK
+% structure. These columns are tstamp_1 and datasetId; they are removed if
+% they are present.
 %
 % Inputs:
-%    results - the output from the sql call to the data table
+%    results - Output from the SQL query to a data table.
 %
 % Outputs:
-%    dataresults - The data table without tstamp_1 and datasetId.
+%    dataresults - Data table without tstamp_1 and datasetId.
+%
+% See also: RSKreaddata, RSKreadthumbnail, RSKreadburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-25
+% Last revision: 2017-06-21
 
 dataresults = rmfield(results,'tstamp_1');
 
@@ -21,7 +27,7 @@ names = fieldnames(dataresults);
 fieldmatch = strcmpi(names, 'datasetid');
 
 if sum(fieldmatch)
-    dataresults = rmfield(dataresults, names(fieldmatch)); % get rid of the datasetID column
+    dataresults = rmfield(dataresults, names(fieldmatch));
 end
 
 end

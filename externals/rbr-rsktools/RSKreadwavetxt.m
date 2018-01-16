@@ -1,6 +1,6 @@
 function [RBR] = RSKreadwavetxt(file)
 
-% RSKreadwavetxt - Reads wave data from a Ruskin txt export
+%RSKreadwavetxt - Reads wave data from a Ruskin txt export.
 %
 % Syntax:  RSK = RSKreadwavetxt(file)
 % 
@@ -14,12 +14,10 @@ function [RBR] = RSKreadwavetxt(file)
 % the Ruskin Matlab export. 
 % 
 % Inputs: 
-% 
-%    file - Filename of the text export archive directory to be
-%           read. Note that Ruskin exports a zip file of the folder
-%           containing the metadata and all the data tables, with each data
-%           type (data, burst, events, wave, etc) stored as separately named
-%           csv files.
+%    file - Filename of the text export archive directory to be read. Note
+%           that Ruskin exports a zip file of the folder containing the
+%           metadata and all the data tables, with each data type (data,
+%           burst, events, wave, etc) stored as separately named csv files.
 %
 % Outputs:
 %    RBR - Structure containing the data.
@@ -67,3 +65,5 @@ RBR.channelnames = channelnames;
 RBR.sampletimes = sampletimes;
 RBR.data = data;
 RBR.wavedata = wavedata;
+
+end

@@ -1,31 +1,32 @@
 function   check = iscompatibleversion(RSK, minimumvsnMajor, minimumvsnMinor, minimumvsnPatch)
 
-% iscompatibleversion - Checks that the RSK is equal to or later version
-% than the minimum requiments
+%ISCOMPATIBLEVERSION - Find if version is equal or greater than minimum given.
 %
-% Syntax:  [check] = iscompatibleversion(RSK, vsnMajor, vsnMinor, vsnPatch)
+% Syntax:  [check] = ISCOMPATIBLEVERSION(RSK, minimumvsnMajor, minimumvsnMinor, minimumvsnPatch)
 %
-% compatibleversioncheck returns 1 if the RSK has a version that is equal
-% to or greater than the specific minimum version required
+% Returns a logical index that describes if the RSK version is equal to or
+% greater than the specified minimum version required.
 %
 % Inputs:
 %    RSK - Structure containing the logger metadata and thumbnails
-%          returned by RSKopen.
+%          returned by RSKopen
 %
-%    vsnMajor - The minimum requirement version number of category major.
+%    minimumvsnMajor - Minimum requirement version number of category major
 %
-%    vsnMinor - The minimum requirement version number of category minor.
+%    minimumvsnMinor - Minimum requirement version number of category minor
 %
-%    vsnPatch - The minimum requirement version number of category patch.
+%    minimumvsnPatch - Minimum requirement version number of category patch.
 %
 % Output:
 %    check - A logical index 1, version is compatible; 0, version is
-%            not compatible
+%            not compatible.
+%
+% See also: RSKopen, RSKreadcalibrations.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-03-31
+% Last revision: 2017-06-20
 
 check = 0;
 
@@ -33,9 +34,10 @@ check = 0;
 
 if (vsnMajor > minimumvsnMajor) 
     check = 1;
-elseif (vsnMajor == minimumvsnMajor)&&(vsnMinor > minimumvsnMinor)
+elseif (vsnMajor == minimumvsnMajor) && (vsnMinor > minimumvsnMinor)
     check = 1;
-elseif (vsnMajor == minimumvsnMajor)&&(vsnMinor == minimumvsnMinor)&&(vsnPatch >= minimumvsnPatch)
+elseif (vsnMajor == minimumvsnMajor) && (vsnMinor == minimumvsnMinor) && (vsnPatch >= minimumvsnPatch)
     check = 1;
 end
+
 end

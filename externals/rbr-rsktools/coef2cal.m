@@ -1,24 +1,28 @@
-
 function RSK = coef2cal(RSK)
 
-% COEF2CAL - Combines the coefficients structure to the calibrations structure.
+%COEF2CAL - Combine the coefficients field to the calibrations field.
 %
-% Syntax: [RSK] = coef2cal(RSK)
+% Syntax: [RSK] = COEF2CAL(RSK)
 %
-% coef2cal pivots the coefficients table to combine it with the
-% calibrations table.
+% Pivots the coefficients table to combine it with the calibrations table. 
 %
 % Inputs:
 %    RSK - Structure containing the logger metadata created with versions
-%    RSK v1.13.4 or newer.
+%          RSK v1.13.4 or newer.
 %
 % Outputs:
 %    RSK - Structure containing the logger metadata and thumbnails
 %
+% See also: RSKreadcalibrations.
+%
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2016-03-27
+% Last revision: 2017-06-21
+
+if ~iscompatibleversion(RSK, 1, 13, 4)
+    return
+end
 
 RSK.calibrations = mksqlite(['SELECT `cal`.`calibrationID`,'...
     '`cal`.`channelOrder`,'...

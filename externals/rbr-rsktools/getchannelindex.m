@@ -1,30 +1,32 @@
 function channelIdx = getchannelindex(RSK, channel)
 
-% getchannelindex - Check if channels longNames are in RSK channels field and
-% return the index.
+%GETCHANNELINDEX - Return index of channels.
 %
-% Syntax:  [channelIdx] = getchannelindex(RSK, channel)
+% Syntax:  [channelIdx] = GETCHANNELINDEX(RSK, channel)
 % 
-% A helper function that outputs the channel index in the RSK. If the
-% channel is not in the RSK it returns an error.
+% Finds the channel index in the RSK of the channel longNames given. If the
+% channel is not in the RSK, it returns an error.
 %
 % Inputs:
-%   RSK - the input RSK structure
+%   RSK - RSK structure
 %
-%   channel - The channel longName to be check.
+%   channel - LongName as written in RSK.channels.
 %
 % Outputs:
-%    profileIdx - An array containing the index of channels
+%    channelIdx - Array containing the index of channels.
+%
+% See also: RSKplotdata, RSKsmooth, RSKderivedepth.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-05
+% Last revision: 2017-07-04
 
 if any(strcmpi(channel, {RSK.channels.longName}));
     chanCol = find(strcmpi(channel, {RSK.channels.longName}));
     channelIdx = chanCol(1);
 else
-    error(['The is no ' channel ' channel in this file.']);
-end 
+    error(['There is no ' channel ' channel in this file.']);
+end
+
 end

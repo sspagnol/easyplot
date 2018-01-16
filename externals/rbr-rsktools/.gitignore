@@ -1,5 +1,7 @@
 *~
 *.bak
+*.html
+*.pdf
 testfiles/
 tests/
-
+._*

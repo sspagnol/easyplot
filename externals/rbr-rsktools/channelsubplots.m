@@ -1,40 +1,62 @@
-function hdls = channelsubplots(RSK, field, chanCol)
+function handles = channelsubplots(RSK, field, varargin)
 
-% channelsubplots - check if profiles are present and outputs the profiles
-% if none are provided
+%CHANNELSUBPLOTS - Plot each channel specified in a different subplot.
 %
-% Syntax:  [hdls] = channelsubplots(RSK, field, chanCol)
+% Syntax:  [handles] = CHANNELSUBPLOT(RSK, field, [OPTIONS])
 % 
-% Generate and plots to a subplot for each channel in the chosen field.
+% Generates subplots and plots each channel in the chosen data element.
+% If data has many fields and none are specified, the first one is
+% selected.  
 %
 % Inputs:
-%   RSK - Structure create from an rsk file.
+%   [Required] - RSK - Structure created by a .rsk file
 %
-%   field - The source of the data to plot. Can be 'burstdata',
-%       thumbnailData', or 'data'.
+%                field - Source of the data to plot. Can be
+%                      'burstData', 'thumbnailData', or 'data'.
 %
-%   chanCol - The column number of the channels to be plotted. Only
-%       required if all channel are not ebing plotted.
+%   [Optional] - chanCol - Column number of the channels to plot.
+%                      Default is to plot all channels.
+%
+%                castidx - Data element that will be used to make
+%                      the plot. The default is 1. Note: To compare data
+%                      elements use RSKplotprofiles. 
 %
 % Outputs:
-%    hdls - The line object of the plot.
+%    handles - Line object of the plot.
+%
+% See also: RSKplotthumbnail, RSKplotburstdata, RSKplotdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-16
+% Last revision: 2017-06-19
+
+validFields = {'burstData', 'thumbnailData', 'data'};
+checkField = @(x) any(validatestring(x,validFields));
+
+p = inputParser;
+addRequired(p, 'RSK', @isstruct);
+addRequired(p, 'field', checkField)
+addParameter(p, 'chanCol', [], @isnumeric);
+addParameter(p, 'castidx', 1);
+parse(p, RSK, field, varargin{:})
+
+RSK = p.Results.RSK;
+field = p.Results.field;
+chanCol = p.Results.chanCol;
+castidx = p.Results.castidx;
 
 
-if ~exist('chanCol', 'var')
-    chanCol = 1:size(RSK.(field).values,2);
+
+if isempty(chanCol)
+    chanCol = 1:size(RSK.(field)(castidx).values,2);
 end
-
 numchannels = length(chanCol);
 
 n = 1;
 for chan = chanCol
     subplot(numchannels,1,n)
-    hdls(n) = plot(RSK.(field).tstamp, RSK.(field).values(:,chan),'-');
+    handles(n) = plot(RSK.(field)(castidx).tstamp, RSK.(field)(castidx).values(:,chan),'-');
     title(RSK.channels(chan).longName);
     ylabel(RSK.channels(chan).units);
     ax(n)=gca;

@@ -1,14 +1,12 @@
 function RSK = RSKreadprofiles(RSK, varargin)
 
-% RSKreadprofiles - Read individual profiles (e.g. upcast and
-%                   downcast) from an rsk file.
+%RSKreadprofiles - Read individual casts from RSK SQLite database.
 %
-% Syntax:  RSK = RSKreadprofiles(RSK, profileNum, direction, latency)
+% Syntax:  [RSK] = RSKreadprofiles(RSK, [OPTIONS])
 % 
-% Reads profiles, including up and down casts, from the events
-% contained in an rsk file. The profiles are written as fields in a
-% structure array, divided into upcast and downcast fields, which can
-% be indexed individually.
+% Reads profile, including upcasts, downcasts, or both from the events contained
+% in a .rsk file. Each cast is an element in the data field matrix; that
+% way, they can be indexed individually using RSK.data(index).
 %
 % The profile events are parsed from the events table using the
 % following types (see RSKconstants.m):
@@ -16,97 +14,106 @@ function RSK = RSKreadprofiles(RSK, varargin)
 %   34 - Begin downcast
 %   35 - End of profile cast
 %
-% Currently the function assumes that upcasts and downcasts come in
-% pairs, as would be recorded by a continuously recording
-% logger. Future versions may be better at parsing more complicated
-% deployments, such as thresholds or scheduled profiles.
-% 
 % Inputs: 
-%    RSK - Structure containing the logger data read
-%                     from the RSK file.
+%    [Required] - RSK - Structure containing the logger data read
+%                       from the RSK file.
 %
-%    profileNum - vector identifying the profile numbers to read. This
-%          can be used to read only a subset of all the profiles. Default
-%          is to read all the profiles.
-%
-%    direction - `up` for upcast, `down` for downcast, or `both` for
-%          all. Default is `down`.
-%
-%    latency - the latency, or time lag, in seconds, caused by the slowest
-%          responding sensor. When reading profiles the event times must be
-%          shifted by this value to line up with the data time stamps.
-%          Default is 0.
+%    [Optional] - profile - Vector identifying the profile numbers to
+%                       read. Can be used to read only a subset of all
+%                       the profiles. Default is to read all the profiles. 
+% 
+%                 direction - 'up' for upcast, 'down' for downcast, or
+%                       `both` for all. Default is 'both'.
 %
 % Outputs:
-%    RSK - RSK structure containing individual profiles
+%    RSK - RSK structure containing individual casts as each element in the
+%          data field.
 %
 % Examples:
-%
 %    rsk = RSKopen('profiles.rsk');
 %
 %    % read all profiles
 %    rsk = RSKreadprofiles(rsk);
-%
+%    -OR-
 %    % read selective upcasts
-%    rsk = RSKreadprofiles(rsk, [1 3 10], 'up');
+%    rsk = RSKreadprofiles(rsk, 'profile', [1 3 10], 'direction', 'up');
 %
-% See also: RSKreaddata, RSKfindprofiles, RSKplotprofiles
+% See also: RSKfindprofiles, RSKplotprofiles.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-08
-%% Parse Inputs
+% Last revision: 2017-07-06
+
 validDirections = {'down', 'up', 'both'};
 checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addOptional(p, 'profileNum', [], @isnumeric);
-addOptional(p, 'direction', 'down', checkDirection);
-addOptional(p, 'latency', 0, @isnumeric);
+addParameter(p, 'profile', [], @isnumeric);
+addParameter(p, 'direction', 'both', checkDirection);
 parse(p, RSK, varargin{:})
 
-% Assign each input argument
 RSK = p.Results.RSK;
-profileNum = p.Results.profileNum;
-direction = p.Results.direction;
-latency = p.Results.latency;
+profile = p.Results.profile;
+direction = {p.Results.direction};
 
-%%
+
+
 if ~isfield(RSK, 'profiles') 
-    error('No profiles in this RSK, try RSKfindprofiles');
+    error('No profiles in this RSK, try RSKreaddata or RSKfindprofiles');
 end
-
-if strcmpi(direction, 'both')
+if strcmpi(direction{1}, 'both')
     direction = {'down', 'up'};
-else
-    direction = {direction};
 end
 
+
+
+alltstart = [];
+alltend = [];
 for dir = direction
     castdir = [dir{1} 'cast'];
-    
-    if isempty(profileNum)
-        profileIdx = 1:min([length(RSK.profiles.(castdir).tstart), length(RSK.profiles.(castdir).tend)]);
-    else 
-        profileIdx = sort(profileNum, 'ascend');
-    end
-    
-    RSK.profiles.(castdir).data = [];
-    castndx = 1;
-    for ndx=profileIdx
-        tstart = RSK.profiles.(castdir).tstart(ndx) - latency/86400;
-        tend = RSK.profiles.(castdir).tend(ndx) - latency/86400;
-        tmp = RSKreaddata(RSK, tstart, tend);
-        RSK.profiles.(castdir).data(castndx).tstamp = tmp.data.tstamp;
-        RSK.profiles.(castdir).data(castndx).values = tmp.data.values;
-        castndx = castndx + 1;
-    end
-    RSK.profiles.(castdir).profileIndex = profileIdx;
+    alltstart = [alltstart; RSK.profiles.(castdir).tstart];
+    alltend = [alltend; RSK.profiles.(castdir).tend];
+end
+alltstart = sort(alltstart);
+alltend = sort(alltend);
+
+RSK.profiles.order = direction;
+profilecast = size(RSK.profiles.order, 2);
+if profilecast == 2 && (alltstart(1) == RSK.profiles.upcast.tstart(1))
+    RSK.profiles.order = {'up', 'down'};
 end
 
-RSK.instrumentChannels = tmp.instrumentChannels;
-RSK.channels = tmp.channels;
+
+
+if ~isempty(profile)
+    if max(profile) > length(alltstart)/profilecast
+        disp('The profile selected is greater than the total amount of profiles in this file.');
+        return
+    end
+    if profilecast == 2
+        castidx = [(profile*2)-1 profile*2];
+        castidx = sort(castidx);
+    else
+        castidx = profile;
+    end
+else
+    castidx = 1:length(alltstart);
+end
+RSK.profiles.originalindex = castidx;
+
+k = 1;
+data(length(castidx)).tstamp = [];
+data(length(castidx)).values = [];
+for ndx = castidx
+    tmp = RSKreaddata(RSK, 't1', alltstart(ndx), 't2', alltend(ndx));
+    data(k).tstamp = tmp.data.tstamp;
+    data(k).values = tmp.data.values;
+    k = k + 1;
+end
+
+RSK = readchannels(RSK);
+RSK.data = data;
 
 end

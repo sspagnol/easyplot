@@ -1,33 +1,37 @@
 function RSK = addchannelmetadata(RSK, longName, units)
 
-% addchannelmetadata - Add a the metadata for a new channel in the RSK.
+%ADDCHANNELMETADATA - Add the metadata for a new channel.
 %
-% Syntax:  [RSK] = addchannelmetadata(RSK, longName, units)
+% Syntax:  [RSK] = ADDCHANNELMETADATA(RSK, longName, units)
 % 
-% A helper function that adds all the metadata associated with a new
-% channel. Includes updating channels and instrumentsChannels.
+% Adds all the metadata associated with a new channel in the fields,
+% channels and instrumentsChannels, of the RSK structure.
 %
 % Inputs:
-%   RSK - the input RSK structure.
+%   RSK - Input RSK structure
 %
-%   longName - The name of the new channel.
+%   longName - Full name of the new channel
 %            
-%   units - The units of the new channel. 
+%   units - Units of the new channel. 
 %
 % Outputs:
-%    RSK - the RSK structure containing new channel metadata
+%    RSK - RSK structure containing new channel metadata.
+%
+% See also: RSKderivedepth, RSKderiveseapressure, RSKderivesalinity.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-05-05
+% Last revision: 2017-06-21
 
-hasChan = any(strcmp({RSK.channels.longName}, longName));
+hasChan = any(strcmpi({RSK.channels.longName}, longName));
+
 if ~hasChan
     nchannels = length(RSK.channels);
     RSK.channels(nchannels+1).longName = longName;
     RSK.channels(nchannels+1).units = units;
-    % update the instrumentChannels info for the new "channel"
+    
+    
     if isfield(RSK, 'instrumentChannels')
         if isfield(RSK.instrumentChannels, 'instrumentID')
             RSK.instrumentChannels(nchannels+1).instrumentID = RSK.instrumentChannels(1).instrumentID;

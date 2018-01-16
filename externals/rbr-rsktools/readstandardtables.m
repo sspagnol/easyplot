@@ -1,26 +1,25 @@
 function RSK = readstandardtables(RSK)
 
-% readstandardtables - read tables that are always populated.
+%READSTANDARDTABLES- Read tables that are populated in all .rsk files.
 %
-% Syntax:  [RSK] = readstandardtables(RSK)
+% Syntax:  [RSK] = READSTANDARDTABLES(RSK)
 %
-% readstandardtables is a RSKtools helper function that opens the tables
-% that are populated in any file
-% These tables are channels, epochs, schedules, deployments and
-% instruments.
+% Opens the tables that are populated in any file. These tables are
+% channels, epochs, schedules, deployments and instruments.
 %
 % Inputs:
-%    RSK - A RSK structure
+%    RSK - Structure opened using RSKopen.m.
 %
 % Outputs:
-%    RSK - Structure containing the standard tables
+%    RSK - Structure containing the standard tables.
+%
+% See also: RSKopen.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-03-31
+% Last revision: 2017-06-21
 
-%% Tables that are definitely in all files
 RSK = readchannels(RSK);
 
 RSK.epochs = mksqlite('select deploymentID,startTime/1.0 as startTime, endTime/1.0 as endTime from epochs');
