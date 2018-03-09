@@ -257,11 +257,13 @@ function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
 % 15/09/17: Fixed issue #210: initialize alpha map to ones instead of zeros when -transparent is not used
 % 18/09/17: Added -font_space option to replace font-name spaces in EPS/PDF (workaround for issue #194)
 % 18/09/17: Added -noinvert option to solve some export problems with some graphic cards (workaround for issue #197)
-% 08/11/17: Fixed issue #220: exponent is removed in HG1 when TickMode is 'manual' (internal Matlab bug)
+% 08/11/17: Fixed issue #220: axes exponent is removed in HG1 when TickMode is 'manual' (internal Matlab bug)
 % 08/11/17: Fixed issue #221: alert if the requested folder does not exist
 % 19/11/17: Workaround for issue #207: alert when trying to use transparent bgcolor with -opengl
 % 29/11/17: Workaround for issue #206: warn if exporting PDF/EPS for a figure that contains an image
 % 11/12/17: Fixed issue #230: use OpenGL renderer when exported image contains transparency (also see issue #206)
+% 30/01/18: Updated SVG message to point to https://github.com/kupiqu/plot2svg and display user-selected filename if available
+% 27/02/18: Fixed issue #236: axes exponent cropped from output if on right-hand axes
 %}
 
     if nargout
@@ -1007,9 +1009,10 @@ function [fig, options] = parse_args(nout, fig, varargin)
                         options.im = true;
                         options.alpha = true;
                     case 'svg'
+                        filename = strrep(options.name,'export_fig_out','filename');
                         msg = ['SVG output is not supported by export_fig. Use one of the following alternatives:\n' ...
-                               '  1. saveas(gcf,''filename.svg'')\n' ...
-                               '  2. plot2svg utility: http://github.com/jschwizer99/plot2svg\n' ...
+                               '  1. saveas(gcf,''' filename '.svg'')\n' ...
+                               '  2. plot2svg utility: https://github.com/kupiqu/plot2svg\n' ...  % Note: replaced defunct https://github.com/jschwizer99/plot2svg with up-to-date fork on https://github.com/kupiqu/plot2svg
                                '  3. export_fig to EPS/PDF, then convert to SVG using generic (non-Matlab) tools\n'];
                         error(sprintf(msg)); %#ok<SPERR>
                     case 'update'
@@ -1128,9 +1131,10 @@ function [fig, options] = parse_args(nout, fig, varargin)
                             return
                         end
                     case '.svg'
+                        filename = strrep(options.name,'export_fig_out','filename');
                         msg = ['SVG output is not supported by export_fig. Use one of the following alternatives:\n' ...
-                               '  1. saveas(gcf,''filename.svg'')\n' ...
-                               '  2. plot2svg utility: http://github.com/jschwizer99/plot2svg\n' ...
+                               '  1. saveas(gcf,''' filename '.svg'')\n' ...
+                               '  2. plot2svg utility: https://github.com/kupiqu/plot2svg\n' ...  % Note: replaced defunct https://github.com/jschwizer99/plot2svg with up-to-date fork on https://github.com/kupiqu/plot2svg
                                '  3. export_fig to EPS/PDF, then convert to SVG using generic (non-Matlab) tools\n'];
                         error(sprintf(msg)); %#ok<SPERR>
                     otherwise
@@ -1362,7 +1366,12 @@ function set_tick_mode(Hlims, ax)
             props = {[ax 'TickMode'],'manual', [ax 'TickLabelMode'],'manual'};
             tickVals = get(hAxes,[ax 'Tick']);
             tickStrs = get(hAxes,[ax 'TickLabel']);
-            if isempty(strtrim(hAxes.([ax 'Ruler']).SecondaryLabel.String))
+            try % Fix issue #236
+                exponents = [hAxes.([ax 'Axis']).SecondaryLabel];
+            catch
+                exponents = [hAxes.([ax 'Ruler']).SecondaryLabel];
+            end
+            if isempty([exponents.String])
                 % Fix for issue #205 - only set manual ticks when the Ticks number match the TickLabels number
                 if numel(tickVals) == numel(tickStrs)
                     set(hAxes, props{:});  % no exponent and matching ticks, so update both ticks and tick labels to manual
