@@ -44,7 +44,7 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-04
+% Last revision: 2017-11-23
 
 validDirections = {'down', 'up'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -89,7 +89,7 @@ end
 
 
 [binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction);
-samplesinbin = NaN(maxlength, length(binArray)-1);
+samplesinbin = NaN(length(binArray)-1,1);
 k = 1;
 for ndx = castidx
     X = [RSK.data(ndx).tstamp, RSK.data(ndx).values];
@@ -97,14 +97,14 @@ for ndx = castidx
     
     for bin=1:length(binArray)-1
         binidx = findbinindices(Y(:,k), binArray(bin), binArray(bin+1));
-        samplesinbin(:,bin) = binidx;
+        samplesinbin(bin,1) = sum(binidx);
         binnedValues(bin,:) = nanmean(X(binidx,:),1);
     end
     
     RSK.data(ndx).values = binnedValues(:,2:end);
     RSK.data(ndx).samplesinbin = samplesinbin;
     if binbytime
-        RSK.data(ndx).tstamp = binCenter;
+        RSK.data(ndx).tstamp = binnedValues(:,1);
     else
         RSK.data(ndx).tstamp = binnedValues(:,1);
         RSK.data(ndx).values(:,chanCol) = binCenter;
@@ -114,7 +114,11 @@ end
 
 
 
-unit = RSK.channels(chanCol).units;
+if binbytime, 
+    unit = 'tstamp';
+else
+    unit = RSK.channels(chanCol).units;
+end
 logdata = logentrydata(RSK, profile, direction);
 logentry = sprintf('Binned with respect to %s using [%s] boundaries with %s %s bin size on %s.', binBy, num2str(boundary), num2str(binSize), unit, logdata);
 RSK = RSKappendtolog(RSK, logentry);

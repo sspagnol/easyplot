@@ -21,7 +21,7 @@ function RSK = readheaderskinny(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-06-21
 
-tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if any(strcmpi({tables.name}, 'geodata'))
     RSK = RSKreadgeodata(RSK);

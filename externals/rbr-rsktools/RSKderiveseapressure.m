@@ -33,8 +33,12 @@ RSK = p.Results.RSK;
 patm = p.Results.patm;
 
 
+try
+    Pcol = getchannelindex(RSK, 'Pressure');
+catch
+    Pcol = getchannelindex(RSK, 'BPR pressure');
+end
 
-Pcol = getchannelindex(RSK, 'Pressure');
 if isempty(patm)
     patm = getatmosphericpressure(RSK);
 end

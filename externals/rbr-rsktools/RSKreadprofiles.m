@@ -1,12 +1,14 @@
 function RSK = RSKreadprofiles(RSK, varargin)
 
-%RSKreadprofiles - Read individual casts from RSK SQLite database.
+% RSKreadprofiles - Read individual casts from RSK SQLite database or
+% existing RSK.data field.
 %
 % Syntax:  [RSK] = RSKreadprofiles(RSK, [OPTIONS])
 % 
-% Reads profile, including upcasts, downcasts, or both from the events contained
-% in a .rsk file. Each cast is an element in the data field matrix; that
-% way, they can be indexed individually using RSK.data(index).
+% Reads profile, including upcasts, downcasts, or both from the events 
+% contained in a .rsk file. Each cast is an element in the data field 
+% matrix. The cast direction is indicated as 'up' or 'down' in 
+% RSK.data.direction.
 %
 % The profile events are parsed from the events table using the
 % following types (see RSKconstants.m):
@@ -43,7 +45,7 @@ function RSK = RSKreadprofiles(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-06
+% Last revision: 2017-11-22
 
 validDirections = {'down', 'up', 'both'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -103,17 +105,50 @@ else
 end
 RSK.profiles.originalindex = castidx;
 
+dir2fill = cell(length(castidx),1); % append data.direction to each cast
+if size(RSK.profiles.order, 2) == 1
+    dir2fill(:) = direction;
+    pronum2fill = castidx;
+else
+    dir2fill(1:2:end) = RSK.profiles.order(1);
+    dir2fill(2:2:end) = RSK.profiles.order(2);
+    pronum2fill = reshape(repmat(castidx(1:length(castidx)/2), 2, 1),length(castidx),1);
+end
+
 k = 1;
 data(length(castidx)).tstamp = [];
 data(length(castidx)).values = [];
+data(length(castidx)).direction = [];
+data(length(castidx)).profilenumber = [];
+
 for ndx = castidx
-    tmp = RSKreaddata(RSK, 't1', alltstart(ndx), 't2', alltend(ndx));
-    data(k).tstamp = tmp.data.tstamp;
-    data(k).values = tmp.data.values;
+    
+    if isfield(RSK, 'data')
+        ind_start = (find(RSK.data.tstamp == alltstart(ndx)));
+        ind_end = (find(RSK.data.tstamp == alltend(ndx)));
+        
+        if isempty(ind_start) || isempty(ind_end)
+            tmp = RSKreaddata(RSK, 't1', alltstart(ndx), 't2', alltend(ndx));
+            data(k).tstamp = tmp.data.tstamp;
+            data(k).values = tmp.data.values;
+        else
+            data(k).tstamp = RSK.data.tstamp(ind_start:ind_end);
+            data(k).values = RSK.data.values(ind_start:ind_end,:);
+        end
+        
+    else
+        tmp = RSKreaddata(RSK, 't1', alltstart(ndx), 't2', alltend(ndx));
+        data(k).tstamp = tmp.data.tstamp;
+        data(k).values = tmp.data.values;
+    end
+
+    data(k).direction = dir2fill{k};
+    data(k).profilenumber = pronum2fill(k);
     k = k + 1;
+    
 end
 
-RSK = readchannels(RSK);
+if ~isfield(RSK, 'data'), RSK = readchannels(RSK); end
 RSK.data = data;
 
 end

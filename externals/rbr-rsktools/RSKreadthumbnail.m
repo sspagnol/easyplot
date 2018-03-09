@@ -22,8 +22,14 @@ function RSK = RSKreadthumbnail(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-06-22
 
+p = inputParser;
+addRequired(p, 'RSK', @isstruct);
+parse(p, RSK);
+
+RSK = p.Results.RSK;
+
 sql = 'select tstamp/1.0 as tstamp, * from thumbnailData order by tstamp';
-results = mksqlite(sql);
+results = doSelect(RSK, sql);
 if isempty(results)
     return
 end

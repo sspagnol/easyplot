@@ -46,6 +46,9 @@ for ndx = castidx
     RSK.data(ndx).values(:,Scol) = salinity;
 end
 
+logentry = ('Practical Salinity derived using TEOS-10 GSW toolbox.');
+RSK = RSKappendtolog(RSK, logentry);
+
 end
 
 

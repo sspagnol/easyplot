@@ -85,11 +85,11 @@ end
 
     % write fix to file
     %     try
-    %         mksqlite('begin');
-    %         mksqlite(['INSERT INTO `dbInfo` VALUES ("' v '","' type '")']);
-    %         mksqlite('commit');
+    %         doSelect(RSK, 'begin');
+    %         doSelect(RSK, ['INSERT INTO `dbInfo` VALUES ("' v '","' type '")']);
+    %         doSelect(RSK, 'commit');
     %     catch
-    %         mksqlite('rollback');
+    %         doSelect(RSK, 'rollback');
     %     end
-    %     RSK.dbInfo = mksqlite('select version,type from dbInfo');
+    %     RSK.dbInfo = doSelect(RSK, 'select version,type from dbInfo');
     end

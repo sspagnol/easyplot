@@ -22,10 +22,10 @@ function RSK = readparameters(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-06-21
 
-RSK.parameters = mksqlite('select * from parameters');
+RSK.parameters = doSelect(RSK, 'select * from parameters');
 
 if iscompatibleversion(RSK, 1, 13, 4)
-    RSK.parameterKeys = mksqlite('select * from parameterKeys'); 
+    RSK.parameterKeys = doSelect(RSK, 'select * from parameterKeys'); 
     if length(RSK.parameters) > 1
         [~, currentidx] = max([RSK.parameters.tstamp]);
         currentparamId = RSK.parameters(currentidx).parameterID;

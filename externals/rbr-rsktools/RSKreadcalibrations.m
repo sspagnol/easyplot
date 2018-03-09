@@ -33,8 +33,8 @@ end
 % As of RSK v1.13.4 coefficients is it's own table. We add it back into calibration to be consistent with previous versions.
 RSK = coef2cal(RSK);
 if ~iscompatibleversion(RSK, 1, 13, 4)
-    RSK.calibrations = mksqlite('select * from calibrations');
-    tstampstruct = mksqlite('select `tstamp`/1.0 as tstamp from calibrations');
+    RSK.calibrations = doSelect(RSK, 'select * from calibrations');
+    tstampstruct = doSelect(RSK, 'select `tstamp`/1.0 as tstamp from calibrations');
     for ndx = 1:length(RSK.calibrations)
         RSK.calibrations(ndx).tstamp = RSKtime2datenum(tstampstruct(ndx).tstamp);
 

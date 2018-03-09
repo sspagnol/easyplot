@@ -59,7 +59,7 @@ end
 
 
 
-logentry = ['Velocity calculated from depth filtered with a windowLength of ' num2str(windowLength) ' samples.'];
+logentry = ['Profiling velocity calculated from depth filtered with a windowLength of ' num2str(windowLength) ' samples.'];
 RSK = RSKappendtolog(RSK, logentry);
 end
 

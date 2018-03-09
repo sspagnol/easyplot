@@ -9,7 +9,8 @@ function RSK = RSKfindprofiles(RSK, varargin)
 % upcasts or downcasts by looking for pressure reversals.  The
 % algorithm distinguishes between upcasts and downcasts, and stores
 % the start and end time for each as 'tstart' and 'tend' in the
-% profile field of the RSK structure.
+% profile field of the RSK structure. If RSK.profiles already exists, it
+% will be removed and replaced.
 %
 % Inputs: 
 %    [Required] - RSK - Structure containing logger metadata and data
@@ -40,7 +41,7 @@ function RSK = RSKfindprofiles(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-05
+% Last revision: 2017-11-22
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -55,7 +56,7 @@ conductivityThreshold = p.Results.conductivityThreshold;
 
 
 if isfield(RSK, 'profiles')
-    error('Profiles are already found, get data using RSKreadprofiles.m');
+    RSK = rmfield(RSK, 'profiles');
 end
 
 

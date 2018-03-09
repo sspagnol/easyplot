@@ -1,6 +1,6 @@
 function handles = RSKplotthumbnail(RSK, varargin)
 
-%RSKplotthumbnail - Plot summaries of logger data thumbnail.
+% RSKplotthumbnail - Plot summaries of logger data thumbnail.
 %
 % Syntax:  [handles] = RSKplotthumbnail(RSK, [OPTIONS])
 % 
@@ -29,7 +29,7 @@ function handles = RSKplotthumbnail(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-22
+% Last revision: 2018-01-24
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -45,6 +45,9 @@ field = 'thumbnailData';
 if ~isfield(RSK,field)
     disp('You must read a section of thumbnailData in first!');
     disp('Use RSKreadthumbnail...')
+    disp('Note that thumbnail data may not be supported in future release.')
+    disp('We recommend users to use RSKreaddownsample and RSKplotdownsample.')
+    handles = NaN;
     return
 end
 

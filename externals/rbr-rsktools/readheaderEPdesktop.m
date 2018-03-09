@@ -35,14 +35,14 @@ end
 
 
 %% Tables that may or may not be in file
-tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if any(strcmpi({tables.name}, 'geodata'))
     RSK = RSKreadgeodata(RSK);
 end
 
 if any(strcmpi({tables.name}, 'appSettings'))
-    RSK.appSettings = mksqlite('select * from appSettings');  
+    RSK.appSettings = doSelect(RSK, 'select * from appSettings');  
 end
 
 end

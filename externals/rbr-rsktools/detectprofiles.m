@@ -1,4 +1,4 @@
-function wwevt = detectprofiles(pressure, timestamp, conductivity, profileThreshold, conductivityThreshold)
+function wwevt = detectprofiles(pressure, timestamp, conductivity, pressureThreshold, conductivityThreshold)
 
 %DETECTPROFILES - Implement the logger profile detection algorithm.
 %
@@ -17,7 +17,7 @@ function wwevt = detectprofiles(pressure, timestamp, conductivity, profileThresh
 %    conductivity - Time series. Optional, if no conductivity data use []
 %   
 %    pressureThreshold - Pressure difference required to detect a
-%               profile. Standard is 3dbar, or 1/4(max(pressure)-min(pressure).
+%               profile. Standard is 3dbar, or 0.05*(max(pressure)-min(pressure).
 %
 %    conductivityThreshold - Conductivity value that indicates the
 %               sensor is out of water. Typically 0.05 mS/cm is very good. If the
@@ -33,7 +33,7 @@ function wwevt = detectprofiles(pressure, timestamp, conductivity, profileThresh
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-20
+% Last revision: 2017-11-14
 
 %% Set up
 detectcaststate = 0; % 0 unknown, 1 down, 2 up
@@ -42,68 +42,68 @@ hasC = ~isempty(conductivity);
 
 
 %% The Profile Detection
-k=1;
+k = 1;
 klast = k;
-n=1;
-maxpressure=pressure(1);
-minpressure=pressure(1);
+n = 1;
+maxpressure = pressure(1);
+minpressure = pressure(1);
 wwevt = zeros(1,2);
-while(k<length(timestamp))
+while(k < length(timestamp))
     %
     % profile detection part
-    evt=0; % 0 nothing new 1 we are descending 2 we are ascending
-    if hasC && conductivity(k)<conductivityThreshold
-        evt=3;
-        minpressure=pressure(k);
+    evt = 0; % 0 nothing new 1 we are descending 2 we are ascending
+    if hasC && conductivity(k) < conductivityThreshold
+        evt = 3;
+        minpressure = pressure(k);
     else
         
         switch  detectcaststate
 
             case 0   % unknown
-                if (pressure(k)>maxpressure)
-                    maxpressure=pressure(k);
-                    if (maxpressure-minpressure>profileThreshold)
-                        detectcaststate=1;
-                        evt=1;
+                if (pressure(k) > maxpressure)
+                    maxpressure = pressure(k);
+                    if (maxpressure - minpressure > pressureThreshold)
+                        detectcaststate = 1;
+                        evt = 1;
                     end
                 end
-                if (pressure(k)<minpressure)
-                    minpressure=pressure(k);
-                    if (maxpressure-minpressure>13)
-                        detectcaststate=2;
-                        evt=2;
+                if (pressure(k) < minpressure)
+                    minpressure = pressure(k);
+                    if (maxpressure - minpressure > pressureThreshold)
+                        detectcaststate = 2;
+                        evt = 2;
                     end
                 end
 
             case 1   % down
-                if (pressure(k)>maxpressure)
-                    maxpressure=pressure(k);
+                if (pressure(k) > maxpressure)
+                    maxpressure = pressure(k);
                 end
-                if (pressure(k)<minpressure)
-                    minpressure=pressure(k);
+                if (pressure(k) < minpressure)
+                    minpressure = pressure(k);
                 end
-                if (maxpressure-pressure(k)>max(profileThreshold, 0.05*(maxpressure-minpressure))) % we are going up, set by profile detection algorithm
-                    detectcaststate=2;
-                    evt=2;
-                    minpressure=pressure(k);
+                if (maxpressure - pressure(k) > max(pressureThreshold, 0.05*(maxpressure - minpressure))) % we are going up, set by profile detection algorithm
+                    detectcaststate = 2;
+                    evt = 2;
+                    minpressure = pressure(k);
                 else
-                    detectcaststate=1;  
+                    detectcaststate = 1;  
                 end
 
 
             case 2   % up
-                if (pressure(k)>maxpressure)
-                    maxpressure=pressure(k);
+                if (pressure(k) > maxpressure)
+                    maxpressure = pressure(k);
                 end
-                if (pressure(k)<minpressure)
-                    minpressure=pressure(k);
+                if (pressure(k) < minpressure)
+                    minpressure = pressure(k);
                 end
-                if (pressure(k)-minpressure>max(profileThreshold, 0.05*(maxpressure-minpressure))) % we are going down, set by profile detection algorithm
-                    detectcaststate=1;
-                    evt=1;
-                    maxpressure=pressure(k);
+                if (pressure(k) - minpressure > max(pressureThreshold, 0.05*(maxpressure - minpressure))) % we are going down, set by profile detection algorithm
+                    detectcaststate = 1;
+                    evt= 1;
+                    maxpressure = pressure(k);
                 else
-                    detectcaststate=2;
+                    detectcaststate = 2;
                 end
 
         end

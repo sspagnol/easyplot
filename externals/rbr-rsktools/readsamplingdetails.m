@@ -33,7 +33,7 @@ if iscompatibleversion(RSK, 1, 13, 8)
         modetable = mode;
     end
 
-    RSK.(modetable) = mksqlite(['select * from ' modetable]);
+    RSK.(modetable) = doSelect(RSK, ['select * from ' modetable]);
 end
 
 end

@@ -21,7 +21,7 @@ function RSK = readheaderEP(RSK)
 % Last revision: 2017-07-10
 
 %% Tables that could be populated in 'EasyParse'
-tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if any(strcmpi({tables.name}, 'geodata'))
     RSK = RSKreadgeodata(RSK);

@@ -37,13 +37,13 @@ UTCdelta = p.Results.UTCdelta;
 
 
 
-RSK.geodata = mksqlite('select tstamp/1.0 as tstamp, latitude, longitude, accuracy, accuracyType from geodata');
+RSK.geodata = doSelect(RSK, 'select tstamp/1.0 as tstamp, latitude, longitude, accuracy, accuracyType from geodata');
 if isempty(RSK.geodata)
     RSK = rmfield(RSK, 'geodata');
     return;
 elseif strcmpi(p.UsingDefaults, 'UTCdelta')
     try
-        tmp = mksqlite('select UTCdelta/1.0 as UTCdelta from epoch');
+        tmp = doSelect(RSK, 'select UTCdelta/1.0 as UTCdelta from epoch');
         UTCdelta = tmp.UTCdelta;
         RSK.epochs.UTCdelta = UTCdelta;
     catch

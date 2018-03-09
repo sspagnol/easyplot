@@ -31,15 +31,15 @@ function handles = channelsubplots(RSK, field, varargin)
 % Website: www.rbr-global.com
 % Last revision: 2017-06-19
 
-validFields = {'burstData', 'thumbnailData', 'data'};
+validFields = {'burstData', 'thumbnailData', 'data','downsample'};
 checkField = @(x) any(validatestring(x,validFields));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'field', checkField)
+addRequired(p, 'field', checkField);
 addParameter(p, 'chanCol', [], @isnumeric);
 addParameter(p, 'castidx', 1);
-parse(p, RSK, field, varargin{:})
+parse(p, RSK, field, varargin{:});
 
 RSK = p.Results.RSK;
 field = p.Results.field;
@@ -60,11 +60,11 @@ for chan = chanCol
     title(RSK.channels(chan).longName);
     ylabel(RSK.channels(chan).units);
     ax(n)=gca;
-    datetick('x')
-    n = n+1 ;
+    datetick('x');
+    n = n+1;
 end
 
-linkaxes(ax,'x')
+linkaxes(ax,'x');
 shg
 
 end

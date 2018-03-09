@@ -58,7 +58,7 @@ t2 = datenum2RSKtime(t2);
 
 
 sql = ['select tstamp/1.0 as tstamp,* from burstData where tstamp/1.0 between ' num2str(t1) ' and ' num2str(t2) ' order by tstamp'];
-results = mksqlite(sql);
+results = doSelect(RSK, sql);
 if isempty(results)
     disp('No burstData found in that interval')
     return

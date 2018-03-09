@@ -8,33 +8,43 @@ function RSK = renamechannels(RSK)
 %
 % Checks for shortNames that correspond to channels that require a
 % more descriptive name and replaces the longName. These are doxy,
-% temp04, temp05, temp10, temp13 and pres08. Enumerates duplicate
-% longNames.  Replaces the subscript '2' in dissolved oxygen with a
-% normal '2'.
+% temp04, temp05, temp10, temp11, temp13 and pres08. Enumerates
+% duplicate longNames.  Replaces the subscript '2' in dissolved oxygen
+% with a normal '2'.
 %    
 % Inputs:
 %    RSK - Structure containing metadata.
 %
 % Outputs:
-%    RSK - Structure with decriptive unique channel names if required. 
+%    RSK - Structure with modified channel long names. 
 %
 % See also: RSKopen.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-08-15
+% Last revision: 2017-11-01
 
 shortName = {RSK.channels.shortName};
 
 idx = (strcmpi(shortName, 'temp05') | strcmpi(shortName, 'temp10'));
 if any(idx)
-    RSK.channels(idx).longName = 'Pressure Gauge Temperature';
+    [RSK.channels(idx).longName] = deal('Pressure Gauge Temperature');
+end
+
+idx = (strcmpi(shortName, 'temp11') | strcmpi(shortName, 'temp22'));
+if any(idx)
+    [RSK.channels(idx).longName] = deal('CT Cell Temperature');
 end
 
 idx = strcmpi(shortName, 'temp13');
 if any(idx)
-    RSK.channels(idx).longName = 'External Cabled Temperature';
+    [RSK.channels(idx).longName] = deal('External Cabled Temperature');
+end
+
+idx = strcmpi(shortName, 'temp16');
+if any(idx)
+    [RSK.channels(idx).longName] = deal('Optode Temperature');
 end
 
 idx = strncmpi(shortName, 'doxy', 4);
@@ -44,7 +54,7 @@ end
 
 idx = strcmpi(shortName, 'pres08');
 if any(idx)
-    RSK.channels(idx).longName = 'Sea Pressure';
+    [RSK.channels(idx).longName] = deal('Sea Pressure');
 end
 
 

@@ -1,6 +1,6 @@
 function im = RSKplot2D(RSK, channel, varargin)
 
-%RSKplot2D - Plot profiles in a 2D plot.
+% RSKplot2D - Plot profiles in a 2D plot.
 %
 % Syntax:  [im] = RSKplot2D(RSK, channel, [OPTIONS])
 % 
@@ -20,10 +20,10 @@ function im = RSKplot2D(RSK, channel, varargin)
 %   [Optional] - profile - Profile numbers to plot. Default is to use all
 %                      available profiles.  
 %
-%                 direction - 'up' for upcast, 'down' for downcast. Default
+%                direction - 'up' for upcast, 'down' for downcast. Default
 %                      is down.
 %
-%                 reference - Channel that will be plotted as y. Default
+%                reference - Channel that will be plotted as y. Default
 %                      'Sea Pressure', can be any other channel.
 %
 % Output:
@@ -85,7 +85,7 @@ ylabel(cb, RSK.channels(chanCol).units)
 h = title(sprintf('%s', RSK.channels(chanCol).longName));
 p = get(h,'Position');
 set(h, 'Position', [t(end) p(2) p(3)], 'HorizontalAlignment', 'right')
-text(t(1), p(2)-0.5, sprintf('[%s - %s]', datestr(t(1), 'mmmm dd HH:MM'), datestr(t(end),'mmmm dd HH:MM')));
+% text(t(1), p(2)-0.5, sprintf('[%s - %s]', datestr(t(1), 'mmmm dd HH:MM'), datestr(t(end),'mmmm dd HH:MM')));
 set(gcf, 'Position', [1 1 800 450]);
 datetick('x', 'HH', 'keepticks')
 axis tight

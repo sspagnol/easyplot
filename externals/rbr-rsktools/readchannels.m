@@ -10,7 +10,7 @@ function RSK = readchannels(RSK)
 % EPdesktop file, and enumerates duplicate channel names.
 %
 % Inputs:
-%    RSK - RSK structure.
+%    RSK - Structure opened using RSKopen.m.
 %
 % Outputs:
 %    RSK - Structure containing channels.
@@ -22,18 +22,25 @@ function RSK = readchannels(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-07-10
 
-tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
+
+p = inputParser;
+addRequired(p, 'RSK', @isstruct);
+parse(p, RSK);
+
+RSK = p.Results.RSK;
+
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if any(strcmpi({tables.name}, 'instrumentChannels'))
-    RSK.instrumentChannels = mksqlite('select * from instrumentChannels');
-    RSK.channels = mksqlite(['SELECT c.shortName as shortName,'...
+    RSK.instrumentChannels = doSelect(RSK, 'select * from instrumentChannels');
+    RSK.channels = doSelect(RSK, ['SELECT c.shortName as shortName,'...
                         'c.longName as longName,'...
                         'c.units as units '... 
                         'FROM instrumentChannels ic '... 
                         'JOIN channels c ON ic.channelID = c.channelID '...
                         'ORDER by ic.channelOrder']);
 else
-    RSK.channels = mksqlite('SELECT shortName, longName, units FROM channels ORDER by channels.channelID');
+    RSK.channels = doSelect(RSK, 'SELECT shortName, longName, units FROM channels ORDER by channels.channelID');
 end
 
 RSK = removenonmarinechannels(RSK);

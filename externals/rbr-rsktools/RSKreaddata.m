@@ -23,6 +23,7 @@ function RSK = RSKreaddata(RSK, varargin)
 %
 %    [Optional] - t1 - Start time for range of data to be read, specified
 %                       using the MATLAB datenum format. 
+%
 %                 t2 - End time for range of data to be read, specified
 %                       using the MATLAB datenum format. 
 %
@@ -80,7 +81,7 @@ end
 
 %% Load data
 sql = ['select tstamp/1.0 as tstamp,* from data where tstamp between ' num2str(t1) ' and ' num2str(t2) ' order by tstamp'];
-results = mksqlite(sql);
+results = doSelect(RSK, sql);
 if isempty(results)
     disp('No data found in that interval.')
     return

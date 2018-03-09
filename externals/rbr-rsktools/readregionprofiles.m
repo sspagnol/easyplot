@@ -20,11 +20,11 @@ function RSK = readregionprofiles(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-06-21
 
-tables = mksqlite('SELECT name FROM sqlite_master WHERE type="table"');
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if any(strcmpi({tables.name}, 'regionCast')) && any(strcmpi({tables.name}, 'region'))
-    RSK.region = mksqlite('select regionID, type, tstamp1/1.0 as tstamp1, tstamp2/1.0 as tstamp2 from region');
-    RSK.regionCast = mksqlite('select * from regionCast');
+    RSK.region = doSelect(RSK, 'select regionID, type, tstamp1/1.0 as tstamp1, tstamp2/1.0 as tstamp2 from region');
+    RSK.regionCast = doSelect(RSK, 'select * from regionCast');
 else
     return
 end
