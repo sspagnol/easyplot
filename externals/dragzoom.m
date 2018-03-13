@@ -399,6 +399,14 @@ Initialize(varargin{:})
 %==========================================================================
     function SetOriginalCallbacks()
         %SetOriginalCallbacks
+
+        % https://undocumentedmatlab.com/blog/enabling-user-callbacks-during-zoom-pan  
+        hManager = uigetmodemanager(hFig);
+        try
+            set(hManager.WindowListenerHandles, 'Enable', 'off');  % HG1
+        catch
+            [hManager.WindowListenerHandles.Enabled] = deal(false);  % HG2
+        end
         
         set(hFig, ...
             'WindowButtonDownFcn',      mOrigCallbacks.window_button_down_fcn, ...
@@ -429,6 +437,14 @@ Initialize(varargin{:})
     function SetFigureCallbacks2D()
         %SetFigureCallbacks2D set callback-functions for processing figure events in mode 2D
         
+        % https://undocumentedmatlab.com/blog/enabling-user-callbacks-during-zoom-pan  
+        hManager = uigetmodemanager(hFig);
+        try
+            set(hManager.WindowListenerHandles, 'Enable', 'off');  % HG1
+        catch
+            [hManager.WindowListenerHandles.Enabled] = deal(false);  % HG2
+        end
+        
         set(hFig, ...
             'WindowButtonDownFcn',      {@WindowButtonDownCallback2D}, ...
             'WindowButtonUpFcn',        {@WindowButtonUpCallback2D}, ...
@@ -442,6 +458,15 @@ Initialize(varargin{:})
 %==========================================================================
     function SetFigureCallbacks3D()
         %SetFigureCallbacks3D set callback-functions for processing figure events in mode 3D
+        % This should work in both HG1 and HG2:
+
+        % https://undocumentedmatlab.com/blog/enabling-user-callbacks-during-zoom-pan  
+        hManager = uigetmodemanager(hFig);
+        try
+            set(hManager.WindowListenerHandles, 'Enable', 'off');  % HG1
+        catch
+            [hManager.WindowListenerHandles.Enabled] = deal(false);  % HG2
+        end
         
         set(hFig, ...
             'WindowButtonDownFcn',      {@WindowButtonDownCallback3D}, ...
