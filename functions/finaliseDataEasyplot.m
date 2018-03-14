@@ -407,6 +407,17 @@ else
         depth = 10*ones(size(temp));
         presName = 'instrument_nominal_depth';
     end
+    if isfield(sam.meta, 'latitude')
+        latitude = sam.meta.latitude;
+    else
+        prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
+        dlg_title = 'Latitude';
+        num_lines = 1;
+        defaultans = {'-19'};
+        latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
+        sam.meta.latitude = latitude;   
+    end
+    presRel = gsw_p_from_z(depth, latitude);
 end
 % calculate C(S,T,P)/C(35,15,0) ratio
 % conductivity is in S/m and gsw_C3515 in mS/cm
@@ -451,11 +462,16 @@ if ~isPresVar
     return;
 end
 
-prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
-dlg_title = 'Latitude';
-num_lines = 1;
-defaultans = {'-19'};
-latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
+if isfield(sam.meta, 'latitude')
+    latitude = sam.meta.latitude;
+else
+    prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
+    dlg_title = 'Latitude';
+    num_lines = 1;
+    defaultans = {'-19'};
+    latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
+    sam.meta.latitude = latitude;
+end
 
 if presRelIdx > 0
     presRel = sam.variables{presRelIdx}.data;
