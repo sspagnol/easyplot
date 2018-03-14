@@ -8,6 +8,9 @@ function [ sam ] = workhorseParseCleanup( sam )
 %sam.meta.instrument_model_shortname = strtrim(regexprep(sam.meta.instrument_model, '.+(?=RDI)', ''));
 
 sam.meta.instrument_model_shortname = 'RDI';
+if isempty(sam.meta.instrument_serial_no)
+    sam.meta.instrument_serial_no ='RDI';
+end
 
 end
 
