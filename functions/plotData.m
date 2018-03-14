@@ -131,7 +131,7 @@ isNotP3 = strcmpi(userData.plotType,'VARS_STACKED') && ...
 
 redoSubplots = false;
 %if isEmptyPlotPanel || isAnyEmptyStackedPlots || isPlotTypeChange || isNewSubplot
-if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot
+if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot || userData.redoPlots
     redoSubplots = true;
 %elseif isNotP1 || isNotP2 || isNotP3
 %    redoSubplots = false;
@@ -362,6 +362,7 @@ end
     
 %% update progress string and save UserData
 set(msgPanelText,'String','Done');
+userData.redoPlots = false;
 setappdata(hFig, 'UserData', userData);
 % is this needed?
 drawnow;

@@ -25,6 +25,7 @@ uimenu(sm1, 'Label', 'VARS_OVERLAY', 'Checked','on','Callback', @plotType_Callba
 uimenu(sm1, 'Label', 'VARS_STACKED', 'Callback', @plotType_Callback);
 uimenu(m, 'Label', 'Use QC flags', 'Callback', @useQCflags_Callback);
 uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
+uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback);
 uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback);
 uimenu(m, 'Label', 'Save filelist (YML)', 'Callback', @saveFilelist_Callback);
 uimenu(m, 'Label', 'Save Image', 'Callback', @saveImage_Callback);
@@ -391,6 +392,23 @@ setappdata(hFig, 'UserData', userData);
         
         [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
         yml.write(fullfile(ymlPathName,ymlFileName),ymlData);
+    end
+%%
+    function timeOffsets_Callback(hObject, eventdata, handles)
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        msgPanel = findobj(hFig, 'Tag','msgPanel');
+        msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+
+        if ~isfield(userData,'sample_data')
+            return;
+        end
+        
+        userData.sample_data = timeOffsetPP(userData.sample_data, 'raw', false);
+        userData.redoPlots = true;
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
     end
 end
 
