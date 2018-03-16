@@ -317,6 +317,9 @@ setappdata(hFig, 'UserData', userData);
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
                     structs.meta.parser = theParser;
+                    if isfield(ymlData.files{ii}, 'latitude') && ~isempty(ymlData.files{ii}.latitude)
+                        structs.meta.latitude = ymlData.files{ii}.latitude;
+                    end
                     tmpStruct = finaliseDataEasyplot(structs, theFullFile);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
@@ -327,6 +330,9 @@ setappdata(hFig, 'UserData', userData);
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
                         structs{k}.meta.parser = theParser;
+                        if isfield(ymlData.files{ii}, 'latitude') & ~isempty(ymlData.files{ii}.latitude)
+                            structs{k}.meta.latitude = ymlData.files{ii}.latitude;
+                        end
                         tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
@@ -385,6 +391,9 @@ setappdata(hFig, 'UserData', userData);
             plotVars = plotVars(logical(userData.sample_data{ii}.variablePlotStatus));
             plotVars = strjoin(plotVars, ', ');
             tmpStruct.variables = plotVars;
+            if isfield(userData.sample_data{ii}.meta, 'latitude') && ~isempty(userData.sample_data{ii}.meta.latitude)
+                tmpStruct.latitude = userData.sample_data{ii}.meta.latitude;
+            end
             ymlData.files{ii} = tmpStruct;
         end
         
