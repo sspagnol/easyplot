@@ -23,6 +23,7 @@ m=uimenu(hFig, 'Label', 'Easyplot');
 sm1=uimenu(m, 'Label', 'Plot Vars As...');
 uimenu(sm1, 'Label', 'VARS_OVERLAY', 'Checked','on','Callback', @plotType_Callback);
 uimenu(sm1, 'Label', 'VARS_STACKED', 'Callback', @plotType_Callback);
+uimenu(m, 'Label', 'Plot Time as Day Number', 'Checked','off', 'Callback', @plotYearly_Callback);
 uimenu(m, 'Label', 'Use QC flags', 'Callback', @useQCflags_Callback);
 uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
 uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback);
@@ -171,6 +172,7 @@ userData.plotLimits.MULTI.yMax=NaN;
 
 % default single plot with any selected variables
 userData.plotType = 'VARS_OVERLAY';
+userData.plotYearly = false;
 
 % if plot IMOS netcdf files, plot using raw/good qc flags
 userData.plotQC = false;
@@ -246,6 +248,30 @@ setappdata(hFig, 'UserData', userData);
         
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
+        
+    end
+
+%% --- Executes when user attempts to close figure1.
+    function plotYearly_Callback(hObject, eventdata, handles)
+        % hObject    handle to figure1 (see GCBO)
+        % eventdata  reserved - to be defined in a future version of MATLAB
+        % handles    structure with handles and user data (see GUIDATA)
+        
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        if strcmp(get(hObject,'Checked'),'on')
+            set(hObject,'Checked','off');
+            userData.plotYearly = false;
+        else
+            set(hObject,'Checked','on');
+            userData.plotYearly = true;
+        end
+        userData.redoPlots = true;
+        setappdata(hFig, 'UserData', userData);
+        if isfield(userData, 'sample_data')
+            plotData(hFig);
+        end
         
     end
 

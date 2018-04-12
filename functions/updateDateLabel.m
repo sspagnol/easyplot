@@ -29,6 +29,9 @@ if all(get(axH,'xlim') == [0 1])
     set(axH, 'XLim', [floor(now) floor(now)+1]);
 end
 
+hFig = ancestor(plotPanel,'figure');
+userData = getappdata(hFig, 'UserData');
+
 % Check if this axes is a date axes. If not, do nothing more (return)
 try
     if ~strcmp(axesInfo.Type, 'dateaxes')
@@ -36,6 +39,16 @@ try
     end
 catch
     return;
+end
+
+if userData.plotYearly
+    if isempty(axH.XTickLabel)
+        xticks('auto');
+        datetick(axH, 'x', 'dd-mmm')
+    else
+        datetick(axH, 'x', 'dd-mmm', 'keeplimits')
+    end
+    %return
 end
 
 %Re-apply date ticks, but keep limits (unless called the first time)
@@ -189,10 +202,14 @@ end
 graphs = findobj(plotPanel,'Type','axes');
 for ii=1:numel(graphs)
     grid(graphs(ii), 'on');
-    if axesInfo.doMultilineXLabel
-        ht = my_xticklabels(graphs(ii), ticks, labels);
+    if userData.plotYearly
+        datetick(graphs(ii), 'x', 'dd-mmm', 'keeplimits')
     else
-        set(graphs(ii), 'XTick', ticks, 'XTickLabel', labels);
+        if axesInfo.doMultilineXLabel
+            ht = my_xticklabels(graphs(ii), ticks, labels);
+        else
+            set(graphs(ii), 'XTick', ticks, 'XTickLabel', labels);
+        end
     end
 end
 

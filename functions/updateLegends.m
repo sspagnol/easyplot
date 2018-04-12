@@ -14,6 +14,7 @@ for ii = 1:numel(graphs)
    
     legendStrings = {};
     hLines = findobj(graphs(ii).Children,'Type','Line');
+    
     %legendStrings = {hLines.Tag};
     legendStrings = strrep({hLines.Tag}, '_', '\_');
     %legendStrings = sort(legendStrings);

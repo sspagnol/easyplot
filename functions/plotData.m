@@ -107,12 +107,7 @@ varNewNames=sort(unique(varNewNames));
 %%
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 
-% require || result redoSubplots = true
 isEmptyPlotPanel = isempty(plotPanel.Children);
-% isAnyEmptyStackedPlots = strcmpi(userData.plotType, 'VARS_STACKED') && ...
-%     (any(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter))) || ...
-%     any(arrayfun(@(x) isempty(x.Children), graphs)));
-% isAnyEmptyOverlayPlots = strcmpi(userData.plotType, 'VARS_OVERLAY') && all(cellfun(@(x) plotVarCounter.(x) == 0, fieldnames(plotVarCounter)));
 isAnyEmptyGraphs = any(arrayfun(@(x) isempty(x.Children), graphs));
 isPlotTypeChange = strcmpi(userData.plotType,'VARS_STACKED') && (~isempty(graphs) && strcmp(graphs(1).Tag, 'MULTI')) || ...
     strcmpi(userData.plotType,'VARS_OVERLAY') && (~isempty(graphs) && ~strcmp(graphs(1).Tag, 'MULTI'));
@@ -123,18 +118,17 @@ isNewSubplot = strcmpi(userData.plotType,'VARS_STACKED') && ...
 % require || result redoSubplots = false
 isNotP1 = strcmpi(userData.plotType, 'VARS_OVERLAY') && ... % overlay
     ~isempty(varNames);                                     % have plotted some variable
+% stacked and there is some variable to plot 
 isNotP2 = strcmpi(userData.plotType,'VARS_STACKED') && ...
     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
-
+% stacked and no new vars plotted
 isNotP3 = strcmpi(userData.plotType,'VARS_STACKED') && ...
     ~isempty(varNames) && isempty(varNewNames);
 
+% require || result redoSubplots = true
 redoSubplots = false;
-%if isEmptyPlotPanel || isAnyEmptyStackedPlots || isPlotTypeChange || isNewSubplot
 if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot || userData.redoPlots
     redoSubplots = true;
-%elseif isNotP1 || isNotP2 || isNotP3
-%    redoSubplots = false;
 end
 
 %
@@ -248,10 +242,14 @@ for ii = 1:numel(userData.sample_data)
         switch upper(userData.plotType)
             case 'VARS_OVERLAY'
                 graphs(ihAx).Tag = 'MULTI';
-                if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
-                    set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                if userData.plotYearly
+                    set(graphs(ihAx),'XLim',[1 367])
                 else
-                    set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                        set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                    else
+                        set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    end
                 end
                 if ~isfield(userData.plotLimits, 'MULTI')
                     userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
@@ -260,10 +258,14 @@ for ii = 1:numel(userData.sample_data)
                 
             case 'VARS_STACKED'
                 graphs(ihAx).Tag = theVar;
-                if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
-                    set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                if userData.plotYearly
+                    set(graphs(ihAx),'XLim',[1 367])
                 else
-                    set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                        set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                    else
+                        set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                    end
                 end
                 if ~isfield(userData.plotLimits, theVar)
                     userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
@@ -298,10 +300,23 @@ for ii = 1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                    'YData',ydataVar, ...
-                    'LineStyle',lineStyle, 'Marker', markerStyle,...
-                    'DisplayName', legendString, 'Tag', instStr);
+                if userData.plotYearly
+                    yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
+                    yStart = yyyy(1);
+                    yEnd = yyyy(end);
+                    for yr = yStart:yEnd
+                        yGood = yyyy == yr;
+                        hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data(yGood) - datenum(yr,1,1,0,0,0), ...
+                            'YData',ydataVar(yGood), ...
+                            'LineStyle',lineStyle, 'Marker', markerStyle,...
+                            'DisplayName', legendString, 'Tag', instStr);
+                    end
+                else
+                    hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                        'YData',ydataVar, ...
+                        'LineStyle',lineStyle, 'Marker', markerStyle,...
+                        'DisplayName', legendString, 'Tag', instStr);
+                end
             else
                 % 2D var
                 iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
@@ -311,10 +326,23 @@ for ii = 1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
-                    'YData',ydataVar, ...
-                    'LineStyle',lineStyle, 'Marker', markerStyle,...
-                    'DisplayName', legendString, 'Tag', instStr);
+                if userData.plotYearly
+                    yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
+                    yStart = yyyy(1);
+                    yEnd = yyyy(end);
+                    for yr = yStart:yEnd
+                        yGood = yyyy == yr;
+                        hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data(yGood) - datenum(yr,1,1,0,0,0), ...
+                            'YData',ydataVar(yGood), ...
+                            'LineStyle',lineStyle, 'Marker', markerStyle,...
+                            'DisplayName', legendString, 'Tag', instStr);
+                    end
+                else
+                    hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                        'YData',ydataVar, ...
+                        'LineStyle',lineStyle, 'Marker', markerStyle,...
+                        'DisplayName', legendString, 'Tag', instStr);
+                end
             end
             hLine.UserData.legendString = legendString;
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
@@ -337,6 +365,7 @@ if redoSubplots
     dragzoom(graphs);
     linkaxes(graphs,'x');
     
+    % update date labels, only pass one axis and it will update any others
     updateDateLabel([], struct('Axes', graphs(1)), false);
     
     % not the best when have multiline xticklabels, not sure why yet.
@@ -349,14 +378,17 @@ if redoSubplots
         set(hFig,'CurrentAxes', graphs(ii));
         updateYlabel( graphs(ii) );
         grid(graphs(ii),'on');
-%        hLegend = legend(graphs(ii),'show');
-%        hLegend.FontSize = 8;
     end
 end
 
 for ii=1:length(graphs)
     set(hFig,'CurrentAxes', graphs(ii));
     hLegend = legend(graphs(ii),'show');
+    % can have multiple lines per instrument when plotYearly = true
+    % make unique strings
+    hStrings = hLegend.String;
+    [uStrings, IA, IC] = unique(hStrings, 'stable');
+    hLegend.String = hLegend.String(IA);
     hLegend.FontSize = 8;
 end
     
