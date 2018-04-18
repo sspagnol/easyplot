@@ -324,6 +324,15 @@ setappdata(hFig, 'UserData', userData);
         
         [ymlFileName, ymlPathName, ~] = uigetfile('*.yml','');
         ymlData = yml.read(fullfile(ymlPathName,ymlFileName));
+        % test if no file selected
+        if ~isfield(ymlData, 'files')
+            return;
+        end
+        nFiles = numel(ymlData.files);
+        % a bit more paranoia
+        if nFiles == 0
+            return;
+        end 
         nFiles = numel(ymlData.files);
         for ii = 1:nFiles
             theParser = ymlData.files{ii}.parser;
