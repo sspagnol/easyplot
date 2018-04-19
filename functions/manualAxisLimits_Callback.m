@@ -24,7 +24,7 @@ if ~isfield(userData,'sample_data')
 end
 
 try
-    useQCflags = userData.plotQC;
+    useQCflags = userData.EP_plotQC;
 catch
     useQCflags = false;
 end
@@ -45,7 +45,7 @@ else
 end
 
 tableData = {};
-switch upper(userData.plotType)
+switch upper(userData.EP_plotType)
     case 'VARS_OVERLAY'
         theVar = 'MULTI';
         tableData{1,1} = theVar;
@@ -157,7 +157,7 @@ setappdata(hFig, 'UserData', userData);
         %             theLimits = dataLimits.RAW;
         %         end
         
-        switch upper(userData.plotType)
+        switch upper(userData.EP_plotType)
             case 'VARS_OVERLAY'
                 theVar = 'MULTI';
 %                 if ~isnan(dataLimits.(theVar).(useFlags).yMin) || ~isnan(dataLimits.(theVar).(useFlags).yMax)

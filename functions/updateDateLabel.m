@@ -41,7 +41,7 @@ catch
     return;
 end
 
-if userData.plotYearly
+if userData.EP_plotYearly
     if isempty(axH.XTickLabel)
         xticks('auto');
         datetick(axH, 'x', 'dd-mmm')
@@ -202,7 +202,7 @@ end
 graphs = findobj(plotPanel,'Type','axes');
 for ii=1:numel(graphs)
     grid(graphs(ii), 'on');
-    if userData.plotYearly
+    if userData.EP_plotYearly
         datetick(graphs(ii), 'x', 'dd-mmm', 'keeplimits')
     else
         if axesInfo.doMultilineXLabel

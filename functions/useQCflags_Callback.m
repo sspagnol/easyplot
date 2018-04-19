@@ -8,11 +8,11 @@ userData=getappdata(theParent, 'UserData');
 
 if strcmp(get(hObject,'Checked'),'on')
     set(hObject,'Checked','off');
-    userData.plotQC = false;
+    userData.EP_plotQC = false;
 else 
     set(hObject,'Checked','on');
-    userData.plotQC = true;
+    userData.EP_plotQC = true;
 end
-
+setappdata(theParent, 'UserData', userData);
 end
 

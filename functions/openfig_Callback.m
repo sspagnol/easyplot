@@ -34,7 +34,7 @@ for txtTag = {'Exploration.Rotate' 'DataManager.Linking' 'Annotation.InsertLegen
 end
 
 % add some custom toolbar buttons, need previous used EPpath to find icons
-EPpath = userData.EPdir;
+EPpath = userData.EP_easyplotDir;
 
 [img,map,tran] = imread(fullfile(EPpath,'icons', 'profile.png'));
 img = double(img)/255;

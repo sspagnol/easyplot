@@ -15,13 +15,13 @@ if ~isfield(userData,'sample_data'), return; end
 
 plotPanel = findobj(hFig, 'Tag','plotPanel');
 
-if userData.plotYearly
+if userData.EP_plotYearly
     set(gca,'XLim', [1 367]);
     set(gca, 'XTick', [1 32  60 91 121 152 182 213 244 274 305 335]);
     datetick(gca, 'x', 'dd-mmm', 'keepticks');
 else
     try
-        useQCflags = userData.plotQC;
+        useQCflags = userData.EP_plotQC;
     catch
         useQCflags = false;
     end

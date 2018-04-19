@@ -69,7 +69,7 @@ if iParse == 1
     end
 else
     % user selected files for one particular instrument type
-    filterSpec=fullfile(userData.oldPathname,strjoin(parserList.wildcard{iParse},';'));
+    filterSpec=fullfile(userData.EP_previousDataDir,strjoin(parserList.wildcard{iParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
     [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
     allFiles = fullfile(thePath, theFiles);
@@ -82,7 +82,7 @@ end
 
 %utcOffsets = askUtcOffset(FILENAME);
 
-userData.oldPathname=thePath;
+userData.EP_previousDataDir=thePath;
 if isequal(FILEnames,0) || isequal(thePath,0)
     disp('No file selected.');
 else

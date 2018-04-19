@@ -53,7 +53,7 @@ if strcmp(selectionType,'open')
             %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
             %         end
             userData.jtable = createTreeTable(treePanel, userData);
-            userData.firstPlot=true;
+            userData.EP_firstPlot=true;
             setappdata(hFig, 'UserData', userData);
             plotData(plotPanel);
             % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, ancestor(hObject,'figure')});

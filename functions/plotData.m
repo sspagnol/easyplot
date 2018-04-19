@@ -109,20 +109,20 @@ graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Col
 
 isEmptyPlotPanel = isempty(plotPanel.Children);
 isAnyEmptyGraphs = any(arrayfun(@(x) isempty(x.Children), graphs));
-isPlotTypeChange = strcmpi(userData.plotType,'VARS_STACKED') && (~isempty(graphs) && strcmp(graphs(1).Tag, 'MULTI')) || ...
-    strcmpi(userData.plotType,'VARS_OVERLAY') && (~isempty(graphs) && ~strcmp(graphs(1).Tag, 'MULTI'));
-isNewSubplot = strcmpi(userData.plotType,'VARS_STACKED') && ...
+isPlotTypeChange = strcmpi(userData.EP_plotType,'VARS_STACKED') && (~isempty(graphs) && strcmp(graphs(1).Tag, 'MULTI')) || ...
+    strcmpi(userData.EP_plotType,'VARS_OVERLAY') && (~isempty(graphs) && ~strcmp(graphs(1).Tag, 'MULTI'));
+isNewSubplot = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
     (~isempty(varNames) && ~isempty(varNewNames) && ...
     ~any(strcmp(varNewNames, varNames)));
 
 % require || result redoSubplots = false
-isNotP1 = strcmpi(userData.plotType, 'VARS_OVERLAY') && ... % overlay
+isNotP1 = strcmpi(userData.EP_plotType, 'VARS_OVERLAY') && ... % overlay
     ~isempty(varNames);                                     % have plotted some variable
 % stacked and there is some variable to plot 
-isNotP2 = strcmpi(userData.plotType,'VARS_STACKED') && ...
+isNotP2 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
 % stacked and no new vars plotted
-isNotP3 = strcmpi(userData.plotType,'VARS_STACKED') && ...
+isNotP3 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
     ~isempty(varNames) && isempty(varNewNames);
 
 % require || result redoSubplots = true
@@ -148,8 +148,8 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     
     % return early if overlay/stacked graphs still have lines and no new
     % plots are to be added
-    if  (strcmpi(userData.plotType,'VARS_OVERLAY') & any(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))) || ...
-            (strcmpi(userData.plotType,'VARS_STACKED') & all(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter))))
+    if  (strcmpi(userData.EP_plotType,'VARS_OVERLAY') & any(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))) || ...
+            (strcmpi(userData.EP_plotType,'VARS_STACKED') & all(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter))))
         % release rentrancy flag
         hash.remove(hObject);
         return
@@ -161,7 +161,7 @@ end
 % VARS_STACKED : subplots with common vars per subplot
 % VARS_SINGLE : subplot per var, not implemented yet
 % for each marked variable assign it an subplot/axis number
-switch upper(userData.plotType)
+switch upper(userData.EP_plotType)
     case 'VARS_OVERLAY'
         nSubPlots = 1;
         for ii=1:numel(userData.sample_data)
@@ -186,7 +186,7 @@ end
 
 %% determine QC use
 try
-    useQCflags = userData.plotQC;
+    useQCflags = userData.EP_plotQC;
 catch
     useQCflags = false;
 end
@@ -224,7 +224,7 @@ for ii = 1:numel(userData.sample_data)
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             graphs(ihAx).UserData.axesInfo = userData.axesInfo;
         else
-            switch upper(userData.plotType)
+            switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
                     %axes(graphs(1));
                     set(hFig,'CurrentAxes', graphs(1));
@@ -239,10 +239,10 @@ for ii = 1:numel(userData.sample_data)
         %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',plotPanel);
         
         % for each subplot set a tag and xlim/ylim
-        switch upper(userData.plotType)
+        switch upper(userData.EP_plotType)
             case 'VARS_OVERLAY'
                 graphs(ihAx).Tag = 'MULTI';
-                if userData.plotYearly
+                if userData.EP_plotYearly
                     set(graphs(ihAx),'XLim',[1 367])
                 else
                     if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
@@ -258,7 +258,7 @@ for ii = 1:numel(userData.sample_data)
                 
             case 'VARS_STACKED'
                 graphs(ihAx).Tag = theVar;
-                if userData.plotYearly
+                if userData.EP_plotYearly
                     set(graphs(ihAx),'XLim',[1 367])
                 else
                     if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
@@ -300,7 +300,7 @@ for ii = 1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                if userData.plotYearly
+                if userData.EP_plotYearly
                     yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
                     yStart = yyyy(1);
                     yEnd = yyyy(end);
@@ -326,7 +326,7 @@ for ii = 1:numel(userData.sample_data)
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
-                if userData.plotYearly
+                if userData.EP_plotYearly
                     yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
                     yStart = yyyy(1);
                     yEnd = yyyy(end);
@@ -384,7 +384,7 @@ end
 for ii=1:length(graphs)
     set(hFig,'CurrentAxes', graphs(ii));
     hLegend = legend(graphs(ii),'show');
-    % can have multiple lines per instrument when plotYearly = true
+    % can have multiple lines per instrument when EP_plotYearly = true
     % make unique strings
     hStrings = hLegend.String;
     [uStrings, IA, IC] = unique(hStrings, 'stable');

@@ -15,7 +15,7 @@ if ~isfield(userData,'sample_data'), return; end
 plotPanel = findobj(hFig, 'Tag','plotPanel');
 
 try
-    useQCflags = userData.plotQC;
+    useQCflags = userData.EP_plotQC;
 catch
     useQCflags = false;
 end
@@ -24,7 +24,7 @@ if useQCflags, useFlags='QC'; end
 
 dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 axH = gca;
-switch upper(userData.plotType)
+switch upper(userData.EP_plotType)
     case 'VARS_OVERLAY'
         theVar = 'MULTI';
         

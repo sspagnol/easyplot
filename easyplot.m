@@ -171,20 +171,20 @@ userData.plotLimits.MULTI.yMin=NaN;
 userData.plotLimits.MULTI.yMax=NaN;
 
 % default single plot with any selected variables
-userData.plotType = 'VARS_OVERLAY';
-userData.plotYearly = false;
+userData.EP_plotType = 'VARS_OVERLAY';
+userData.EP_plotYearly = false;
 
 % if plot IMOS netcdf files, plot using raw/good qc flags
-userData.plotQC = false;
+userData.EP_plotQC = false;
 
 % old path for easier importing
-[userData.EPdir, name, ext] = fileparts(mfilename('fullpath'));
-userData.oldPathname=userData.EPdir;
-userData.ini = ini2struct(fullfile(userData.EPdir,'easyplot.ini'));
+[userData.EP_easyplotDir, name, ext] = fileparts(mfilename('fullpath'));
+userData.EP_previousDataDir=userData.EP_easyplotDir;
+userData.ini = ini2struct(fullfile(userData.EP_easyplotDir,'easyplot.ini'));
 try
     thePath=userData.ini.startDialog.dataDir;
     if exist(thePath)
-        userData.oldPathname=thePath;
+        userData.EP_previousDataDir=thePath;
     end
 end
 if ~isfield(userData.ini.plotting,'doMultilineXLabel')
@@ -194,7 +194,7 @@ end
 % get parser list
 userData.parserList=initParserList;
 
-userData.firstPlot = true;
+userData.EP_firstPlot = true;
 
 userData.plotVarNames = {};
 axesInfo.mdformat = 'dd-mmm';
@@ -235,10 +235,10 @@ setappdata(hFig, 'UserData', userData);
         hFig = ancestor(hObject,'figure');
         userData=getappdata(hFig, 'UserData');
         
-        oldPlotType = userData.plotType;
-        userData.plotType = hObject.Label;
+        oldPlotType = userData.EP_plotType;
+        userData.EP_plotType = hObject.Label;
         
-        if strcmp(userData.plotType, oldPlotType)
+        if strcmp(userData.EP_plotType, oldPlotType)
             set(hObject,'Checked','on');
         else
             set(hObject,'Checked','on');
@@ -262,10 +262,10 @@ setappdata(hFig, 'UserData', userData);
         
         if strcmp(get(hObject,'Checked'),'on')
             set(hObject,'Checked','off');
-            userData.plotYearly = false;
+            userData.EP_plotYearly = false;
         else
             set(hObject,'Checked','on');
-            userData.plotYearly = true;
+            userData.EP_plotYearly = true;
         end
         userData.redoPlots = true;
         setappdata(hFig, 'UserData', userData);
@@ -287,7 +287,7 @@ setappdata(hFig, 'UserData', userData);
         userData=getappdata(hFig, 'UserData');
         try
             % save path
-            userData.ini.startDialog.dataDir=userData.oldPathname;
+            userData.ini.startDialog.dataDir=userData.EP_previousDataDir;
             % need to convert logical to string for struct2ini
             if userData.ini.plotting.doMultilineXLabel
                 userData.ini.plotting.doMultilineXLabel = 'true';
@@ -297,8 +297,8 @@ setappdata(hFig, 'UserData', userData);
             % inelegant code to handle if user double clicked on a '_ep.fig' and stored
             % EPdir is different to current.
             [tmpEPdir, ~, ~] = fileparts(which('easyplot'));
-            userData.EPdir = tmpEPdir;
-            struct2ini(fullfile(userData.EPdir,'easyplot.ini'),userData.ini);
+            userData.EP_easyplotDir = tmpEPdir;
+            struct2ini(fullfile(userData.EP_easyplotDir,'easyplot.ini'),userData.ini);
         catch
             warning('Error writing to easyplot.ini');
         end
@@ -432,7 +432,7 @@ setappdata(hFig, 'UserData', userData);
             ymlData.files{ii} = tmpStruct;
         end
         
-        %ymlData.plottype = userData.plotType;
+        %ymlData.plottype = userData.EP_plotType;
         
         [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
         yml.write(fullfile(ymlPathName,ymlFileName),ymlData);
