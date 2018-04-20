@@ -1,6 +1,6 @@
 
 %%
-function sam = finaliseDataEasyplot(sam,fileName)
+function [sam, defaultLatitude] = finaliseDataEasyplot(sam, fileName, defaultLatitude)
 %FINALISEDATA Adds new EP_TIMEDIFF var
 %
 % Inputs:
@@ -81,8 +81,9 @@ sam.history = '';
 %% add derived diagnositic variables, prefaces with 'EP_'
 sam = add_EP_TIMEDIFF(sam);
 sam = add_EP_LPF(sam);
-sam = add_EP_PSAL(sam);
-sam = add_EP_DEPTH(sam);
+
+[sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude);
+[sam, defaultLatitude] = add_EP_DEPTH(sam, defaultLatitude);
 
 % update isPlottableVar, must be done last
 sam.isPlottableVar = false(1,numel(sam.variables));
@@ -347,7 +348,7 @@ end
 end
 
 %%
-function sam = add_EP_PSAL(sam)
+function [sam, latitude] = add_EP_PSAL(sam, defaultLatitude)
 %add_EP_PSAL Calculate simplified PSAL value
 
 % data set already contains salinity
@@ -381,6 +382,8 @@ if ~(cndcIdx && tempIdx && (isPresVar || isDepthInfo)), return; end
 cndc = sam.variables{cndcIdx}.data;
 temp = sam.variables{tempIdx}.data;
 
+latitude = defaultLatitude;
+
 % pressure information used for Salinity computation is from the
 % PRES or PRES_REL variables in priority
 if isPresVar
@@ -413,7 +416,7 @@ else
         prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
         dlg_title = 'Latitude';
         num_lines = 1;
-        defaultans = {'-19'};
+        defaultans = {num2str(defaultLatitude)};
         latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
         sam.meta.latitude = latitude;   
     end
@@ -447,7 +450,7 @@ sam = EP_addVar(...
 end
 
 %%
-function sam = add_EP_DEPTH(sam)
+function [sam, latitude] = add_EP_DEPTH(sam, defaultLatitude)
 
 % exit if we already have depth
 depthIdx       = getVar(sam.variables, 'DEPTH');
@@ -468,7 +471,7 @@ else
     prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
     dlg_title = 'Latitude';
     num_lines = 1;
-    defaultans = {'-19'};
+    defaultans = {num2str(defaultLatitude)};
     latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
     sam.meta.latitude = latitude;
 end

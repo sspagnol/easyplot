@@ -124,10 +124,11 @@ else
                 parser = str2func(FILEparsers{ii});
                 
                 structs = parser( {theFullFile}, 'timeSeries' );
+                defaultLatitude = userData.EP_defaultLatitude;
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
                     structs.meta.parser = FILEparsers{ii};
-                    tmpStruct = finaliseDataEasyplot(structs, theFullFile);
+                    [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs, theFullFile, defaultLatitude);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.isNew = true;
@@ -136,12 +137,13 @@ else
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
                         structs{k}.meta.parser = FILEparsers{ii};
-                        tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
+                        [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, defaultLatitude);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                         userData.sample_data{end}.isNew = true;
                     end
                 end
+                userData.EP_defaultLatitude = defaultLatitude;
                 clear('structs');
                 set(msgPanelText,'String',strcat({'Loaded : '}, theFile));
                 %drawnow;

@@ -132,7 +132,6 @@ set(filelistPanelListbox,  'Units', 'normalized');
 set(treePanel,      'Units', 'normalized');
 set(plotPanel,      'Units', 'normalized');
 
-
 % set window position
 set(hFig, 'Position', [0.1,  0.15, 0.8,  0.7]);
 
@@ -195,6 +194,8 @@ end
 userData.parserList=initParserList;
 
 userData.EP_firstPlot = true;
+
+userData.EP_defaultLatitude = -19;
 
 userData.plotVarNames = {};
 axesInfo.mdformat = 'dd-mmm';
