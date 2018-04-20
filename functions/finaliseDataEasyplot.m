@@ -351,6 +351,7 @@ end
 function [sam, latitude] = add_EP_PSAL(sam, defaultLatitude)
 %add_EP_PSAL Calculate simplified PSAL value
 
+latitude = defaultLatitude;
 % data set already contains salinity
 if getVar(sam.variables, 'PSAL'), return; end
 
@@ -381,8 +382,6 @@ if ~(cndcIdx && tempIdx && (isPresVar || isDepthInfo)), return; end
 
 cndc = sam.variables{cndcIdx}.data;
 temp = sam.variables{tempIdx}.data;
-
-latitude = defaultLatitude;
 
 % pressure information used for Salinity computation is from the
 % PRES or PRES_REL variables in priority
@@ -452,6 +451,7 @@ end
 %%
 function [sam, latitude] = add_EP_DEPTH(sam, defaultLatitude)
 
+latitude = defaultLatitude;
 % exit if we already have depth
 depthIdx       = getVar(sam.variables, 'DEPTH');
 if depthIdx ~= 0
