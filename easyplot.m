@@ -342,7 +342,7 @@ setappdata(hFig, 'UserData', userData);
             theFile = [fileStr extStr];
             
             notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFullFile)), userData.sample_data, 'UniformOutput', false))));
-            
+            defaultLatitude = userData.EP_defaultLatitude;
             if notLoaded
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));
                 drawnow;
@@ -356,7 +356,7 @@ setappdata(hFig, 'UserData', userData);
                     if isfield(ymlData.files{ii}, 'latitude') && ~isempty(ymlData.files{ii}.latitude)
                         structs.meta.latitude = ymlData.files{ii}.latitude;
                     end
-                    tmpStruct = finaliseDataEasyplot(structs, theFullFile);
+                    tmpStruct = finaliseDataEasyplot(structs, theFullFile, defaultLatitude);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.isNew = true;
@@ -369,7 +369,7 @@ setappdata(hFig, 'UserData', userData);
                         if isfield(ymlData.files{ii}, 'latitude') & ~isempty(ymlData.files{ii}.latitude)
                             structs{k}.meta.latitude = ymlData.files{ii}.latitude;
                         end
-                        tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile);
+                        tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                         userData.sample_data{end}.isNew = true;
