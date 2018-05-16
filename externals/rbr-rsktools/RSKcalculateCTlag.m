@@ -50,11 +50,11 @@ function lag = RSKcalculateCTlag(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-08-06
+% Last revision: 2018-02-01
 
-hasTEOS = exist('gsw_SP_from_C', 'file') == 2;
+hasTEOS = ~isempty(which('gsw_SP_from_C'));
 if ~hasTEOS
-    error('Error: Must install TEOS-10 toolbox'); 
+    error('Must install TEOS-10 toolbox. Download it from here: http://www.teos-10.org/software.htm');
 end
 
 

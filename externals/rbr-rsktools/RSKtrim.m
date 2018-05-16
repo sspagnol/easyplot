@@ -1,6 +1,6 @@
 function [RSK, trimidx] = RSKtrim(RSK, varargin)
 
-%RSKtrim - Remove or replace values that fall in a certain range.
+% RSKtrim - Remove or replace values that fall in a certain range.
 %
 % Syntax:  [RSK] = RSKtrim(RSK, [OPTIONS])
 % 
@@ -28,12 +28,17 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 %                       If 'reference' is 'time', then range must be in
 %                       Matlab datenum format.
 %                 
-%                 appliedchannel - Apply the flag to specified channels.
+%                 channel - Apply the flag to specified channels.
 %                       Default is all channels. When action is set to 
-%                       'remove`, specifying appliedchannel will not work.
+%                       'remove`, specifying channel will not work.
 %                           
 %                 action - Action to apply to the flagged values.  Can be 
 %                       'nan' (default) or 'remove' or 'interp'.
+%
+%                 visualize - To give a diagnostic plot on specified
+%                       profile number(s). Original, processed data and  
+%                       flagged data will be plotted to show users how the 
+%                       algorithm works. Default is 0.
 %
 % Outputs:
 %    RSK - Structure with trimmed channel values.
@@ -48,7 +53,7 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-11-23
+% Last revision: 2018-05-07
 
 validAction = {'remove', 'nan','interp'};
 checkAction = @(x) any(validatestring(x,validAction));
@@ -62,8 +67,9 @@ addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'reference', 'index');
 addParameter(p, 'range', [], @isnumeric);
-addParameter(p, 'appliedchannel','all');
+addParameter(p, 'channel','all');
 addParameter(p, 'action', 'nan', checkAction);
+addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
@@ -71,17 +77,19 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 reference = p.Results.reference;
 range = p.Results.range;
-appliedchannel = p.Results.appliedchannel;
+channel = p.Results.channel;
 action = p.Results.action;
+visualize = p.Results.visualize;
 
 
 appliedchanCol = [];
-channels = cellchannelnames(RSK, appliedchannel);
+channels = cellchannelnames(RSK, channel);
 for chan = channels
     appliedchanCol = [appliedchanCol getchannelindex(RSK, chan{1})];
 end
 castidx = getdataindex(RSK, profile, direction);
 
+if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
 
 for ndx =  castidx
     if strcmpi(reference, 'index')
@@ -113,14 +121,21 @@ for ndx =  castidx
             RSK.data(ndx).values(:,c) = y;
         end
     end
+    
+    if visualize ~= 0      
+        for d = diagndx;
+            if ndx == d;
+                figure
+                doDiagPlot(RSK,raw,'index',find(trimindex),'ndx',ndx,'channelidx',appliedchanCol(1),'fn',mfilename); 
+            end
+        end
+    end 
 
 end
 
-
-
-%% Log entry
+% Log entry
 logdata = logentrydata(RSK, profile, direction);
-logentry = ['Data samples with ' reference ' between ' num2str(range(1)) '  and ' num2str(range(2)) ' trimmed by ' action ' on ' appliedchannel ' channels of ' logdata '.'];
+logentry = ['Data samples with ' reference ' between ' num2str(range(1)) '  and ' num2str(range(2)) ' trimmed by ' action ' on ' channel ' channels of ' logdata '.'];
 RSK = RSKappendtolog(RSK, logentry);
 
 end

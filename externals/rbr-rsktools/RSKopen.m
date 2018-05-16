@@ -87,7 +87,7 @@ end
 
 RSK = RSKgetprofiles(RSK);
 
-
+RSK = RSKreadannotations(RSK);
 
 logentry = [fname ' opened using RSKtools v' RSKtoolsversion '.'];
 RSK = RSKappendtolog(RSK, logentry);

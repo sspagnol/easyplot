@@ -32,9 +32,9 @@ function RSK2CSV(RSK, varargin)
 % //Vessel:
 % //Latitude:
 % //Longitude:
-% //Bottom depth:
-% //Date and Time:
-% //Weather conditions:
+% //Depth:
+% //Date:
+% //Weather:
 % //Crew:
 % //Comment: Hey Jude
 % 
@@ -54,6 +54,9 @@ function RSK2CSV(RSK, varargin)
 %
 %                 profile - Profile number for output CSV files, default is
 %                 all profiles.
+%
+%                 direction - Direction for output CSV files, default is
+%                 both.
 %
 %                 outputdir - directory for output CSV files, default is
 %                 current directory.
@@ -75,12 +78,13 @@ function RSK2CSV(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-24
+% Last revision: 2018-04-03
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'channel', 'all');
 addParameter(p, 'profile', [], @isnumeric);
+addParameter(p, 'direction', [], @ischar);
 addParameter(p, 'outputdir', pwd);
 addParameter(p, 'comment', [], @ischar);
 parse(p, RSK, varargin{:})
@@ -90,9 +94,26 @@ channel = p.Results.channel;
 profile = p.Results.profile;
 outputdir = p.Results.outputdir;
 comment = p.Results.comment;
+direction = p.Results.direction;
+
+
 
 if exist(outputdir, 'dir') ~= 7
     error('Input directory does not exist.')
+end
+
+% Check if the structure comes from RSKreaddata or RSKreadprofiles?
+isProfile = isfield(RSK.data,'direction');
+
+if ~isProfile && (~isempty(profile) || ~isempty(direction))
+    error('RSK structure is not organized into profiles. Use RSKreadprofiles');
+end
+
+if isempty(direction); direction = 'both'; end;
+
+if ~strcmp('both', direction) && isProfile && ...
+    (all(strcmp('up',{RSK.data.direction})) && ~strcmp(direction,'up') || all(strcmp('down',{RSK.data.direction})) && ~strcmp(direction,'down'))
+    error('Requested cast direction or profile does not exist in RSK structure, use RSKreadprofiles.')
 end
 
 % Set up metadata
@@ -124,9 +145,6 @@ RBR.channelnames = strrep(RBR.channelnames,' ','_');
 RBR.starttime = datestr(RSK.epochs.startTime, 'dd/mm/yyyy HH:MM:SS PM');
 RBR.endtime = datestr(RSK.epochs.endTime, 'dd/mm/yyyy HH:MM:SS PM');
 
-% Check if the structure comes from RSKreaddata or RSKreadprofiles?
-isProfile = isfield(RSK.data,'direction');
-
 % Set up data tables and output accordingly. When the structure comes from
 % RSKreaddata, one CSV file is saved, when it comes from RSKreadprofiles,
 % multiple CSV files are saved.
@@ -140,9 +158,9 @@ if ~isProfile,
 end
 log = RSK.log(:,2);
 
-% Check if cast direction includes both upcast and downcast?
+% Check if both upcast and downcast needs reading?
 directions = 1;
-if isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 
+if isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 && strcmp(direction,'both')
     directions = 2;
 end
 
@@ -156,24 +174,24 @@ end
 
 % Determin which profile(s) for output
 if isProfile,
-    select_cast = getdataindex(RSK, profile);
+    select_cast = getdataindex(RSK, profile, direction);
 else
     select_cast = 1;
 end
 
-for castidx = select_cast(1) : directions: select_cast(end); 
+for castidx = select_cast(1:directions:end); 
     
-    for direction = 1 : directions
+    for d = 1 : directions
         
-        directionidx = castidx - 1 + direction;
+        directionidx = castidx - 1 + d;
         
         RBR(directionidx).sampletimes = cellstr(datestr(RSK.data(directionidx).tstamp, fmt_time));
         RBR(directionidx).data = RSK.data(directionidx).values(:,chanCol);     
-        data2fill{direction} = [RBR(directionidx).sampletimes, num2cell(RBR(directionidx).data)];
+        data2fill{d} = [RBR(directionidx).sampletimes, num2cell(RBR(directionidx).data)];
         
         if isProfile
             RBR(directionidx).castdirection = repmat(RSK.data(directionidx).direction(1), length(RBR(directionidx).sampletimes),1);
-            data2fill{direction} = [data2fill{direction}, cellstr(RBR(directionidx).castdirection)];
+            data2fill{d} = [data2fill{d}, cellstr(RBR(directionidx).castdirection)];
         end
     end
     
@@ -191,18 +209,61 @@ for castidx = select_cast(1) : directions: select_cast(end);
     fprintf(fid,'%s\n',['//Sample period: ' num2str(sampleperiod) ' second']);
     fprintf(fid,'%s\n','//Processing history:');
     for l = 1:length(log), fprintf(fid,'%s\n',['//' log{l}]); end
-    % For users to edit
-    fprintf(fid,'%s\n','//Cruise:');
-    fprintf(fid,'%s\n','//Station:');
-    fprintf(fid,'%s\n','//Vessel:');
-    fprintf(fid,'%s\n','//Latitude:');
-    fprintf(fid,'%s\n','//Longitude:');
-    fprintf(fid,'%s\n','//Bottom depth:');
-    fprintf(fid,'%s\n','//Date and Time:');
-    fprintf(fid,'%s\n','//Weather conditions:');
-    fprintf(fid,'%s\n','//Crew:');
-    if ~isempty(comment), fprintf(fid,'%s\n',['//Comment: ' comment]); end
-    fprintf(fid,'\n');    
+    
+    if isProfile && isfield(RSK.data,'cruise') && ~isempty(RSK.data(castidx).cruise)
+        temp = RSK.data(castidx).cruise;
+        fprintf(fid,'%s\n',['//Cruise: ' num2str(temp{1})]);
+    else
+        fprintf(fid,'%s\n','//Cruise:');
+    end
+    if isProfile && isfield(RSK.data,'station') && ~isempty(RSK.data(castidx).station)
+        temp = RSK.data(castidx).station;
+        fprintf(fid,'%s\n',['//Station: ' num2str(temp{1})]);
+    else
+        fprintf(fid,'%s\n','//Station:');
+    end
+    if isProfile && isfield(RSK.data,'latitude')
+        fprintf(fid,'%s\n',['//Latitude: ' num2str(RSK.data(castidx).latitude)]);
+    else
+        fprintf(fid,'%s\n','//Latitude:');
+    end
+    if isProfile && isfield(RSK.data,'longitude')
+        fprintf(fid,'%s\n',['//Longitude: ' num2str(RSK.data(castidx).longitude)]);
+    else
+        fprintf(fid,'%s\n','//Longitude:');
+    end
+    if isProfile && isfield(RSK.data,'depth')
+        fprintf(fid,'%s\n',['//Depth: ' num2str(RSK.data(castidx).depth)]);
+    else
+        fprintf(fid,'%s\n','//Depth:');
+    end
+    if isProfile && isfield(RSK.data,'date') && ~isempty(RSK.data(castidx).date)
+        temp = RSK.data(castidx).date;
+        fprintf(fid,'%s\n',['//Date: ' num2str(temp{1})]);
+    else
+        fprintf(fid,'%s\n','//Date:');
+    end
+    if isProfile && isfield(RSK.data,'weather') && ~isempty(RSK.data(castidx).weather)
+        temp = RSK.data(castidx).weather;
+        fprintf(fid,'%s\n',['//Weather: ' num2str(temp{1})]);
+    else
+        fprintf(fid,'%s\n','//Weather:');
+    end
+    if isProfile && isfield(RSK.data,'crew') && ~isempty(RSK.data(castidx).crew)
+        temp = RSK.data(castidx).crew;
+        fprintf(fid,'%s\n',['//Crew: ' num2str(temp{1})]);
+    else
+        fprintf(fid,'%s\n','//Crew:'); 
+    end
+    if isProfile && isfield(RSK.data,'comment');
+        temp = RSK.data(castidx).comment;
+        if ~isempty(temp), fprintf(fid,'%s\n',['//Comment: ' num2str(temp{1})]); end
+        if ~isempty(comment), fprintf(fid,'%s\n',['//' comment]); end
+    else
+        if ~isempty(comment), fprintf(fid,'%s\n',['//Comment: ' comment]); end
+    end
+        
+    fprintf(fid,'\n');   
     
     % Output time and variable names and/or cast_direction
     output_name = ['//Time(' fmt_time '),  ', channel_name_unit{:}];
@@ -213,8 +274,8 @@ for castidx = select_cast(1) : directions: select_cast(end);
     fprintf(fid, '\n');
     
     % Output data 
-    for direction = 1 : directions
-        outdata = data2fill{direction}';
+    for d = 1 : directions
+        outdata = data2fill{d}';
         fprintf(fid, fmt_data, outdata{:});
     end
 

@@ -49,6 +49,8 @@ if any(strcmpi({tables.name}, 'thumbnailData'))
     RSK = RSKreadthumbnail(RSK);
 end
 
-RSK = RSKreaddownsample(RSK);
+if any(strcmpi({tables.name}, 'downsample_caches'))
+    RSK = RSKreaddownsample(RSK);
+end
 
 end

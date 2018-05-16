@@ -45,5 +45,9 @@ if any(strcmpi({tables.name}, 'appSettings'))
     RSK.appSettings = doSelect(RSK, 'select * from appSettings');  
 end
 
+if any(strcmpi({tables.name}, 'downsample_caches'))
+    RSK = RSKreaddownsample(RSK);
+end
+
 end
 

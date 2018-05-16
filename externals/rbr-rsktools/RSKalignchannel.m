@@ -11,7 +11,8 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 % Inputs: 
 %    [Required] - RSK - Input RSK structure
 %
-%                 channel - Longname of channel to align (e.g., temperature)
+%                 channel - Longname of channel to align (e.g., 
+%                       temperature)
 %
 %                 lag - The lag (in samples) to apply to the channel. A
 %                       negative lag shifts the channel backwards in time
@@ -19,11 +20,12 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 %                       forward in time (later). To apply a different lag
 %                       to each data element, specify the lags in a vector.
 %
-%    [Optional] - profile - Profile number. Default is to operate
-%                       on all of data's elements. 
+%    [Optional] - profile - Profile number. Default is to operate on all of
+%                       data's elements. 
 %
 %                 direction - 'up' for upcast, 'down' for downcast, or
-%                       'both' for all. Defaults to all directions available.
+%                       'both' for all. Defaults to all directions 
+%                       available.
 %
 %                 shiftfill - Values that will fill the void left at the
 %                        beginning or end of the time series. 'nan', fills
@@ -40,12 +42,17 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 %                 lagunits - Units of the lag entry. Can be seconds or
 %                        samples (default).
 %
+%                 visualize - To give a diagnostic plot on specified
+%                        profile number(s). Original and processed data 
+%                        will be plotted to show users how the algorithm 
+%                        works. Default is 0.
+%
 % Outputs:
 %    RSK - Structure with aligned channel values.
 %
 % Example: 
 %    rsk = RSKopen('file.rsk');
-%    rsk = RSKreadprofiles(rsk, 'profile', 1:10, 'direction', 'down'); % read first 10 downcasts
+%    rsk = RSKreadprofiles(rsk, 'profile', 1:10, 'direction', 'down'); 
 %
 %   1. Shift temperature channel of first four profiles with the same lag value.
 %    rsk = RSKalignchannel(rsk, 'temperature', 2, 'profile', 1:4);
@@ -63,7 +70,7 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-16
+% Last revision: 2018-04-06
 
 validShiftfill = {'zeroorderhold', 'union', 'nan', 'mirror'};
 checkShiftfill = @(x) any(validatestring(x,validShiftfill));
@@ -82,6 +89,7 @@ addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'shiftfill', 'zeroorderhold', checkShiftfill);
 addParameter(p, 'lagunits', 'samples', checklagunits);
+addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, channel, lag, varargin{:})
 
 RSK = p.Results.RSK;
@@ -91,6 +99,7 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 shiftfill = p.Results.shiftfill;
 lagunits = p.Results.lagunits;
+visualize = p.Results.visualize;
 
 
 
@@ -98,7 +107,7 @@ castidx = getdataindex(RSK, profile, direction);
 lags = checklag(lag, castidx, lagunits);
 channelCol = getchannelindex(RSK, channel);
 
-
+if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
 
 counter = 0;
 for ndx =  castidx
@@ -143,6 +152,12 @@ for ndx =  castidx
     RSK.data(ndx).values(:, channelCol) = channelShifted;
 end
 
+if visualize ~= 0      
+    for d = diagndx;
+        figure
+        doDiagPlot(RSK,raw,'ndx',d,'channelidx',channelCol,'fn',mfilename); 
+    end
+end 
 
 %% Log entry
 if length(lag) == 1
@@ -151,7 +166,7 @@ if length(lag) == 1
     RSK = RSKappendtolog(RSK, logentry);
 else
     for ndx = 1:length(castidx)
-        logdata = logentrydata(RSK, profile, direction);
+        logdata = logentrydata(RSK, ndx, direction);
         logentry = [channel ' aligned using a ' num2str(lags(ndx)) ' ' lagunits ' lag and ' shiftfill ' shiftfill on ' logdata '.'];
         RSK = RSKappendtolog(RSK, logentry);
     end

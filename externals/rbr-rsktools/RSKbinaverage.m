@@ -1,6 +1,6 @@
 function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 
-%RSKbinaverage - Average the profile data by a quantized reference channel.
+% RSKbinaverage - Average the profile data by a quantized reference channel.
 %
 % Syntax:  [RSK, samplesinbin] = RSKbinaverage(RSK, [OPTIONS])
 % 
@@ -34,7 +34,12 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 %                boundary - First boundary crossed in the direction
 %                      selected of each regime, in same units as binBy.
 %                      Must have length(boundary) == length(binSize) or one
-%                      greater. Default[]; whole pressure range.       
+%                      greater. Default[]; whole pressure range.
+%
+%                visualize - To give a diagnostic plot on specified
+%                      profile number(s). Original and processed data will
+%                      be plotted to show users how the algorithm works.
+%                      Default is 0.
 %
 % Outputs:
 %    RSK - Structure with binned data
@@ -44,7 +49,7 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-11-23
+% Last revision: 2018-04-06
 
 validDirections = {'down', 'up'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -56,6 +61,7 @@ addParameter(p, 'direction', 'down', checkDirection);
 addParameter(p, 'binBy', 'sea pressure', @ischar);
 addParameter(p, 'binSize', 1, @isnumeric);
 addParameter(p, 'boundary', [], @isnumeric);
+addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
@@ -64,16 +70,23 @@ direction = p.Results.direction;
 binBy = p.Results.binBy;
 binSize = p.Results.binSize;
 boundary = p.Results.boundary;
+visualize = p.Results.visualize;
 
 
 
 binbytime = strcmpi(binBy, 'Time');
-
 castidx = getdataindex(RSK, profile, direction);
 alltstamp = {RSK.data(castidx).tstamp};
 maxlength = max(cellfun('size', alltstamp, 1));
 Y = NaN(maxlength, length(castidx));
-k=1;
+
+if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+diagChanCol = [getchannelindex(RSK,'Conductivity'), getchannelindex(RSK,'Temperature')];
+if any(strcmp({RSK.channels.longName},'Salinity'))
+    diagChanCol = [diagChanCol, getchannelindex(RSK,'Salinity')];   
+end
+
+k = 1;
 for ndx = castidx;
     if binbytime
         ref = RSK.data(ndx).tstamp;
@@ -83,9 +96,8 @@ for ndx = castidx;
         ref = RSK.data(ndx).values(:,chanCol);
         Y(1:length(ref),k) = ref;
     end
-    k = k+1;
+    k = k + 1;
 end
-
 
 
 [binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction);
@@ -109,10 +121,15 @@ for ndx = castidx
         RSK.data(ndx).tstamp = binnedValues(:,1);
         RSK.data(ndx).values(:,chanCol) = binCenter;
     end
-    k = k+1;
+    k = k + 1;
 end
 
-
+if visualize ~= 0      
+    for d = diagndx;
+        figure
+        doDiagPlot(RSK,raw,'ndx',d,'channelidx',diagChanCol,'fn',mfilename); 
+    end
+end 
 
 if binbytime, 
     unit = 'tstamp';

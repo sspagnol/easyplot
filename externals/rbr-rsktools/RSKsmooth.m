@@ -1,6 +1,6 @@
 function RSK = RSKsmooth(RSK, channel, varargin)
 
-%RSKsmooth - Apply a low pass filter on specified channels.
+% RSKsmooth - Apply a low pass filter on specified channels.
 %
 % Syntax:  [RSK] = RSKsmooth(RSK, channel, [OPTIONS])
 % 
@@ -29,6 +29,11 @@ function RSK = RSKsmooth(RSK, channel, varargin)
 %                 windowLength - The total size of the filter window. Must
 %                       be odd. Default is 3.
 %
+%                 visualize - To give a diagnostic plot on specified
+%                       profile number(s). Original and processed data will
+%                       be plotted to show users how the algorithm works.
+%                       Default is 0.
+%
 % Outputs:
 %    RSK - Structure with filtered values.
 %
@@ -40,7 +45,7 @@ function RSK = RSKsmooth(RSK, channel, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-28
+% Last revision: 2018-04-06
 
 validFilterNames = {'median', 'boxcar', 'triangle'};
 checkFilter = @(x) any(validatestring(x,validFilterNames));
@@ -55,6 +60,7 @@ addParameter(p, 'filter', 'boxcar', checkFilter);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'windowLength', 3, @isnumeric);
+addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, channel, varargin{:})
 
 RSK = p.Results.RSK;
@@ -63,16 +69,23 @@ filter = p.Results.filter;
 profile = p.Results.profile;
 direction = p.Results.direction;
 windowLength = p.Results.windowLength;
+visualize = p.Results.visualize;
 
 
 
-channelcell = cellchannelnames(RSK, channel);
+chanCol = [];
+channels = cellchannelnames(RSK, channel);
+for chan = channels
+    chanCol = [chanCol getchannelindex(RSK, chan{1})];
+end
 
 castidx = getdataindex(RSK, profile, direction);
-for chanName = channelcell
-    channelCol = getchannelindex(RSK, chanName);
+
+if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+
+for c = chanCol
     for ndx = castidx
-        in = RSK.data(ndx).values(:,channelCol);
+        in = RSK.data(ndx).values(:,c);
         switch filter
             case 'boxcar'
                 out = runavg(in, windowLength);
@@ -81,11 +94,18 @@ for chanName = channelcell
             case 'triangle'
                 out = runtriang(in, windowLength);
         end      
-        RSK.data(ndx).values(:,channelCol) = out;
+        RSK.data(ndx).values(:,c) = out;       
     end
     logdata = logentrydata(RSK, profile, direction);
-    logentry = sprintf('%s filtered using a %s filter with a %1.0f sample window on %s.', chanName{1}, filter, windowLength, logdata);
+    logentry = sprintf('%s filtered using a %s filter with a %1.0f sample window on %s.', RSK.channels(c).longName, filter, windowLength, logdata);
     RSK = RSKappendtolog(RSK, logentry);
 end
+
+if visualize ~= 0      
+    for d = diagndx;
+        figure
+        doDiagPlot(RSK,raw,'ndx',d,'channelidx',chanCol,'fn',mfilename); 
+    end
+end 
 
 end

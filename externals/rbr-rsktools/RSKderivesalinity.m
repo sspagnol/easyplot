@@ -21,10 +21,11 @@ function [RSK] = RSKderivesalinity(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-02
+% Last revision: 2018-02-01
 
-if isempty(which('gsw_SP_from_C'))
-    error('RSKtools requires TEOS-10 GSW toolbox to derive salinity. Download it here: http://www.teos-10.org/software.htm');
+hasTEOS = ~isempty(which('gsw_SP_from_C'));
+if ~hasTEOS
+    error('Must install TEOS-10 toolbox. Download it from here: http://www.teos-10.org/software.htm');
 end
     
 

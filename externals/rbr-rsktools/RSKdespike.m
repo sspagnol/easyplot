@@ -1,6 +1,6 @@
 function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 
-%RSKdespike - Despike a time series.
+% RSKdespike - Despike a time series.
 %
 % Syntax:  [RSK, spike] = RSKdespike(RSK, channel, [OPTIONS])
 % 
@@ -16,10 +16,10 @@ function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 % Inputs:
 %   [Required] - RSK - Structure containing logger data.
 %
-%                channel - Longname of channel to despike (e.g., temperature,
-%                      salinity, etc)
+%                channel - Longname of channel to despike (e.g., 
+%                      temperature, salinity, etc)
 %
-%   [Optional] - profile - Profile number. Default is all available
+%   [Optional] - profile - Profile number. Default is all available 
 %                      profiles.
 %
 %                direction - 'up' for upcast, 'down' for downcast, or
@@ -31,13 +31,18 @@ function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 %                windowLength - Total size of the filter window. Must be
 %                      odd. Default is 3. 
 %
-%                action - Action to perform on a spike. The default is 'nan',
-%                      whereby spikes are replaced with NaN.  Other options are 
-%                      'replace', whereby spikes are replaced with the 
-%                      corresponding reference value, and 'interp', 
+%                action - Action to perform on a spike. The default is 
+%                      'nan', whereby spikes are replaced with NaN. Other 
+%                      options are 'replace', whereby spikes are replaced 
+%                      with the corresponding reference value, and 'interp' 
 %                      whereby spikes are replaced with values calculated
 %                      by linearly interpolating from the neighbouring 
 %                      points.
+%
+%                visualize - To give a diagnostic plot on specified profile 
+%                      number(s). Original, processed data and flagged
+%                      data will be plotted to show users how the algorithm
+%                      works. Default is 0.
 %
 % Outputs:
 %    RSK - Structure with de-spiked series.
@@ -47,16 +52,17 @@ function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 %          profile.   
 %
 % Example: 
-%    [RSK, spike] = RSKdespike(RSK, 'Turbidity')
-%   OR
-%    [RSK, spike] = RSKdespike(RSK, 'Temperature', 'threshold', 4, 'windowLength', 11, 'action', 'nan'); 
+%    [RSK, spike] = RSKdespike(RSK,'Turbidity')
+%     OR
+%    [RSK, spike] = RSKdespike(RSK,'Temperature','profile',3:5,'direction','down',...
+%                   'threshold',4,'windowLength',11,'action','nan','visualize',4); 
 %
 % See also: RSKremoveloops, RSKsmooth.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-08-10
+% Last revision: 2018-04-06
 
 validActions = {'replace', 'interp', 'nan'};
 checkAction = @(x) any(validatestring(x,validActions));
@@ -72,6 +78,7 @@ addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'threshold', 2, @isnumeric);
 addParameter(p, 'windowLength', 3, @isnumeric);
 addParameter(p, 'action', 'nan', checkAction);
+addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, channel, varargin{:})
 
 RSK = p.Results.RSK;
@@ -81,18 +88,29 @@ direction = p.Results.direction;
 windowLength = p.Results.windowLength;
 threshold = p.Results.threshold;
 action = p.Results.action;
-
+visualize = p.Results.visualize;
 
 
 channelCol = getchannelindex(RSK, channel);
 castidx = getdataindex(RSK, profile, direction);
+
+if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+
 k = 1;
 for ndx = castidx
     in = RSK.data(ndx).values(:,channelCol);
     intime = RSK.data(ndx).tstamp;
     [out, index] = despike(in, intime, threshold, windowLength, action);
     RSK.data(ndx).values(:,channelCol) = out;
-    spike(k).index = index;
+    spike(k).index = index;    
+    if visualize ~= 0      
+        for d = diagndx;
+            if ndx == d;
+                figure
+                doDiagPlot(RSK,raw,'index',index,'ndx',ndx,'channelidx',channelCol,'fn',mfilename); 
+            end
+        end
+    end 
     k = k+1;
 end
 
@@ -129,4 +147,5 @@ RSK = RSKappendtolog(RSK, logentry);
             y(I) = interp1(t(good), x(good), t(I)) ;
         end
     end
+
 end

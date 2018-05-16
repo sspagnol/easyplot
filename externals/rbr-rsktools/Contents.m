@@ -1,5 +1,5 @@
 % RSKTOOLS
-% Version 2.2.0 2018-01-25
+% Version 2.3.0 2018-05-09
 %
 % 1.  This toolbox depends on the presence of a functional mksqlite
 % library.  We have included a couple of versions here for Windows (32 bit/
@@ -87,8 +87,10 @@
 %   RSKbinaverage        - bin average the profile data by reference channel intervals
 %   RSKtrim              - remove or NaN channel data fitting specified criteria
 %   RSKaddchannel        - add a new channel to existing RSK structure
+%   RSKaddmetadata       - add station meta data to RSK data structure
 %   RSK2MAT              - convert RSK structure to legacy RUSKIN .mat format
 %   RSK2CSV              - write channel data and metadata to one or more CSV files
+%   RSK2ODV              - write channel data and metadata to one or more ODV files
 %
 %
 % Helper files

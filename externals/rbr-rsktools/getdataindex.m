@@ -24,7 +24,8 @@ function castidx = getdataindex(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-20
+% Last revision: 2018-05-04
+
 
 validationFcn = @(x) ischar(x) || isempty(x);
 
@@ -39,6 +40,8 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 
 
+profile = profile(:)';
+
 if size(RSK.data,2) == 1
     castidx = 1;
     if ~isempty(profile) && profile ~= 1  
@@ -50,7 +53,7 @@ end
 profilecast = size(RSK.profiles.order,2);
 ndata = length(RSK.data);
 
-if ~isempty(direction) && profilecast == 1 && ~strcmp(RSK.profiles.order, direction)
+if ~isempty(direction) && profilecast == 1 && ~strcmp(RSK.profiles.order, direction) && ~strcmp(direction,'both')
     error(['There is no ' direction 'cast in this RSK structure.']);
 end
 
