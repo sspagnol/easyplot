@@ -137,7 +137,7 @@ else
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
                         structs{k}.meta.parser = FILEparsers{ii};
-                        [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, defaultLatitude);
+                        [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                         userData.sample_data{end}.isNew = true;
