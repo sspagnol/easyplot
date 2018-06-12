@@ -54,18 +54,19 @@ for ii=1:numel(userData.sample_data)
     iDeletePlotVars = find(userData.sample_data{ii}.variablePlotStatus == -1)';
     if ~isempty(iDeletePlotVars)
         for jj = iDeletePlotVars
-            theVar = userData.sample_data{ii}.variables{jj}.name;
-            if isfield (plotVarCounter, theVar)
-                plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
-            else
-                plotVarCounter.(theVar) = 0;
+            if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
+                theVar = userData.sample_data{ii}.variables{jj}.name;
+                if isfield (plotVarCounter, theVar)
+                    plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
+                else
+                    plotVarCounter.(theVar) = 0;
+                end
+                % delete the plot,
+                delete(userData.sample_data{ii}.variables{jj}.hLine);
+                userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
+                varDeleteNames{end+1}=theVar;
+                userData.sample_data{ii}.variablePlotStatus(jj) = 0;
             end
-            % delete the plot
-            delete(userData.sample_data{ii}.variables{jj}.hLine);
-            % is this required?
-            %userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
-            varDeleteNames{end+1}=theVar;
-            userData.sample_data{ii}.variablePlotStatus(jj) = 0;
         end
     end
 end
