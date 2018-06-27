@@ -45,7 +45,7 @@ function [axes,handles] = RSKplotdata(RSK, varargin)
 %    -OR-
 %    handles = RSKplotdata(RSK, 'channel', 'Pressure', 'showcast', 1);
 %
-% See also: RSKplotprofiles, RSKplotburstdata, RSKreadprofiles, RSKplotthumbnail
+% See also: RSKreadprofiles, RSKplotprofiles, RSKplotdownsample.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

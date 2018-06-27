@@ -31,12 +31,12 @@ function [RSK, dbid] = RSKopen(fname, varargin)
 % Example: 
 %    RSK = RSKopen('sample.rsk');  
 %
-% See also: RSKplotthumbnail, RSKreaddata, RSKreadevents.
+% See also: RSKreaddata, RSKreadprofiles, RSKreaddownsample.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-22
+% Last revision: 2018-06-18
 
 p = inputParser;
 addRequired(p,'fname',@ischar);

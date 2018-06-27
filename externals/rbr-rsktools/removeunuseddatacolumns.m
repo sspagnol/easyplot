@@ -14,7 +14,7 @@ function dataresults = removeunuseddatacolumns(results)
 % Outputs:
 %    dataresults - Data table without tstamp_1 and datasetId.
 %
-% See also: RSKreaddata, RSKreadthumbnail, RSKreadburstdata.
+% See also: RSKreaddata, RSKreaddownsample, RSKreadburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

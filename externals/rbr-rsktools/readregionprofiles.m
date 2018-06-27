@@ -56,11 +56,13 @@ for ndx = 1:length(RSK.regionCast)/2
     nregionCast = (ndx*2)-1;
     
     regionID = RSK.regionCast(nregionCast).regionID;
+    if regionID < numel(RSK.region)
     RSK.profiles.(firstdir).tstart(ndx,1) = RSKtime2datenum(RSK.region(regionID).tstamp1); 
     RSK.profiles.(firstdir).tend(ndx,1) = RSKtime2datenum(RSK.region(regionID).tstamp2);
     
     regionID2 = RSK.regionCast(nregionCast+1).regionID;
     RSK.profiles.(lastdir).tstart(ndx,1) = RSKtime2datenum(RSK.region(regionID2).tstamp1);
     RSK.profiles.(lastdir).tend(ndx,1) = RSKtime2datenum(RSK.region(regionID2).tstamp2);
+    end
 end
 end

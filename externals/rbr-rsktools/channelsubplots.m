@@ -26,7 +26,7 @@ function [axes,handles] = channelsubplots(RSK, field, varargin)
 %
 %    axes - Axes object of the plot.
 %
-% See also: RSKplotthumbnail, RSKplotburstdata, RSKplotdata.
+% See also: RSKplotdata, RSKplotdownsample, RSKplotburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

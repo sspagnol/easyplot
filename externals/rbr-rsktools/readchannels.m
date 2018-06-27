@@ -22,10 +22,9 @@ function RSK = readchannels(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2017-07-10
 
-
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-parse(p, RSK);
+parse(p, RSK)
 
 RSK = p.Results.RSK;
 

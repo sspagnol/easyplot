@@ -16,7 +16,7 @@ function data = arrangedata(results_struct)
 %    data - Structure containing the arranged logger data, ordered
 %           by tstamp.
 %
-% See also: RSKreaddata, RSKreadevents, RSKreadburstdata, RSKreadthumbnail.
+% See also: RSKreaddata, RSKreadevents, RSKreadburstdata, RSKreaddownsample.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

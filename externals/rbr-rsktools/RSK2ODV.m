@@ -12,9 +12,10 @@ function RSK2ODV(RSK, varargin)
 % an extra column called 'cast_direction' will be included, where 'd' 
 % indicates downcast while 'u' indicates upcast.
 % 
-% Notes: Ruskin desktop does not record geodata (lat/lon coordinates) and
-% Ruskin mobile only records coordinates when the app connects with the
-% instruments. So the lat/lon are set to 0.0/0.0 for now.
+% Notes: Cruise, station, longitude, latitude and bottom depth are set to 
+% `C1`, `S1`, `0.0`, `0.0` and `0.0` respectively as default. They will be 
+% filled automatically with Ruskin annotations if they were added by the 
+% user. Alternatively, they can be populated with RSKaddmetadata.m.
 % 
 % Output samples as below:
 %
@@ -32,7 +33,7 @@ function RSK2ODV(RSK, varargin)
 % // Firmware=12.03
 % // Serial=80217
 % //Processing history:
-% ///Users/RZhang/code/rsk_files/080217_20150919_1417.rsk opened using RSKtools v2.1.0.
+% ///Users/RZhang/code/rsk_files/080217_20150919_1417.rsk opened using RSKtools v2.3.0.
 % //Sea pressure calculated using an atmospheric pressure of 10.1325 dbar.
 % //Comment: Hey Jude
 % 
@@ -75,7 +76,7 @@ function RSK2ODV(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-03-29
+% Last revision: 2018-05-11
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);

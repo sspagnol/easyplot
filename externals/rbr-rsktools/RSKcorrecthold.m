@@ -62,7 +62,7 @@ function [RSK, holdpts] = RSKcorrecthold(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-04-06
+% Last revision: 2018-06-06
 
 validActions = {'interp', 'nan'};
 checkAction = @(x) any(validatestring(x,validActions));
@@ -130,7 +130,7 @@ RSK = RSKappendtolog(RSK, logentry);
         good = find(ismember(1:length(t),I) == 0);
         hashold = ~isempty(I);
 
-        if hashold,
+        if hashold && any(x) % Check if the channel contains zero value only
             switch action  
               case 'interp'
                 y(I) = interp1(t(good), x(good), t(I)); 

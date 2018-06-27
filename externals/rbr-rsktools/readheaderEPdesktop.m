@@ -22,7 +22,6 @@ function RSK = readheaderEPdesktop(RSK)
 % Last revision: 2017-06-21
 
 %% Tables that are definitely in 'EPdesktop'
-RSK = RSKreadthumbnail(RSK);
 
 RSK = readsamplingdetails(RSK);
 

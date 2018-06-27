@@ -26,7 +26,7 @@ function handles = RSKplotdownsample(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-24
+% Last revision: 2018-06-18
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -41,8 +41,7 @@ channel = p.Results.channel;
 field = 'downsample';
 if ~isfield(RSK,field)
     disp('You must read a section of downsample in first!');
-    disp('Use RSKreaddownsample, note that when dataset is small, downsample may not exist.')
-    disp('If that is the case, try RSKreadthumbnail and RSKplotthumbnail.')
+    disp('Use RSKreaddownsample, note that when dataset has less than 40960 samples per channel, downsample does not exist.')
     handles = NaN;
     return
 end

@@ -24,7 +24,7 @@ function handles = RSKplotburstdata(RSK, varargin)
 %    RSK = RSKreadburstdata(RSK, 'channel', {'Conductivity', 'Temperature', 'Pressure'});  
 %    RSKplotburstdata(RSK);  
 %
-% See also: RSKreadburstdata, RSKplotthumbnail, RSKplotdata.
+% See also: RSKreadburstdata, RSKplotdata, RSKplotdownsample.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

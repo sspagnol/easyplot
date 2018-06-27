@@ -54,10 +54,6 @@ if any(strcmpi({tables.name}, 'geodata'))
     RSK = RSKreadgeodata(RSK);
 end
 
-if any(strcmpi({tables.name}, 'thumbnailData'))
-    RSK = RSKreadthumbnail(RSK);
-end
-
 if any(strcmpi({tables.name}, 'downsample_caches'))
     RSK = RSKreaddownsample(RSK);
 end
