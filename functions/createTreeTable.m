@@ -13,14 +13,20 @@ treePanelColumnEditable = {'', '', '', false, true, true};
 
 % I can't work out how to reuse existing jtable and setModelData so just
 % delete the old one
-if isfield(userData, 'jtable') & ~isempty(userData.jtable)
-    % clear tree table
-    % https://undocumentedmatlab.com/blog/treetable#comment-308645
-    jtree = userData.jtable;
-    jtreePanel = jtree.getParent.getParent.getParent;
-    jtreePanelParent = jtreePanel.getParent;
-    jtreePanelParent.remove(jtreePanel);
-    jtreePanelParent.repaint;
+if isfield(userData, 'jtable') 
+    if ~isempty(userData.jtable)
+        % clear tree table
+        % https://undocumentedmatlab.com/blog/treetable#comment-308645
+        jtree = userData.jtable;
+        jtreePanel = jtree.getParent.getParent.getParent;
+        if ~isempty(jtreePanel)
+            jtreePanelParent = jtreePanel.getParent;
+            if ~isempty(jtreePanelParent)
+                jtreePanelParent.remove(jtreePanel);
+                jtreePanelParent.repaint;
+            end
+        end
+    end
 end
 
 jtable = treeTable(panel, ...
