@@ -18,6 +18,7 @@ set(msgPanelText, 'String', 'plotQC_Callback');
 %set(otherRadio, 'Value', 0);
 if isfield(userData,'sample_data')
 plotData(hFig);
+%replot_Callback(hObject, eventdata, handles)
 end
 
 end

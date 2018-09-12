@@ -80,10 +80,11 @@ sam.history = '';
 
 %% add derived diagnositic variables, prefaces with 'EP_'
 sam = add_EP_TIMEDIFF(sam);
-sam = add_EP_LPF(sam);
-
 [sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude);
 [sam, defaultLatitude] = add_EP_DEPTH(sam, defaultLatitude);
+
+% done after adding other variables
+sam = add_EP_LPF(sam);
 
 % update isPlottableVar, must be done last
 sam.isPlottableVar = false(1,numel(sam.variables));

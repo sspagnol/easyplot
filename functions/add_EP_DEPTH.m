@@ -3,10 +3,10 @@ function [sam, latitude] = add_EP_DEPTH(sam, defaultLatitude)
 
 latitude = defaultLatitude;
 % exit if we already have depth
-depthIdx       = getVar(sam.variables, 'DEPTH');
-%if depthIdx ~= 0
-%    return;
-%end
+%depthIdx       = getVar(sam.variables, 'DEPTH');
+if (getVar(sam.variables, 'DEPTH') ~= 0) || (getVar(sam.variables, 'EP_DEPTH') ~= 0)
+   return;
+end
     
 presIdx       = getVar(sam.variables, 'PRES');
 presRelIdx    = getVar(sam.variables, 'PRES_REL');

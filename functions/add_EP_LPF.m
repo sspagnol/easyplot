@@ -6,9 +6,25 @@ function sam = add_EP_LPF(sam)
 % filtering need a monotonic time stamp with regular dt and with nan data
 % replaced with mean of time series.
 
+%% determine QC use
+try
+    useQCflags = userData.EP_plotQC;
+catch
+    useQCflags = false;
+end
+useFlags = 'RAW';
+if useQCflags, useFlags='QC'; end
+
+% retrieve good flag values
+qcSet     = str2double(readProperty('toolbox.qc_set'));
+rawFlag   = imosQCFlag('raw', qcSet, 'flag');
+goodFlag  = imosQCFlag('good', qcSet, 'flag');
+%pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
+goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
+
 % only do LPF on PRES, PRES_REL. Search is setup such to avoid bursted
 % names
-iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES$|PRES_REL$','once')), sam.variables, 'UniformOutput', false)));
+iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES$|PRES_REL$|^DEPTH|EP_DEPTH','once')), sam.variables, 'UniformOutput', false)));
 if isempty(iLpfVars), return; end
 
 % filtering burst data like WQMs can be problematic, totally experimental
@@ -107,14 +123,24 @@ if candoLpf
     
     idLpfTime  = getVar(sam.dimensions, 'LPFTIME');
     
-    for ii = iLpfVars
+    for vv = 1:numel(iLpfVars)
+        ii = iLpfVars(vv);
         rawData=sam.variables{ii}.data;
+        %if useQCflags & isfield(sam.variables{ii}, 'flags')
+        if isfield(sam.variables{ii}, 'flags')
+            varFlags = sam.variables{ii}.flags;
+            iGood = ismember(varFlags, goodFlags);
+            rawData(~iGood) = NaN;
+        end
         meansignal=nanmean(rawData);
         % interpolate onto clean time data
-        [qdata, index] = unique(sam.dimensions{idTime}.data); 
+        [qdata, index] = unique(sam.dimensions{idTime}.data);
         newRawData=interp1(qdata,rawData(index)-meansignal,filterTime,'linear',0.0);
         newRawData(isnan(newRawData))=0; % this should never be the case but...
-        
+        if isfield(sam.variables{ii}, 'flags')
+            varFlags = sam.variables{ii}.flags;
+            newVarFlags = varFlags(index);
+        end
         % butterworth low pass filter with 40h cutoff, using
         % matlab function as has zero phase shift
         order=4;
@@ -142,12 +168,14 @@ if candoLpf
         
         % add LPF data
         varStruct = struct();
-        varStruct.name = ['EP_LPF_' sam.variables{ii}.name];
+        varStruct.name = ['LPF_' sam.variables{ii}.name];
         varStruct.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sam.variables{ii}.name, 'type')));
         varStruct.dimensions = 1;
         varStruct.data = filterData;
         varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
-        
+        if isfield(sam.variables{ii}, 'flags')
+            varStruct.flags = newVarFlags;
+        end
         sam.variables{end+1} = varStruct;
         clear('varStruct');
         

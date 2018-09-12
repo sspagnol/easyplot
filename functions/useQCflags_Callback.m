@@ -13,6 +13,10 @@ else
     set(hObject,'Checked','on');
     userData.EP_plotQC = true;
 end
+userData.redoPlots = true;
 setappdata(theParent, 'UserData', userData);
+if isfield(userData,'sample_data')
+    plotData(theParent);
+end
 end
 
