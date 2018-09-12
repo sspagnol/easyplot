@@ -45,7 +45,7 @@ switch theChar
         ylim('auto');
         
     case {'x', 'X'}
-        if theChar == 'X',
+        if theChar == 'X'
             zoomFactor=1/zoomFactor;
         end
         xLim=get(gca,'XLim');
