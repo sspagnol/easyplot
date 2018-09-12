@@ -15,7 +15,7 @@ datacursorText = {['Time: ', datestr(pos(1),'yyyy-mm-dd HH:MM:SS.FFF')],...
     ['Y: ',num2str(pos(2),4)]};
 % If there is a Z-coordinate in the position, display it as well
 if length(pos) > 2
-    datacursorText{end+1} = ['Z: ',num2str(pos(3),4)];
+    datacursorText{end+1} = ['Z: ',num2str(pos(3),6)];
 end
 
 try
