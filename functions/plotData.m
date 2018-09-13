@@ -382,17 +382,19 @@ if redoSubplots
     end
 end
 
-for ii=1:length(graphs)
-    set(hFig,'CurrentAxes', graphs(ii));
-    hLegend = legend(graphs(ii),'show');
-    % can have multiple lines per instrument when EP_plotYearly = true
-    % make unique strings
-    hStrings = hLegend.String;
-    [uStrings, IA, IC] = unique(hStrings, 'stable');
-    hLegend.String = hLegend.String(IA);
-    hLegend.FontSize = 8;
-end
-    
+% for ii=1:length(graphs)
+%     set(hFig,'CurrentAxes', graphs(ii));
+%     hLegend = legend(graphs(ii),'show');
+%     % can have multiple lines per instrument when EP_plotYearly = true
+%     % make unique strings
+%     hStrings = hLegend.String;
+%     [uStrings, IA, IC] = unique(hStrings, 'stable');
+%     hLegend.String = hLegend.String(IA);
+%     hLegend.FontSize = 8;
+% end
+
+updateLegends(hFig);
+
 %% update progress string and save UserData
 set(msgPanelText,'String','Done');
 userData.redoPlots = false;

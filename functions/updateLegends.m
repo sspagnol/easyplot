@@ -15,15 +15,19 @@ for ii = 1:numel(graphs)
     legendStrings = {};
     hLines = findobj(graphs(ii).Children,'Type','Line');
     
-    %legendStrings = {hLines.Tag};
     legendStrings = strrep({hLines.Tag}, '_', '\_');
-    %legendStrings = sort(legendStrings);
-    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii), legendStrings); %, 'FontSize', 8, 'Interpreter', 'none');
+    % can have multiple lines per instrument when EP_plotYearly = true
+    % make unique strings and get indexing
+    [uStrings, IA, IC] = unique(legendStrings, 'stable');
+
+    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA)); %, 'FontSize', 8, 'Interpreter', 'none');
     hLegend.Interpreter = 'none';
     hLegend.FontSize = 8;
-    iSort=cellfun(@(x) find(strcmp(x, text_str)), {plot_h.Tag}, 'UniformOutput', false);
-    iSort=[iSort{:}];
-    legend(text_str(iSort));
+    set(object_h,'linewidth',2.0);
+    
+    %iSort=cellfun(@(x) find(strcmp(x, text_str)), {plot_h.Tag}, 'UniformOutput', false);
+    %iSort=[iSort{:}];
+    %legend(text_str(iSort));
     %legend('toggle');
     
     % legendflex still has problems
@@ -31,4 +35,3 @@ for ii = 1:numel(graphs)
 end
 
 end
-
