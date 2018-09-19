@@ -151,6 +151,7 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     % plots are to be added
     if  (strcmpi(userData.EP_plotType,'VARS_OVERLAY') & any(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))) || ...
             (strcmpi(userData.EP_plotType,'VARS_STACKED') & all(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter))))
+        updateLegends(hFig);
         % release rentrancy flag
         hash.remove(hObject);
         return
