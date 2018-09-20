@@ -122,7 +122,7 @@ if candoLpf
     clear('dimStruct');
     
     idLpfTime  = getVar(sam.dimensions, 'LPFTIME');
-    
+    [qdata, qindex] = unique(sam.dimensions{idTime}.data);
     for vv = 1:numel(iLpfVars)
         ii = iLpfVars(vv);
         rawData=sam.variables{ii}.data;
@@ -134,12 +134,11 @@ if candoLpf
         end
         meansignal=nanmean(rawData);
         % interpolate onto clean time data
-        [qdata, index] = unique(sam.dimensions{idTime}.data);
-        newRawData=interp1(qdata,rawData(index)-meansignal,filterTime,'linear',0.0);
-        newRawData(isnan(newRawData))=0; % this should never be the case but...
+        newRawData=interp1(qdata,rawData(qindex)-meansignal,filterTime,'linear',0.0);
+        newRawData(isnan(newRawData)) = 0.0; % this should never be the case but...
         if isfield(sam.variables{ii}, 'flags')
             varFlags = sam.variables{ii}.flags;
-            newVarFlags = varFlags(index);
+            newVarFlags = interp1(qdata, single(varFlags(qindex)), filterTime, 'nearest', 0);
         end
         % butterworth low pass filter with 40h cutoff, using
         % matlab function as has zero phase shift
@@ -170,11 +169,11 @@ if candoLpf
         varStruct = struct();
         varStruct.name = ['LPF_' sam.variables{ii}.name];
         varStruct.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sam.variables{ii}.name, 'type')));
-        varStruct.dimensions = 1;
+        varStruct.dimensions = idLpfTime;
         varStruct.data = filterData;
         varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
         if isfield(sam.variables{ii}, 'flags')
-            varStruct.flags = newVarFlags;
+            varStruct.flags = uint8(newVarFlags);
         end
         sam.variables{end+1} = varStruct;
         clear('varStruct');

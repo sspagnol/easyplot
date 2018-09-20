@@ -142,16 +142,17 @@ userData.plotVarNames = varNames;
 %%
 if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     %updateDateLabel(hFig,struct('Axes', graphs(1)), true);
+    updateLegends(hFig);
     set(msgPanelText,'String','Done');
     setappdata(hFig, 'UserData', userData);
     % is this needed?
-    drawnow;
+    %drawnow;
     
     % return early if overlay/stacked graphs still have lines and no new
     % plots are to be added
     if  (strcmpi(userData.EP_plotType,'VARS_OVERLAY') & any(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter)))) || ...
             (strcmpi(userData.EP_plotType,'VARS_STACKED') & all(cellfun(@(x) plotVarCounter.(char(x)) > 0, fieldnames(plotVarCounter))))
-        updateLegends(hFig);
+        %updateLegends(hFig);
         % release rentrancy flag
         hash.remove(hObject);
         return
@@ -284,12 +285,12 @@ for ii = 1:numel(userData.sample_data)
             markerStyle='none';
         end
         
-        if strfind(theVar, 'EP_LPF')
+        if strfind(theVar, 'LPF_')
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'LPFTIME');
         else
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
-        
+
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         legendString = strrep(instStr,'_','\_');

@@ -9,8 +9,8 @@ plotPanel = findobj(hFig, 'Tag','plotPanel');
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 
 for ii = 1:numel(graphs)
-    axes(graphs(ii));
-    legend('off');
+    %axes(graphs(ii));
+    legend(graphs(ii), 'off');
    
     legendStrings = {};
     hLines = findobj(graphs(ii).Children,'Type','Line');
