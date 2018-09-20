@@ -141,7 +141,7 @@ for ii=1:numel(sam.variables)
     
     if isIMOS
         if isfield(sam.variables{ii}, 'flags')
-            varFlags = sam.variables{ii}.flags;
+            varFlags = int8(sam.variables{ii}.flags);
             iGood = ismember(varFlags, goodFlags);
             yData(~iGood) = NaN;
         end
