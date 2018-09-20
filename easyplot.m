@@ -378,6 +378,11 @@ setappdata(hFig, 'UserData', userData);
                 end
                 if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
                     plotVar = strtrim(strsplit(ymlData.files{ii}.variables, ','));
+                    % var rename handle, all LPF variable are new just
+                    % LPF_theVariableName
+                    if strcmp(plotVar, 'EP_LPF_PRES_REL')
+                        plotVar = 'LPF_PRES_REL';
+                    end
                     userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
                 end
             end
