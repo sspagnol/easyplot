@@ -8,13 +8,20 @@ function sam = updateDataEasyplot(sam)
 % Outputs:
 %   sample_data - same as input, with fields added/modified
 
+%% retrieve good flag values
+qcSet     = str2double(readProperty('toolbox.qc_set'));
+rawFlag   = imosQCFlag('raw', qcSet, 'flag');
+goodFlag  = imosQCFlag('good', qcSet, 'flag');
+goodFlags = [rawFlag, goodFlag];
 
+%%
 if isfield(sam.meta, 'latitude')
     defaultLatitude = sam.meta.latitude;
 else
     defaultLatitude = NaN;
 end
 
+%%
 idTime  = getVar(sam.dimensions, 'TIME');
 
 %% add derived diagnositic variables, prefaces with 'EP_'

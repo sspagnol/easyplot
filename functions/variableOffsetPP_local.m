@@ -160,50 +160,52 @@ if ~auto
         nVars = length(sample_data{k}.variables);
         rh    = 0.95 / (nVars + 1);
         
-        diffHeaderLabelStr = '';
-        if isTimeSeries
-            % we might want to see the difference for this variable with
-            % the nearest instrument on the mooring
-            iTimeCurrent = getVar(sample_data{k}.dimensions, 'TIME');
-            timeCurrent = sample_data{k}.dimensions{iTimeCurrent}.data;
-            nominalDepthCurrent = inf;
-            if isfield(sample_data{k}, 'instrument_nominal_depth')
-                if ~isempty(sample_data{k}.instrument_nominal_depth)
-                    nominalDepthCurrent = sample_data{k}.instrument_nominal_depth;
-                end
-            end
-            
-            if isinf(nominalDepthCurrent)
-                fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
-                    ' please document instrument_nominal_depth global attributes'...
-                    ' so that a nearest instrument can be found in the mooring']);
-            end
-            
-            % we will be looking at differences over a day from 1/4 of the
-            % deployment
-            timeForDiff = timeCurrent(1) + (timeCurrent(end)-timeCurrent(1))/4;
-            if isfield(sample_data{k}, 'time_deployment_start')
-                if ~isempty(sample_data{k}.time_deployment_start)
-                    % or preferably from the moment the mooring is in position
-                    timeForDiff = sample_data{k}.time_deployment_start;
-                else
-                    fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
-                        ' please document time_deployment_start global attributes'...
-                        ' so that difference with a nearest instrument can be better calculated']);
-                end
-            else
-                fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
-                    ' please document time_deployment_start global attributes'...
-                    ' so that difference with a nearest instrument can be better calculated']);
-            end
-            
-            iForDiff = timeCurrent >= timeForDiff & ...
-                timeCurrent <= timeForDiff + 1;
-            timeCurrentForDiff = timeCurrent(iForDiff);
-            
-            diffHeaderLabelStr = ['Mean diff from ' datestr(timeCurrentForDiff(1), 'dd-mm-yyyy HH:MM:SS UTC') ' over 24h'];
-        end
+%         diffHeaderLabelStr = '';
+%         if isTimeSeries
+%             % we might want to see the difference for this variable with
+%             % the nearest instrument on the mooring
+%             iTimeCurrent = getVar(sample_data{k}.dimensions, 'TIME');
+%             timeCurrent = sample_data{k}.dimensions{iTimeCurrent}.data;
+%             nominalDepthCurrent = inf;
+%             if isfield(sample_data{k}, 'instrument_nominal_depth')
+%                 if ~isempty(sample_data{k}.instrument_nominal_depth)
+%                     nominalDepthCurrent = sample_data{k}.instrument_nominal_depth;
+%                 end
+%             end
+%             
+%             if isinf(nominalDepthCurrent)
+%                 fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
+%                     ' please document instrument_nominal_depth global attributes'...
+%                     ' so that a nearest instrument can be found in the mooring']);
+%             end
+%             
+%             % we will be looking at differences over a day from 1/4 of the
+%             % deployment
+%             timeForDiff = timeCurrent(1) + (timeCurrent(end)-timeCurrent(1))/4;
+%             if isfield(sample_data{k}, 'time_deployment_start')
+%                 if ~isempty(sample_data{k}.time_deployment_start)
+%                     % or preferably from the moment the mooring is in position
+%                     timeForDiff = sample_data{k}.time_deployment_start;
+%                 else
+%                     fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
+%                         ' please document time_deployment_start global attributes'...
+%                         ' so that difference with a nearest instrument can be better calculated']);
+%                 end
+%             else
+%                 fprintf('%s\n', ['Info : ' sample_data{k}.toolbox_input_file ...
+%                     ' please document time_deployment_start global attributes'...
+%                     ' so that difference with a nearest instrument can be better calculated']);
+%             end
+%             
+%             iForDiff = timeCurrent >= timeForDiff & ...
+%                 timeCurrent <= timeForDiff + 1;
+%             timeCurrentForDiff = timeCurrent(iForDiff);
+%             
+%             diffHeaderLabelStr = ['Mean diff from ' datestr(timeCurrentForDiff(1), 'dd-mm-yyyy HH:MM:SS UTC') ' over 24h'];
+%         end
         
+diffHeaderLabelStr = 'Not Used';
+
         % column headers
         varHeaderLabel    = uicontrol('Parent', setPanels(k), 'Style', 'text', ...
             'String', 'Variable', 'FontWeight', 'bold');
@@ -257,55 +259,55 @@ if ~auto
             
             dataDiffStr = '';
             if isTimeSeries && length(sizeData) == 2 && any(sizeData == 1)
-                % look for nearest instrument with the same 1D variable
-                distInstruments = inf(1, nSampleData);
-                for kk=1:nSampleData
-                    if kk == k, continue; end
-                    nominalDepthOther = inf;
-                    if isfield(sample_data{kk}, 'instrument_nominal_depth')
-                        nominalDepthOther = sample_data{kk}.instrument_nominal_depth;
-                    else
-                        continue;
-                    end
-                    distInstruments(kk) = abs(nominalDepthCurrent - nominalDepthOther);
-                end
-                distInstruments(isnan(distInstruments)) = inf;
+%                 % look for nearest instrument with the same 1D variable
+%                 distInstruments = inf(1, nSampleData);
+%                 for kk=1:nSampleData
+%                     if kk == k, continue; end
+%                     nominalDepthOther = inf;
+%                     if isfield(sample_data{kk}, 'instrument_nominal_depth')
+%                         nominalDepthOther = sample_data{kk}.instrument_nominal_depth;
+%                     else
+%                         continue;
+%                     end
+%                     distInstruments(kk) = abs(nominalDepthCurrent - nominalDepthOther);
+%                 end
+%                 distInstruments(isnan(distInstruments)) = inf;
+%                 
+%                 [~, iNearest] = min(distInstruments);
+%                 varName = sample_data{k}.variables{m}.name;
+%                 iVarNearest = getVar(sample_data{iNearest}.variables, varName);
+%                 signPresAtm = 0;
+%                 if strcmpi(varName, 'PRES') && iVarNearest == 0
+%                     iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES_REL');
+%                     signPresAtm = -1;
+%                 elseif strcmpi(varName, 'PRES_REL') && iVarNearest == 0
+%                     iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES');
+%                     signPresAtm = 1;
+%                 end
+%                 while iVarNearest == 0 && ~all(isinf(distInstruments))
+%                     distInstruments(iNearest) = inf;
+%                     [~, iNearest] = min(distInstruments);
+%                     iVarNearest = getVar(sample_data{iNearest}.variables, sample_data{k}.variables{m}.name);
+%                     signPresAtm = 0;
+%                     if strcmpi(varName, 'PRES') && iVarNearest == 0
+%                         iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES_REL');
+%                         signPresAtm = -1;
+%                     elseif strcmpi(varName, 'PRES_REL') && iVarNearest == 0
+%                         iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES');
+%                         signPresAtm = 1;
+%                     end
+%                 end
                 
-                [~, iNearest] = min(distInstruments);
-                varName = sample_data{k}.variables{m}.name;
-                iVarNearest = getVar(sample_data{iNearest}.variables, varName);
-                signPresAtm = 0;
-                if strcmpi(varName, 'PRES') && iVarNearest == 0
-                    iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES_REL');
-                    signPresAtm = -1;
-                elseif strcmpi(varName, 'PRES_REL') && iVarNearest == 0
-                    iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES');
-                    signPresAtm = 1;
-                end
-                while iVarNearest == 0 && ~all(isinf(distInstruments))
-                    distInstruments(iNearest) = inf;
-                    [~, iNearest] = min(distInstruments);
-                    iVarNearest = getVar(sample_data{iNearest}.variables, sample_data{k}.variables{m}.name);
-                    signPresAtm = 0;
-                    if strcmpi(varName, 'PRES') && iVarNearest == 0
-                        iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES_REL');
-                        signPresAtm = -1;
-                    elseif strcmpi(varName, 'PRES_REL') && iVarNearest == 0
-                        iVarNearest = getVar(sample_data{iNearest}.variables, 'PRES');
-                        signPresAtm = 1;
-                    end
-                end
-                
-                if iVarNearest && ~isinf(distInstruments(iNearest))
-                    dataNearest = sample_data{iNearest}.variables{iVarNearest}.data;
-                    iTimeNearest = getVar(sample_data{iNearest}.dimensions, 'TIME');
-                    timeNearest = sample_data{iNearest}.dimensions{iTimeNearest}.data;
-                    
-                    dataDiff = sample_data{k}.variables{m}.data(iForDiff) + signPresAtm*(14.7*0.689476) - interp1(timeNearest, dataNearest, timeCurrentForDiff);
-                    
-                    iNanDataDiff = isnan(dataDiff);
-                    dataDiffStr = [num2str(mean(dataDiff(~iNanDataDiff))) ' @ ' num2str(distInstruments(iNearest)) 'm away (nominal)'];
-                end
+%                 if iVarNearest && ~isinf(distInstruments(iNearest))
+%                     dataNearest = sample_data{iNearest}.variables{iVarNearest}.data;
+%                     iTimeNearest = getVar(sample_data{iNearest}.dimensions, 'TIME');
+%                     timeNearest = sample_data{iNearest}.dimensions{iTimeNearest}.data;
+%                     
+%                     dataDiff = sample_data{k}.variables{m}.data(iForDiff) + signPresAtm*(14.7*0.689476) - interp1(timeNearest, dataNearest, timeCurrentForDiff);
+%                     
+%                     iNanDataDiff = isnan(dataDiff);
+%                     dataDiffStr = [num2str(mean(dataDiff(~iNanDataDiff))) ' @ ' num2str(distInstruments(iNearest)) 'm away (nominal)'];
+%                 end
             end
             
             iNanDataCurrent = isnan(sample_data{k}.variables{m}.data);
