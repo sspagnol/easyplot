@@ -78,6 +78,26 @@ sam.meta.depth = 0;
 
 sam.history = '';
 
+%%
+for kk=1:numel(sam.dimensions)
+    if ~isfield(sam.dimensions{kk}, 'EP_OFFSET')
+        sam.dimensions{kk}.EP_OFFSET = 0.0;
+        sam.dimensions{kk}.EP_SCALE = 1.0;
+    end
+end
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'EP_OFFSET')
+        sam.variables{kk}.EP_OFFSET = 0.0;
+        sam.variables{kk}.EP_SCALE = 1.0;
+    end
+end
+%
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'EP_iSlice')
+        sam.variables{kk}.EP_iSlice = 1;
+    end
+end
+
 %% add derived diagnositic variables, prefaces with 'EP_'
 sam = add_EP_TIMEDIFF(sam);
 [sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude);
@@ -99,17 +119,12 @@ for kk=1:numel(sam.variables)
     end
 end
 sam.variablePlotStatus = sam.variablePlotStatus(:);
+sam.meta.latitude = defaultLatitude;
 
-%
-for kk=1:numel(sam.variables)
-    if ~isfield(sam.variables{kk}, 'iSlice')
-        sam.variables{kk}.iSlice = 1;
-    end
-end
 
 % calculate data limits
 for ii=1:numel(sam.variables)
-    LIMITS = struct;
+    EP_LIMITS = struct;
     RAW = struct;
     QC = struct;
     
@@ -128,14 +143,18 @@ for ii=1:numel(sam.variables)
     
     %theVar = sam.variables{ii}.name;
     idTime  = getVar(sam.dimensions, 'TIME');
-    RAW.xMin=min(sam.dimensions{idTime}.data(1), RAW.xMin);
-    RAW.xMax=max(sam.dimensions{idTime}.data(end), RAW.xMax);
+    theOffset = sam.dimensions{idTime}.EP_OFFSET;
+    theScale = sam.dimensions{idTime}.EP_SCALE;
+    RAW.xMin=min(sam.dimensions{idTime}.data(1)+theOffset, RAW.xMin);
+    RAW.xMax=max(sam.dimensions{idTime}.data(end)+theOffset, RAW.xMax);
     if ~isfinite(RAW.xMin), RAW.xMin=floor(now); end
     if ~isfinite(RAW.xMax), RAW.xMax=floor(now)+1; end
     QC.xMin = RAW.xMin;
     QC.xMax = RAW.xMax;
     
-    yData = double(sam.variables{ii}.data);
+    theOffset = sam.variables{ii}.EP_OFFSET;
+    theScale = sam.variables{ii}.EP_SCALE;
+    yData = theOffset + double(sam.variables{ii}.data).*theScale;
     RAW.yMin=min(min(yData), RAW.yMin);
     RAW.yMax=max(max(yData), RAW.yMax);
     
@@ -167,9 +186,9 @@ for ii=1:numel(sam.variables)
     if ~isfinite(QC.yMin), QC.yMin=0; end
     if ~isfinite(QC.yMax), QC.yMax=1; end
     
-    LIMITS.QC = QC;
-    LIMITS.RAW = RAW;
-    sam.variables{ii}.LIMITS = LIMITS;
+    EP_LIMITS.QC = QC;
+    EP_LIMITS.RAW = RAW;
+    sam.variables{ii}.EP_LIMITS = EP_LIMITS;
 end
 
 end

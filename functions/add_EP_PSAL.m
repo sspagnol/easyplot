@@ -31,7 +31,14 @@ end
 if ~(cndcIdx && tempIdx && (isPresVar || isDepthInfo)), return; end
 
 cndc = sam.variables{cndcIdx}.data;
+theOffset = sam.variables{cndcIdx}.EP_OFFSET;
+theScale = sam.variables{cndcIdx}.EP_SCALE;
+cndc = theOffset + (theScale .* cndc);
+
 temp = sam.variables{tempIdx}.data;
+theOffset = sam.variables{tempIdx}.EP_OFFSET;
+theScale = sam.variables{tempIdx}.EP_SCALE;
+temp = theOffset + (theScale .* temp);
 
 % pressure information used for Salinity computation is from the
 % PRES or PRES_REL variables in priority
@@ -39,12 +46,18 @@ if isPresVar
     if presRelIdx > 0
         presRel = sam.variables{presRelIdx}.data;
         presName = 'PRES_REL';
+        theOffset = sam.variables{presRelIdx}.EP_OFFSET;
+        theScale = sam.variables{presRelIdx}.EP_SCALE;
+        presRel = theOffset + (theScale .* presRel);
     else
         % update from a relative pressure like SeaBird computes
         % it in its processed files, substracting a constant value
         % 10.1325 dbar for nominal atmospheric pressure
         presRel = sam.variables{presIdx}.data - gsw_P0/10^4;
         presName = 'PRES substracting a constant value 10.1325 dbar for nominal atmospheric pressure';
+        theOffset = sam.variables{presRelIdx}.EP_OFFSET;
+        theScale = sam.variables{presRelIdx}.EP_SCALE;
+        presRel = theOffset + (theScale .* presRel);
     end
 else
     % when no pressure variable exists, we use depth information either
@@ -95,6 +108,13 @@ sam = EP_addVar(...
     dimensions, ...
     salinityComment, ...
     coordinates);
+
+% update plot status
+if isfield(sam, 'variablePlotStatus')
+    if (sam.variablePlotStatus(tempIdx) == 2) || (sam.variablePlotStatus(cndcIdx) == 2) || (sam.variablePlotStatus(presRelIdx) == 2)
+        sam.variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
+    end
+end
 
 end
 

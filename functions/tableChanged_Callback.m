@@ -46,7 +46,7 @@ if isempty(theSerial)
 end
 theVariable   = hModel.getValueAt(modifiedRow,idVariable);
 plotStatus = double(hModel.getValueAt(modifiedRow,idShow));
-iSlice = hModel.getValueAt(modifiedRow,idSlice);
+EP_iSlice = hModel.getValueAt(modifiedRow,idSlice);
 
 % if deselecting mark it as -1
 if plotStatus == 0
@@ -67,19 +67,19 @@ for ii=1:numel(userData.sample_data) % loop over files
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 hModel.setValueAt(1,modifiedRow,idSlice);
                 %originalModel.setValueAt(1,modifiedRow,idSlice);
-                userData.sample_data{ii}.variables{jj}.iSlice = 1;
+                userData.sample_data{ii}.variables{jj}.EP_iSlice = 1;
             else
                 [d1,d2] = size(userData.sample_data{ii}.variables{jj}.data);
-                if iSlice<1
+                if EP_iSlice<1
                     hModel.setValueAt(1,modifiedRow,idSlice);
                     %originalModel.setValueAt(1,modifiedRow,idSlice);
-                    userData.sample_data{ii}.variables{jj}.iSlice = 1;
-                elseif iSlice>d2
+                    userData.sample_data{ii}.variables{jj}.EP_iSlice = 1;
+                elseif EP_iSlice>d2
                     hModel.setValueAt(d2,modifiedRow,idSlice);
                     %originalModel.setValueAt(d2,modifiedRow,idSlice);
-                    userData.sample_data{ii}.variables{jj}.iSlice = d2;
+                    userData.sample_data{ii}.variables{jj}.EP_iSlice = d2;
                 else
-                    userData.sample_data{ii}.variables{jj}.iSlice = iSlice;
+                    userData.sample_data{ii}.variables{jj}.EP_iSlice = EP_iSlice;
                 end
             end
         end

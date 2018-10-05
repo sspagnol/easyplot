@@ -27,6 +27,7 @@ uimenu(m, 'Label', 'Plot Time as Day Number', 'Checked','off', 'Callback', @plot
 uimenu(m, 'Label', 'Use QC flags', 'Callback', @useQCflags_Callback);
 uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
 uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback);
+uimenu(m, 'Label', 'Do Variable Offset', 'Callback', @variableOffsets_Callback);
 uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback);
 uimenu(m, 'Label', 'Save filelist (YML)', 'Callback', @saveFilelist_Callback);
 uimenu(m, 'Label', 'Save Image', 'Callback', @saveImage_Callback);
@@ -352,11 +353,32 @@ setappdata(hFig, 'UserData', userData);
                 isNew = false(size(userData.sample_data));
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
+                    % update meta
                     structs.meta.parser = theParser;
                     if isfield(ymlData.files{ii}, 'latitude') && ~isempty(ymlData.files{ii}.latitude)
                         structs.meta.latitude = ymlData.files{ii}.latitude;
                     end
+                    
+                    % finalize
                     tmpStruct = finaliseDataEasyplot(structs, theFullFile, defaultLatitude);
+                    
+                    % update dimensions/variables
+                    if isfield(ymlData.files{ii}, 'offsets') && ~isempty(ymlData.files{ii}.offsets)
+                        offsets = ymlData.files{ii}.offsets;
+                        for ll = 1:numel(fieldnames(offsets))
+                            theVar = offsets{ll};
+                            if strcmp(theVar, 'TIME')
+                                varId = getVar(structs.dimensions, theVar);
+                                structs.dimensions(varId).EP_OFFSET = offsets.(theVar)/24;
+                            else
+                                varId = getVar(structs.variables, theVar);
+                                theOffset = offsets.(theVar);
+                                structs.variables(varId).EP_OFFSET = theOffset(1);
+                                structs.variables(varId).EP_SCALE = theOffset(2);
+                            end
+                        end
+                    end
+                    
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.isNew = true;
@@ -368,6 +390,21 @@ setappdata(hFig, 'UserData', userData);
                         structs{k}.meta.parser = theParser;
                         if isfield(ymlData.files{ii}, 'latitude') & ~isempty(ymlData.files{ii}.latitude)
                             structs{k}.meta.latitude = ymlData.files{ii}.latitude;
+                        end
+                        if isfield(ymlData.files{ii}, 'offsets') && ~isempty(ymlData.files{ii}.offsets)
+                            offsets = ymlData.files{ii}.offsets;
+                            for ll = 1:numel(fieldnames(offsets))
+                                theVar = offsets{ll};
+                                if strcmp(theVar, 'TIME')
+                                    varId = getVar(structs.dimensions, theVar);
+                                    structs.dimensions(varId).EP_OFFSET = offsets.(theVar)/24;
+                                else
+                                    varId = getVar(structs.variables, theVar);
+                                    theOffset = offsets.(theVar);
+                                    structs.variables(varId).EP_OFFSET = theOffset(1);
+                                    structs.variables(varId).EP_SCALE = theOffset(2);
+                                end
+                            end
                         end
                         tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                         userData.sample_data{end+1} = tmpStruct;
@@ -455,7 +492,29 @@ setappdata(hFig, 'UserData', userData);
             return;
         end
         
-        userData.sample_data = timeOffsetPP(userData.sample_data, 'raw', false);
+        userData.sample_data = timeOffsetPP_local(userData.sample_data, 'raw', false);
+        userData.redoPlots = true;
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
+    end
+
+%%
+    function variableOffsets_Callback(hObject, eventdata, handles)
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        msgPanel = findobj(hFig, 'Tag','msgPanel');
+        msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+
+        if ~isfield(userData,'sample_data')
+            return;
+        end
+        
+        userData.sample_data = variableOffsetPP_local(userData.sample_data, 'raw', false);
+        for ii = 1:length(userData.sample_data)
+            userData.sample_data{ii} = updateDataEasyplot(userData.sample_data{ii});
+        end
+        
         userData.redoPlots = true;
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);

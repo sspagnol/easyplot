@@ -297,51 +297,69 @@ for ii = 1:numel(userData.sample_data)
         try
             if isvector(userData.sample_data{ii}.variables{jj}.data)
                 % 1D var
+                xdataVar = userData.sample_data{ii}.dimensions{idTime}.data;
+                theOffset = userData.sample_data{ii}.dimensions{idTime}.EP_OFFSET;
+                theScale = userData.sample_data{ii}.dimensions{idTime}.EP_SCALE;
+                xdataVar = theOffset + (theScale .* xdataVar);
+                
                 ydataVar = userData.sample_data{ii}.variables{jj}.data;
+                theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
+                theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
+                ydataVar = theOffset + (theScale .* ydataVar);
+                
                 if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
                     varFlags = userData.sample_data{ii}.variables{jj}.flags;
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
+                
                 if userData.EP_plotYearly
-                    yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
+                    yyyy = year(xdataVar);
                     yStart = yyyy(1);
                     yEnd = yyyy(end);
                     for yr = yStart:yEnd
                         yGood = yyyy == yr;
-                        hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data(yGood) - datenum(yr,1,1,0,0,0), ...
+                        hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
                             'YData',ydataVar(yGood), ...
                             'LineStyle',lineStyle, 'Marker', markerStyle,...
                             'DisplayName', legendString, 'Tag', instStr);
                     end
                 else
-                    hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
                         'YData',ydataVar, ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', legendString, 'Tag', instStr);
                 end
             else
                 % 2D var
-                iSlice = userData.sample_data{ii}.variables{jj}.iSlice;
-                ydataVar = userData.sample_data{ii}.variables{jj}.data(:,iSlice);
+                xdataVar = userData.sample_data{ii}.dimensions{idTime}.data;
+                theOffset = userData.sample_data{ii}.dimensions{idTime}.EP_OFFSET;
+                theScale = userData.sample_data{ii}.dimensions{idTime}.EP_SCALE;
+                xdataVar = theOffset + (theScale .* xdataVar);
+                
+                EP_iSlice = userData.sample_data{ii}.variables{jj}.EP_iSlice;
+                ydataVar = userData.sample_data{ii}.variables{jj}.data(:,EP_iSlice);
+                theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
+                theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
+                ydataVar = theOffset + (theScale .* ydataVar);
                 if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
-                    varFlags = userData.sample_data{ii}.variables{jj}.flags(:,iSlice);
+                    varFlags = userData.sample_data{ii}.variables{jj}.flags(:,EP_iSlice);
                     iGood = ismember(varFlags, goodFlags);
                     ydataVar(~iGood) = NaN;
                 end
                 if userData.EP_plotYearly
-                    yyyy = year(userData.sample_data{ii}.dimensions{idTime}.data);
+                    yyyy = year(xdataVar);
                     yStart = yyyy(1);
                     yEnd = yyyy(end);
                     for yr = yStart:yEnd
                         yGood = yyyy == yr;
-                        hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data(yGood) - datenum(yr,1,1,0,0,0), ...
+                        hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
                             'YData',ydataVar(yGood), ...
                             'LineStyle',lineStyle, 'Marker', markerStyle,...
                             'DisplayName', legendString, 'Tag', instStr);
                     end
                 else
-                    hLine = line('Parent',graphs(ihAx),'XData',userData.sample_data{ii}.dimensions{idTime}.data, ...
+                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
                         'YData',ydataVar, ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', legendString, 'Tag', instStr);

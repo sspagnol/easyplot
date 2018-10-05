@@ -12,7 +12,7 @@ for ii=1:numel(sample_data)
         treePanelData{kk,3} = sample_data{ii}.meta.instrument_serial_no;
         treePanelData{kk,4} = sample_data{ii}.variables{jj}.name;
         treePanelData{kk,5} = sample_data{ii}.variablePlotStatus(jj) > 0;
-        treePanelData{kk,6} = sample_data{ii}.variables{jj}.iSlice;
+        treePanelData{kk,6} = sample_data{ii}.variables{jj}.EP_iSlice;
         
         kk=kk+1;
     end

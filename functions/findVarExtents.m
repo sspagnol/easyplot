@@ -48,16 +48,22 @@ for ii=1:numel(sample_data)
         if sample_data{ii}.variablePlotStatus(jj) > 0
             theVar = sample_data{ii}.variables{jj}.name;
             
-            dataLimits.TIME.RAW.xMin = min(dataLimits.TIME.RAW.xMin, sample_data{ii}.variables{jj}.LIMITS.RAW.xMin);
-            dataLimits.TIME.RAW.xMax = max(dataLimits.TIME.RAW.xMax, sample_data{ii}.variables{jj}.LIMITS.RAW.xMax);
+            dataLimits.TIME.RAW.xMin = min(dataLimits.TIME.RAW.xMin, sample_data{ii}.variables{jj}.EP_LIMITS.RAW.xMin);
+            dataLimits.TIME.RAW.xMax = max(dataLimits.TIME.RAW.xMax, sample_data{ii}.variables{jj}.EP_LIMITS.RAW.xMax);
             dataLimits.TIME.QC.xMin = dataLimits.TIME.RAW.xMin;
             dataLimits.TIME.QC.xMax = dataLimits.TIME.RAW.xMax;
             
             if isvector(sample_data{ii}.variables{jj}.data)
                 yData = double(sample_data{ii}.variables{jj}.data);
+                theOffset = sample_data{ii}.variables{jj}.EP_OFFSET;
+                theScale = sample_data{ii}.variables{jj}.EP_SCALE;
+                yData = theOffset + (theScale .* yData);
             else
-                iSlice=sample_data{ii}.variables{jj}.iSlice;
-                yData = double(sample_data{ii}.variables{jj}.data(:,iSlice));
+                EP_iSlice=sample_data{ii}.variables{jj}.EP_iSlice;
+                yData = double(sample_data{ii}.variables{jj}.data(:,EP_iSlice));
+                theOffset = sample_data{ii}.variables{jj}.EP_OFFSET;
+                theScale = sample_data{ii}.variables{jj}.EP_SCALE;
+                yData = theOffset + (theScale .* yData);
             end
             dataLimits.(theVar).RAW.yMin=min(min(yData), dataLimits.(theVar).RAW.yMin);
             dataLimits.(theVar).RAW.yMax=max(max(yData), dataLimits.(theVar).RAW.yMax);

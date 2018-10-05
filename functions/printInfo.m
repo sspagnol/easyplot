@@ -19,15 +19,20 @@ if localInBounds(axH)
     for ii=1:numel(userData.sample_data) % loop over files
         for jj=1:numel(userData.sample_data{ii}.variables)
             if userData.sample_data{ii}.variablePlotStatus(jj) > 0
-                idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
+                %idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
+                idTime = userData.sample_data{ii}.variables{jj}.dimensions;
+                idTime = idTime(1);
                 tData=userData.sample_data{ii}.dimensions{idTime}.data;
+                
                 [index,distance]=near(tData,currentPosition(1),1);
+                theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
+                theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
                 listData(end+1,:)={userData.sample_data{ii}.variables{jj}.name,...
                     strcat(userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no),...
                     datestr(tData(1),'yyyy-mm-dd HH:MM:SS.FFF'),...
                     datestr(tData(end),'yyyy-mm-dd HH:MM:SS.FFF'),...
                     datestr(tData(index),'yyyy-mm-dd HH:MM:SS.FFF'),...
-                    userData.sample_data{ii}.variables{jj}.data(index)};
+                    theOffset + ( theScale * userData.sample_data{ii}.variables{jj}.data(index))};
             end
         end
     end

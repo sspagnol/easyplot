@@ -20,11 +20,11 @@ qcSet     = str2double(readProperty('toolbox.qc_set'));
 rawFlag   = imosQCFlag('raw', qcSet, 'flag');
 goodFlag  = imosQCFlag('good', qcSet, 'flag');
 %pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
-goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
+goodFlags = uint8([rawFlag, goodFlag]); %, pGoodFlag];
 
 % only do LPF on PRES, PRES_REL. Search is setup such to avoid bursted
 % names
-iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'PRES$|PRES_REL$|^DEPTH|EP_DEPTH','once')), sam.variables, 'UniformOutput', false)));
+iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'^PRES$|^PRES_REL|^DEPTH|^EP_DEPTH','once')), sam.variables, 'UniformOutput', false)));
 if isempty(iLpfVars), return; end
 
 % filtering burst data like WQMs can be problematic, totally experimental
@@ -50,23 +50,27 @@ else
 end
 
 idTime  = getVar(sam.dimensions, 'TIME');
-
+theOffset = sam.dimensions{idTime}.EP_OFFSET;
+theScale = sam.dimensions{idTime}.EP_SCALE;
+xdataVar = sam.dimensions{idTime}.data;
+xdataVar = theOffset + (theScale .* xdataVar);
+                
 % cannot determine samrate from file
 if sampleInterval<eps
-    sampleInterval=mode(diff(sam.dimensions{idTime}.data))*86400;
+    sampleInterval=mode(diff(xdataVar))*86400;
 end
 
-nt=round(((sam.dimensions{idTime}.data(end)-sam.dimensions{idTime}.data(1)))/(sampleInterval/24/3600) +1);
+nt=round(((xdataVar(end) - xdataVar(1)))/(sampleInterval/24/3600) +1);
 if nt > 1e10
     warning('Too many data points for lowpass filtering.');
     return;
 end
 %if length(dataset.XDATA.data)~=nt
-if length(sam.dimensions{idTime}.data)~=nt
+if length(xdataVar)~=nt
     avec=0:nt-1;
-    filterTime=sam.dimensions{idTime}.data(1) + avec.*(sampleInterval/24/3600);
+    filterTime=xdataVar(1) + avec.*(sampleInterval/24/3600);
 else
-    filterTime=sam.dimensions{idTime}.data;
+    filterTime=xdataVar;
 end
 filterTime=filterTime(:);
 
@@ -117,7 +121,8 @@ if candoLpf
     dimStruct.name = 'LPFTIME';
     dimStruct.typeCastFunc  = str2func(netcdf3ToMatlabType(imosParameters(sam.dimensions{idTime}.name, 'type')));
     dimStruct.data          = sam.dimensions{idTime}.typeCastFunc(filterTime);
-    
+    dimStruct.EP_OFFSET = 0.0;
+    dimStruct.EP_SCALE = 1.0;
     sam.dimensions{end+1} = dimStruct;
     clear('dimStruct');
     
@@ -126,9 +131,12 @@ if candoLpf
     for vv = 1:numel(iLpfVars)
         ii = iLpfVars(vv);
         rawData=sam.variables{ii}.data;
+        theOffset = sam.variables{ii}.EP_OFFSET;
+        theScale = sam.variables{ii}.EP_SCALE;
+        rawData = theOffset + (theScale .* rawData);
         %if useQCflags & isfield(sam.variables{ii}, 'flags')
         if isfield(sam.variables{ii}, 'flags')
-            varFlags = sam.variables{ii}.flags;
+            varFlags = uint8(sam.variables{ii}.flags);
             iGood = ismember(varFlags, goodFlags);
             rawData(~iGood) = NaN;
         end
@@ -175,7 +183,22 @@ if candoLpf
         if isfield(sam.variables{ii}, 'flags')
             varStruct.flags = uint8(newVarFlags);
         end
-        sam.variables{end+1} = varStruct;
+        varStruct.EP_OFFSET = 0.0;
+        varStruct.EP_SCALE = 1.0;
+        
+        idx = getVar(sam.variables, varStruct.name);
+        if idx == 0
+            idx = length(sam.variables) + 1;
+        end
+        sam.variables{idx} = varStruct;
+        
+        % update plot status
+        if isfield(sam, 'variablePlotStatus')
+            if sam.variablePlotStatus(getVar(sam.variables, sam.variables{ii}.name)) == 2
+                sam.variablePlotStatus(idx) = 2;
+            end
+        end
+        
         clear('varStruct');
         
     end

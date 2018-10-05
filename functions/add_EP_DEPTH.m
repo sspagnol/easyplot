@@ -5,9 +5,9 @@ latitude = defaultLatitude;
 % exit if we already have depth
 %depthIdx       = getVar(sam.variables, 'DEPTH');
 if (getVar(sam.variables, 'DEPTH') ~= 0) || (getVar(sam.variables, 'EP_DEPTH') ~= 0)
-   return;
+    return;
 end
-    
+
 presIdx       = getVar(sam.variables, 'PRES');
 presRelIdx    = getVar(sam.variables, 'PRES_REL');
 isPresVar     = logical(presIdx || presRelIdx);
@@ -28,6 +28,9 @@ end
 
 if presRelIdx > 0
     presRel = sam.variables{presRelIdx}.data;
+    theOffset = sam.variables{presRelIdx}.EP_OFFSET;
+    theScale = sam.variables{presRelIdx}.EP_SCALE;
+    presRel = theOffset + (theScale .* presRel);
     presName = 'PRES_REL';
     dimensions = sam.variables{presRelIdx}.dimensions;
     coordinates = sam.variables{presRelIdx}.coordinates;
@@ -37,6 +40,9 @@ else
     % it in its processed files, substracting a constant value
     % 10.1325 dbar for nominal atmospheric pressure
     presRel = sam.variables{presIdx}.data - gsw_P0/10^4;
+    theOffset = sam.variables{presRelIdx}.EP_OFFSET;
+    theScale = sam.variables{presRelIdx}.EP_SCALE;
+    presRel = theOffset + (theScale .* presRel);
     presName = 'PRES substracting a constant value 10.1325 dbar for nominal atmospheric pressure';
     dimensions = sam.variables{presIdx}.dimensions;
     coordinates = sam.variables{presIdx}.coordinates;
@@ -56,4 +62,10 @@ sam = EP_addVar(...
     depthComment, ...
     coordinates);
 
+% update plot status
+if isfield(sam, 'variablePlotStatus')
+    if sam.variablePlotStatus(presRelIdx) == 2
+        sam.variablePlotStatus(getVar(sam.variables, 'EP_DEPTH')) = 2;
+    end
+end
 end

@@ -90,7 +90,7 @@ else
         userData.sample_data={};
     end
     for kk=1:numel(userData.sample_data)
-        userData.sample_data{kk}.isNew = false;
+        userData.sample_data{kk}.EP_isNew = false;
     end
     
     iFailed=0;
@@ -102,18 +102,8 @@ else
         else
             theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
-        % skip any files the user has already imported
-%        isLoaded = cell2mat(cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false));
-%         if ~isempty(isLoaded)
-%             for kk=1:numel(userData.sample_data)
-%                 if ~isLoaded(kk)
-%                     userData.sample_data{kk}.isNew = false;
-%                 end
-%             end
-%         end
         
         notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
-%        if ~any(isLoaded)
         if notLoaded
             try
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));
@@ -128,19 +118,45 @@ else
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
                     structs.meta.parser = FILEparsers{ii};
+                    %
+                    for kk=1:numel(structs.dimensions)
+                        if ~isfield(structs.dimensions{kk}, 'EP_OFFSET')
+                            structs.dimensions{kk}.EP_OFFSET = 0.0;
+                            structs.dimensions{kk}.EP_SCALE = 1.0;
+                        end
+                    end
+                    for kk=1:numel(structs.variables)
+                        if ~isfield(structs.variables{kk}, 'EP_OFFSET')
+                            structs.variables{kk}.EP_OFFSET = 0.0;
+                            structs.variables{kk}.EP_SCALE = 1.0;
+                        end
+                    end
                     [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs, theFullFile, defaultLatitude);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
-                    userData.sample_data{end}.isNew = true;
+                    userData.sample_data{end}.EP_isNew = true;
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
                     for k = 1:length(structs)
                         structs{k}.meta.parser = FILEparsers{ii};
+                        %
+                        for kk=1:numel(structs{k}.dimensions)
+                            if ~isfield(structs{k}.dimensions{kk}, 'EP_OFFSET')
+                                structs{k}.dimensions{kk}.EP_OFFSET = 0.0;
+                                structs{k}.dimensions{kk}.EP_SCALE = 1.0;
+                            end
+                        end
+                        for kk=1:numel(structs{k}.variables)
+                            if ~isfield(structs{k}.variables{kk}, 'EP_OFFSET')
+                                structs{k}.variables{kk}.EP_OFFSET = 0.0;
+                                structs{k}.variables{kk}.EP_SCALE = 1.0;
+                            end
+                        end
                         [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
-                        userData.sample_data{end}.isNew = true;
+                        userData.sample_data{end}.EP_isNew = true;
                     end
                 end
                 userData.EP_defaultLatitude = defaultLatitude;
@@ -176,8 +192,8 @@ else
     
     if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
-        isNew=cellfun(@(x) x.isNew, userData.sample_data);
-        userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
+        EP_isNew=cellfun(@(x) x.EP_isNew, userData.sample_data);
+        userData.sample_data = markPlotVar(userData.sample_data, plotVar, EP_isNew);
         userData.plotVarNames = sort(unique({userData.plotVarNames{:} plotVar}));
         userData.treePanelData = generateTreeData(userData.sample_data);
         %ssetappdata(ancestor(hObject,'figure'), 'UserData', userData);
