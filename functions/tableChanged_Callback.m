@@ -57,29 +57,32 @@ end
 
 % update flags/values in userData.sample_data for the matching instrument
 for ii=1:numel(userData.sample_data) % loop over files
-    for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
-        iMatch = strcmp(userData.sample_data{ii}.meta.instrument_model_shortname, theInstrument) && ...
-            strcmp([userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt], theFile) &&...
-            strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
-            strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable);
-        if iMatch
-            userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;
-            if isvector(userData.sample_data{ii}.variables{jj}.data)
-                hModel.setValueAt(1,modifiedRow,idSlice);
-                %originalModel.setValueAt(1,modifiedRow,idSlice);
-                userData.sample_data{ii}.variables{jj}.EP_iSlice = 1;
-            else
-                [d1,d2] = size(userData.sample_data{ii}.variables{jj}.data);
-                if EP_iSlice<1
+    indMatch = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables));
+    if ~isempty(indMatch)
+        for jj = indMatch
+            iMatch = strcmp(userData.sample_data{ii}.meta.instrument_model_shortname, theInstrument) && ...
+                strcmp([userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt], theFile) &&...
+                strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
+                strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable);
+            if iMatch
+                userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;
+                if isvector(userData.sample_data{ii}.variables{jj}.data)
                     hModel.setValueAt(1,modifiedRow,idSlice);
                     %originalModel.setValueAt(1,modifiedRow,idSlice);
                     userData.sample_data{ii}.variables{jj}.EP_iSlice = 1;
-                elseif EP_iSlice>d2
-                    hModel.setValueAt(d2,modifiedRow,idSlice);
-                    %originalModel.setValueAt(d2,modifiedRow,idSlice);
-                    userData.sample_data{ii}.variables{jj}.EP_iSlice = d2;
                 else
-                    userData.sample_data{ii}.variables{jj}.EP_iSlice = EP_iSlice;
+                    [d1,d2] = size(userData.sample_data{ii}.variables{jj}.data);
+                    if EP_iSlice<1
+                        hModel.setValueAt(1,modifiedRow,idSlice);
+                        %originalModel.setValueAt(1,modifiedRow,idSlice);
+                        userData.sample_data{ii}.variables{jj}.EP_iSlice = 1;
+                    elseif EP_iSlice>d2
+                        hModel.setValueAt(d2,modifiedRow,idSlice);
+                        %originalModel.setValueAt(d2,modifiedRow,idSlice);
+                        userData.sample_data{ii}.variables{jj}.EP_iSlice = d2;
+                    else
+                        userData.sample_data{ii}.variables{jj}.EP_iSlice = EP_iSlice;
+                    end
                 end
             end
         end
