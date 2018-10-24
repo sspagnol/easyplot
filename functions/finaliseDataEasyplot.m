@@ -121,6 +121,26 @@ end
 sam.variablePlotStatus = sam.variablePlotStatus(:);
 sam.meta.latitude = defaultLatitude;
 
+%%
+% just in case
+for kk=1:numel(sam.dimensions)
+    if ~isfield(sam.dimensions{kk}, 'EP_OFFSET')
+        sam.dimensions{kk}.EP_OFFSET = 0.0;
+        sam.dimensions{kk}.EP_SCALE = 1.0;
+    end
+end
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'EP_OFFSET')
+        sam.variables{kk}.EP_OFFSET = 0.0;
+        sam.variables{kk}.EP_SCALE = 1.0;
+    end
+end
+%
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'EP_iSlice')
+        sam.variables{kk}.EP_iSlice = 1;
+    end
+end
 
 % calculate data limits
 for ii=1:numel(sam.variables)

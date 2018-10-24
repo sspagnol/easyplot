@@ -185,6 +185,7 @@ if candoLpf
         end
         varStruct.EP_OFFSET = 0.0;
         varStruct.EP_SCALE = 1.0;
+        varStruct.EP_iSlice = 1;
         
         idx = getVar(sam.variables, varStruct.name);
         if idx == 0

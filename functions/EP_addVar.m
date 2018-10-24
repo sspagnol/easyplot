@@ -71,6 +71,7 @@ sam.variables{idxVar}.typeCastFunc   = str2func(netcdf3ToMatlabType(imosParamete
 sam.variables{idxVar}.dimensions     = dimensions;
 sam.variables{idxVar}.EP_OFFSET     = 0.0;
 sam.variables{idxVar}.EP_SCALE     = 1.0;
+sam.variables{kk}.EP_iSlice = 1;
 sam.variables{idxVar}.data           = sam.variables{end  }.typeCastFunc(data);
 clear data;
 if ~isempty(coordinates)
