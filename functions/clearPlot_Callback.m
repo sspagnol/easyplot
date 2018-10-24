@@ -32,7 +32,7 @@ if isfield(userData, 'sample_data')
     jtreePanelParent.repaint;
     
     userData.sample_data = {};
-    userData.EP_firstPlot = true;
+    userData.EP_redoPlots = true;
     userData.plotLimits.TIME.RAW.xMin = NaN;
     userData.plotLimits.TIME.RAW.xMax = NaN;
     userData.plotLimits.MULTI.RAW.yMin = NaN;

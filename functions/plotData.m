@@ -128,7 +128,7 @@ isNotP3 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
 
 % require || result redoSubplots = true
 redoSubplots = false;
-if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot || userData.redoPlots
+if isEmptyPlotPanel || isAnyEmptyGraphs || isPlotTypeChange || isNewSubplot || userData.EP_redoPlots
     redoSubplots = true;
 end
 
@@ -417,7 +417,7 @@ updateLegends(hFig);
 
 %% update progress string and save UserData
 set(msgPanelText,'String','Done');
-userData.redoPlots = false;
+userData.EP_redoPlots = false;
 setappdata(hFig, 'UserData', userData);
 % is this needed?
 drawnow;

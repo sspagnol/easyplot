@@ -194,7 +194,7 @@ end
 % get parser list
 userData.parserList=initParserList;
 
-userData.EP_firstPlot = true;
+userData.EP_redoPlots = true;
 
 userData.EP_defaultLatitude = -19;
 
@@ -269,7 +269,7 @@ setappdata(hFig, 'UserData', userData);
             set(hObject,'Checked','on');
             userData.EP_plotYearly = true;
         end
-        userData.redoPlots = true;
+        userData.EP_redoPlots = true;
         setappdata(hFig, 'UserData', userData);
         if isfield(userData, 'sample_data')
             plotData(hFig);
@@ -493,7 +493,7 @@ setappdata(hFig, 'UserData', userData);
         end
         
         userData.sample_data = timeOffsetPP_local(userData.sample_data, 'raw', false);
-        userData.redoPlots = true;
+        userData.EP_redoPlots = true;
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
     end
@@ -515,7 +515,7 @@ setappdata(hFig, 'UserData', userData);
             userData.sample_data{ii} = updateDataEasyplot(userData.sample_data{ii});
         end
         
-        userData.redoPlots = true;
+        userData.EP_redoPlots = true;
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
     end
