@@ -13,13 +13,13 @@ function RSK = RSKreaddata(RSK, varargin)
 % raw bin file.
 % 
 % Inputs: 
-%    [Required] - RSK - Structure containing the logger metadata and
-%                       thumbnails returned by RSKopen. If provided as the
-%                       only argument the data for the entire file is read.
-%                       Depending on the amount of data in your dataset,
-%                       and the amount of memory on your computer, you can
-%                       read bigger or smaller chunks before Matlab
-%                       complains and runs out of memory. 
+%    [Required] - RSK - Structure containing the logger metadata returned 
+%                       by RSKopen. If provided as the only argument the 
+%                       data for the entire file is read. Depending on the 
+%                       amount of data in your dataset, and the amount of 
+%                       memory on your computer, you can read bigger or 
+%                       smaller chunks before Matlab complains and runs out
+%                       of memory. 
 %
 %    [Optional] - t1 - Start time for range of data to be read, specified
 %                       using the MATLAB datenum format. 
@@ -34,11 +34,11 @@ function RSK = RSKreaddata(RSK, varargin)
 %          and elements in the data field. 
 %
 % Example: 
-%    RSK = RSKopen('sample.rsk');  
+%    rsk = RSKopen('sample.rsk');  
 %    % Read 1/2 day of data since logger started.
-%    RSK = RSKreaddata(RSK, 't2', RSK.epochs.startTime+0.5);
+%    rsk = RSKreaddata(rsk, 't2', RSK.epochs.startTime+0.5);
 %
-% See also: RSKopen, RSKreadevents, RSKreadburstdata.
+% See also: RSKopen, RSKreadburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -63,8 +63,8 @@ end
 if isempty(t2)
     t2 = RSK.epochs.endTime;
 end
-t1 = datenum2RSKtime(t1);
-t2 = datenum2RSKtime(t2);
+t1 = datenum2rsktime(t1);
+t2 = datenum2rsktime(t2);
 
 if t2 <= t1
     error('The end time (t2) must be greater (later) than the start time (t1).')
@@ -92,15 +92,19 @@ results = removeunuseddatacolumns(results);
 results = arrangedata(results);
 
 t=results.tstamp';
-results.tstamp = RSKtime2datenum(t);
-RSK = readchannels(RSK);
+results.tstamp = rsktime2datenum(t);
 
-if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop')
-    [~, isDerived] = removenonmarinechannels(RSK);
+if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && isfield(RSK,'instrumentChannels')     
+    instrumentChannels = RSK.instrumentChannels;
+    ind = [instrumentChannels.channelStatus] == 4;
+    instrumentChannels(ind) = [];
+    if RSK.toolSettings.readHiddenChannels
+        isDerived = logical([instrumentChannels.channelStatus] == 4);
+    else
+        isDerived = logical([instrumentChannels.channelStatus]);
+    end
     results.values = results.values(:,~isDerived);
 end
-
-
 
 %% Put data into data field of RSK structure.
 RSK.data=results;

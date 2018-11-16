@@ -24,9 +24,9 @@ function [RBR] = RSK2MAT(RSK)
 %          same format as the .mat files exported by Ruskin.
 %
 % Example:
-%   RSK = RSKopen(fname);
-%   RSK = RSKreaddata(RSK);
-%   RBR = RSK2MAT(RSK);
+%   rsk = RSKopen(fname);
+%   rsk = RSKreaddata(rsk);
+%   RBR = RSK2MAT(rsk);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -42,12 +42,12 @@ if size(RSK.data,2) > 1
 end
 
 %% Set up metadata
-[firmwareV, ~, ~]  = RSKfirmwarever(RSK);
+[firmwareV, ~, ~]  = readfirmwarever(RSK);
 
 RBR.name = ['RBR ' RSK.instruments.model ' ' firmwareV ' ' num2str(RSK.instruments.serialID)];
 
 % Sample period
-RBR.sampleperiod = RSKsamplingperiod(RSK); 
+RBR.sampleperiod = readsamplingperiod(RSK); 
 
 % Channels
 RBR.channelnames = {RSK.channels.longName}';

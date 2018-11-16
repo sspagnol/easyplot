@@ -69,9 +69,9 @@ function RSK2ODV(RSK, varargin)
 %    channels.
 %
 % Example:
-%   RSK = RSKopen(fname);
-%   RSK = RSKreadprofiles(RSK);
-%   RSK2ODV(RSK,'channel',{'Temperature','Pressure'},'outputdir','/Users/decide/where','comment','Hey Jude');
+%   rsk = RSKopen(fname);
+%   rsk = RSKreadprofiles(rsk);
+%   RSK2ODV(rsk,'channel',{'Temperature','Pressure'},'outputdir','/Users/decide/where','comment','Hey Jude');
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -116,7 +116,7 @@ end
 
 % Set up metadata
 RBR = struct;
-[firmwareV, ~, ~]  = RSKfirmwarever(RSK);
+[firmwareV, ~, ~]  = readfirmwarever(RSK);
 RBR.model = RSK.instruments.model;
 RBR.firmware = firmwareV;
 RBR.serial = num2str(RSK.instruments.serialID);

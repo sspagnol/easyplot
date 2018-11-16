@@ -32,16 +32,16 @@ function RSK = RSKfindprofiles(RSK, varargin)
 %         profiles by applying the start and end times.
 %
 % Example:
-%    RSK = RSKopen(fname);
-%    RSK = RSKreaddata(RSK);
-%    RSK = RSKfindprofiles(RSK, 'pressureThreshold', 1);
+%    rsk = RSKopen(fname);
+%    rsk = RSKreaddata(rsk);
+%    rsk = RSKfindprofiles(rsk, 'pressureThreshold', 1);
 %
-% See also: RSKreadprofiles, RSKgetprofiles.
+% See also: RSKreadprofiles, getprofiles.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-07
+% Last revision: 2018-05-30
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -138,19 +138,76 @@ RSK.profiles.upcast.tend = upend';
 RSK.profiles.downcast.tstart = downstart;
 RSK.profiles.downcast.tend = downend';
 
-% Remove region.description, regionGeoData and regionComment field if exist
-if isfield(RSK.region,'description') || isfield(RSK,'regionGeoData') || isfield(RSK,'regionComment');
+%% Remove region.description, regionGeoData and regionComment field if exist
+if (isfield(RSK,'region') && isfield(RSK.region,'description')) || isfield(RSK,'regionGeoData') || isfield(RSK,'regionComment');
     warning('Annotations from Ruskin is deleted due to potential mismatch between previous and current detected profiles.');
 end
 
-if isfield(RSK.region,'description');
-    RSK.region = rmfield(RSK.region,'description');
-end
 if isfield(RSK,'regionGeoData');
     RSK = rmfield(RSK,'regionGeoData');
 end
 if isfield(RSK,'regionComment');
     RSK = rmfield(RSK,'regionComment');
+end
+
+%% Update RSK.region and RSK.regionCast
+% Check down or upcast comes first
+if upstart(1) > downstart(1)
+    firstdir = RSK.profiles.downcast;
+    lastdir = RSK.profiles.upcast;
+    firstType = 'down';
+    lastType = 'up';
+else
+    firstdir = RSK.profiles.upcast;
+    lastdir = RSK.profiles.downcast;
+    firstType = 'up';
+    lastType = 'down';
+end
+
+RSK.profiles.order = {firstType lastType};
+
+% Remove RSK.region and RSK.regionCast
+if isfield(RSK, 'region')
+    RSK = rmfield(RSK, 'region');
+end
+if isfield(RSK, 'regionCast')
+    RSK = rmfield(RSK, 'regionCast');
+end
+
+% Create new RSK.region and RSK.regionCast
+for n = 1:length(upstart)
+    nprofile = n*3-2;
+    RSK.region(nprofile).datasetID = 1;
+    RSK.region(nprofile).regionID = nprofile;
+    RSK.region(nprofile).type = 'PROFILE';
+    RSK.region(nprofile).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
+    RSK.region(nprofile).tstamp2 = round(datenum2rsktime(lastdir.tend(n)));
+    RSK.region(nprofile).label = ['Profile ' num2str(n)];
+    RSK.region(nprofile).description = 'RSKtools-generated profile.';
+    
+    RSK.region(nprofile+1).datasetID = 1;
+    RSK.region(nprofile+1).regionID = nprofile+1;
+    RSK.region(nprofile+1).type = 'CAST'; 
+    RSK.region(nprofile+1).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
+    RSK.region(nprofile+1).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
+    RSK.region(nprofile+1).label = [firstType 'cast ' num2str(n)];
+    RSK.region(nprofile+1).description = 'RSKtools-generated cast.';
+
+    RSK.region(nprofile+2).datasetID = 1;
+    RSK.region(nprofile+2).regionID = nprofile+2;    
+    RSK.region(nprofile+2).type = 'CAST';
+    RSK.region(nprofile+2).tstamp1 = round(datenum2rsktime(lastdir.tstart(n)));
+    RSK.region(nprofile+2).tstamp2 = round(datenum2rsktime(lastdir.tend(n)));
+    RSK.region(nprofile+2).label = [lastType 'cast ' num2str(n)];
+    RSK.region(nprofile+2).description = 'RSKtools-generated cast.';
+
+    nregionCast = n*2-1;
+    RSK.regionCast(nregionCast).regionID = nprofile+1;
+    RSK.regionCast(nregionCast).regionProfileID = nprofile;
+    RSK.regionCast(nregionCast).type = upper(firstType);
+    RSK.regionCast(nregionCast+1).regionID = nprofile+2;
+    RSK.regionCast(nregionCast+1).regionProfileID = nprofile;
+    RSK.regionCast(nregionCast+1).type = upper(lastType);
 end
 
 end

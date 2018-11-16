@@ -4,9 +4,7 @@ function handles = RSKplotburstdata(RSK, varargin)
 %
 % Syntax:  [handles] = RSKplotburstdata(RSK, [OPTIONS])
 % 
-% Generates a plot, similar to the thumbnail plot, only using the
-% full 'burstData' that you read in, rather than just the thumbnail
-% view.
+% Generates a plot for the burstdata.
 % 
 % Inputs:
 %    [Required] - RSK - Structure containing the logger metadata and
@@ -20,9 +18,8 @@ function handles = RSKplotburstdata(RSK, varargin)
 %     handles - Line object of the plot.
 %
 % Example: 
-%    RSK = RSKopen('sample.rsk');  
-%    RSK = RSKreadburstdata(RSK, 'channel', {'Conductivity', 'Temperature', 'Pressure'});  
-%    RSKplotburstdata(RSK);  
+%    rsk = RSKreadburstdata(rsk, 'channel', {'Conductivity', 'Temperature', 'Pressure'});  
+%    RSKplotburstdata(rsk);  
 %
 % See also: RSKreadburstdata, RSKplotdata, RSKplotdownsample.
 %

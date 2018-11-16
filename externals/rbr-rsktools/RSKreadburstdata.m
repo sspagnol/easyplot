@@ -6,12 +6,12 @@ function RSK = RSKreadburstdata(RSK, varargin)
 % 
 % Reads the burst data tables from the RSK file previously opened with
 % RSKopen(). Will either read the entire burst data structure, or a subset
-% specified by 't1' and 't2'. Use in conjunction with RSKreadevents to
+% specified by 't1' and 't2'. Use in conjunction with readevents to
 % separate bursts. 
 % 
 % Inputs: 
-%    [Required] - RSK - Structure containing the logger metadata and
-%                       thumbnails returned by RSKopen. 
+%    [Required] - RSK - Structure containing the logger metadata returned 
+%                       by RSKopen. 
 %
 %    [Optional] - t1 - Start time for range of data to be read, specified
 %                       using the MATLAB datenum format. 
@@ -24,10 +24,9 @@ function RSK = RSKreadburstdata(RSK, varargin)
 %          burstData field is replaced.
 %
 % Example: 
-%    RSK = RSKopen('sample.rsk');  
-%    RSK = RSKreadburstdata(RSK);
+%    rsk = RSKreadburstdata(rsk);
 %
-% See also: RSKopen, RSKplotburstdata, RSKreadevents.
+% See also: RSKopen, RSKplotburstdata, readevents.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -52,8 +51,8 @@ end
 if isempty(t2)
     t2 = RSK.epochs.endTime;
 end
-t1 = datenum2RSKtime(t1);
-t2 = datenum2RSKtime(t2);
+t1 = datenum2rsktime(t1);
+t2 = datenum2rsktime(t2);
 
 
 
@@ -70,8 +69,8 @@ results = removeunuseddatacolumns(results);
 results = arrangedata(results);
 
 t=results.tstamp';
-results.tstamp = RSKtime2datenum(t);
-
+results.tstamp = rsktime2datenum(t);
+results.values(:,2:end) = [];
 RSK.burstData=results;
 
 end

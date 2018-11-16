@@ -71,9 +71,9 @@ function RSK2CSV(RSK, varargin)
 %    channels.
 %
 % Example:
-%   RSK = RSKopen(fname);
-%   RSK = RSKreadprofiles(RSK);
-%   RSK2CSV(RSK,'channel',{'Temperature','Pressure'},'outputdir','/Users/decide/where','comment','Hey Jude');
+%   rsk = RSKopen(fname);
+%   rsk = RSKreadprofiles(rsk);
+%   RSK2CSV(rsk,'channel',{'Temperature','Pressure'},'outputdir','/Users/decide/where','comment','Hey Jude');
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -118,7 +118,7 @@ end
 
 % Set up metadata
 RBR = struct;
-[firmwareV, ~, ~]  = RSKfirmwarever(RSK);
+[firmwareV, ~, ~]  = readfirmwarever(RSK);
 RBR.name = [RSK.instruments.model ' ' firmwareV ' ' num2str(RSK.instruments.serialID)];
 
 % Channels
@@ -136,7 +136,7 @@ catch
 end
 
 % Sample period
-sampleperiod = RSKsamplingperiod(RSK);
+sampleperiod = readsamplingperiod(RSK);
 
 % Fix up variable names by replacing spaces with underscores
 RBR.channelnames = strrep(RBR.channelnames,' ','_');

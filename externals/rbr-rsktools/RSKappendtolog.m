@@ -10,7 +10,7 @@ function RSK = RSKappendtolog(RSK, logentry)
 % the end. 
 %
 % Inputs: 
-%    RSK - Structure containing the logger metadata and thumbnail
+%    RSK - Structure containing the logger metadata
 %
 %    logentry - Comment that will be added to the log. Must be a string. 
 %

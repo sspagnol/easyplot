@@ -28,8 +28,8 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 %                      each bin, can be any channel or time. Default is
 %                      sea pressure.
 %
-%                binSize - Size of bins in each regime. Default [1] (units 
-%                      of binBy channel). 
+%                binSize - Size of bins in each regime. Default is 1 unit 
+%                      of binBy channel (1 second when binBy is time).
 %
 %                boundary - First boundary crossed in the direction
 %                      selected of each regime, in same units as binBy.
@@ -80,7 +80,13 @@ alltstamp = {RSK.data(castidx).tstamp};
 maxlength = max(cellfun('size', alltstamp, 1));
 Y = NaN(maxlength, length(castidx));
 
-if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+if binbytime
+    binSize = binSize/86400;
+end
+
+if visualize ~= 0; 
+    [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
+end
 diagChanCol = [getchannelindex(RSK,'Conductivity'), getchannelindex(RSK,'Temperature')];
 if any(strcmp({RSK.channels.longName},'Salinity'))
     diagChanCol = [diagChanCol, getchannelindex(RSK,'Salinity')];   
@@ -115,10 +121,8 @@ for ndx = castidx
     
     RSK.data(ndx).values = binnedValues(:,2:end);
     RSK.data(ndx).samplesinbin = samplesinbin;
-    if binbytime
-        RSK.data(ndx).tstamp = binnedValues(:,1);
-    else
-        RSK.data(ndx).tstamp = binnedValues(:,1);
+    RSK.data(ndx).tstamp = binnedValues(:,1);
+    if ~binbytime
         RSK.data(ndx).values(:,chanCol) = binCenter;
     end
     k = k + 1;

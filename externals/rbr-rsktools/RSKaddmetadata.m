@@ -36,17 +36,17 @@ function [RSK] = RSKaddmetadata(RSK, varargin)
 %    RSK - Updated structure containing metadata for specified profile(s).
 %
 % Example:
-%    RSK = RSKaddmetadata(RSK,'latitude',45,'longitude',-25,...
+%    rsk = RSKaddmetadata(rsk,'latitude',45,'longitude',-25,...
 %                             'station',{'SK1'},'vessel',{'R/V RBR'},...
 %                             'cruise',{'Skootamatta Lake 1'})
 %    -OR-
-%    RSK = RSKaddmetadata(RSK,'profile',4:6,'latitude',[45,44,46],'longitude',...
+%    rsk = RSKaddmetadata(rsk,'profile',4:6,'latitude',[45,44,46],'longitude',...
 %    [-25,-24,-23],'comment',{'Comment1','Comment2','Comment3'});
 % 
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-09
+% Last revision: 2018-05-30
 
 
 p = inputParser;
@@ -117,6 +117,61 @@ for i = 1:directions:length(castidx);
     RSK = assign_metadata(RSK, comment, castidx, i, directions, k, 'comment');
     RSK = assign_metadata(RSK, description, castidx, i, directions, k, 'description');
     k = k + 1;    
+end
+
+% Update region, regionGeoData and regionComment field
+RSK.region(strcmp({RSK.region.type},'GPS')) = [];
+RSK.region(strcmp({RSK.region.type},'COMMENT')) = [];
+
+if isfield(RSK, 'regionGeoData')
+    RSK = rmfield(RSK, 'regionGeoData');
+end
+if isfield(RSK, 'regionComment')
+    RSK = rmfield(RSK, 'regionComment');
+end
+
+initialregionL = length(RSK.region);
+if isfield(RSK.data,'latitude') || isfield(RSK.data,'longitude')
+    k = 0;
+    for i = 1:length(RSK.data)     
+        if (~isempty(RSK.data(i).latitude) && ~isnan(RSK.data(i).latitude)) || (~isempty(RSK.data(i).longitude) && ~isnan(RSK.data(i).longitude))          
+            str = [RSK.data(i).direction 'cast ' num2str(RSK.data(i).profilenumber)];
+            midtstamp = round(datenum2rsktime((RSK.data(i).tstamp(1) + RSK.data(i).tstamp(end))/2));
+            k = k + 1;
+            RSK.region(initialregionL + k).datasetID = 1;
+            RSK.region(initialregionL + k).regionID = initialregionL + k;
+            RSK.region(initialregionL + k).type = 'GPS';
+            RSK.region(initialregionL + k).tstamp1 = midtstamp;
+            RSK.region(initialregionL + k).tstamp2 = midtstamp;
+            RSK.region(initialregionL + k).label = 'GPS';
+            RSK.region(initialregionL + k).description = str;  
+            
+            RSK.regionGeoData(k).regionID = initialregionL + k;
+            RSK.regionGeoData(k).latitude = RSK.data(i).latitude;
+            RSK.regionGeoData(k).longitude = RSK.data(i).longitude;
+        end       
+    end   
+end
+
+initialregionL2 = length(RSK.region);
+if isfield(RSK.data,'comment')
+    k = 0;
+    for i = 1:length(RSK.data)     
+        if ~isempty(RSK.data(i).comment) && any(~isnan(RSK.data(i).comment{:}))    
+            midtstamp = round(datenum2rsktime((RSK.data(i).tstamp(1) + RSK.data(i).tstamp(end))/2));
+            k = k + 1;
+            RSK.region(initialregionL2 + k).datasetID = 1;
+            RSK.region(initialregionL2 + k).regionID = initialregionL2 + k;
+            RSK.region(initialregionL2 + k).type = 'COMMENT';
+            RSK.region(initialregionL2 + k).tstamp1 = midtstamp;
+            RSK.region(initialregionL2 + k).tstamp2 = midtstamp;
+            RSK.region(initialregionL2 + k).label = 'Comment-Title';
+            RSK.region(initialregionL2 + k).description = char(RSK.data(i).comment);
+            
+            RSK.regionComment(k).regionID = initialregionL2 + k;
+            RSK.regionComment(k).content = 'NULL';
+        end       
+    end   
 end
 
     %% Nested Functions

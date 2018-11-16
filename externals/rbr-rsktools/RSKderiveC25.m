@@ -23,7 +23,7 @@ function [RSK] = RSKderiveC25(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-05
+% Last revision: 2018-05-29
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -37,7 +37,7 @@ alpha = p.Results.alpha;
 Ccol = getchannelindex(RSK, 'Conductivity');
 Tcol = getchannelindex(RSK, 'Temperature');
 
-RSK = addchannelmetadata(RSK, 'Specific Conductivity', 'µS/cm');
+RSK = addchannelmetadata(RSK, 'scon00', 'Specific Conductivity', 'µS/cm'); % cond08 is a temporary solution for Ruskin to read, will change in future
 SCcol = getchannelindex(RSK, 'Specific Conductivity');
 
 castidx = getdataindex(RSK);

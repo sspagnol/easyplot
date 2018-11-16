@@ -1,6 +1,6 @@
 function [RSK] = RSKderiveseapressure(RSK, varargin)
 
-%RSKderiveseapressure - Calculate sea pressure.
+% RSKderiveseapressure - Calculate sea pressure.
 %
 % Syntax:  [RSK] = RSKderiveseapressure(RSK, [OPTIONS])
 % 
@@ -11,8 +11,11 @@ function [RSK] = RSKderiveseapressure(RSK, varargin)
 % Inputs: 
 %    [Required] - RSK - Structure containing the logger metadata and data
 %
-%    [Optional] - patm - Atmospheric Pressure. Default is value stored in
-%                       parameters table or 10.1325 dbar if unavailable. 
+%    [Optional] - patm - Atmospheric Pressure. Default is 10.1325 dbar.
+%                 It could be a constant number or vector. When the input
+%                 is vector, input RSK must not have profile structure and
+%                 the input vector should have the same length of the RSK
+%                 samples.
 %
 % Outputs:
 %    RSK - Structure containing the sea pressure data.
@@ -22,7 +25,8 @@ function [RSK] = RSKderiveseapressure(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-04
+% Last revision: 2018-07-20
+
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -32,6 +36,15 @@ parse(p, RSK, varargin{:})
 RSK = p.Results.RSK;
 patm = p.Results.patm;
 
+
+if isvector(patm) && length(patm) > 1
+    if length(RSK.data) ~= 1
+        error('Input atmosphere pressure is a vector, use RSKreaddata to flatten data into time series..')
+    elseif length(RSK.data) == 1 && length(RSK.data.tstamp) ~= length(patm)
+        error('Length of RSK data samples and input atmosphere pressure do not match, please shape input atmosphere pressure..')
+    end
+    patm = patm(:);
+end
 
 try
     Pcol = getchannelindex(RSK, 'Pressure');
@@ -43,24 +56,21 @@ if isempty(patm)
     patm = getatmosphericpressure(RSK);
 end
 
-
-
-RSK = addchannelmetadata(RSK, 'Sea Pressure', 'dbar');
+RSK = addchannelmetadata(RSK, 'pres08', 'Sea Pressure', 'dbar');
 SPcol = getchannelindex(RSK, 'Sea Pressure');
-
-
 
 castidx = getdataindex(RSK);
 for ndx = castidx
-    seapressure = RSK.data(ndx).values(:, Pcol)- patm;
+    seapressure = RSK.data(ndx).values(:, Pcol) - patm;
     RSK.data(ndx).values(:,SPcol) = seapressure;
 end
 
-
-
-logentry = ['Sea pressure calculated using an atmospheric pressure of ' num2str(patm) ' dbar.'];
+if isvector(patm) && length(patm) > 1
+    logentry = 'Sea pressure calculated using an variable atmospheric pressure.';
+else
+    logentry = ['Sea pressure calculated using an atmospheric pressure of ' num2str(patm) ' dbar.'];
+end
 RSK = RSKappendtolog(RSK, logentry);
 
 end
-
 

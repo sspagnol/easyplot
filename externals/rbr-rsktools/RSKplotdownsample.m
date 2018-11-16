@@ -17,10 +17,6 @@ function handles = RSKplotdownsample(RSK, varargin)
 % Output:
 %    handles - Line object of the plot.
 %
-% Example: 
-%    RSK = RSKopen('sample.rsk');  
-%    RSKplotdownsample(RSK);  
-%
 % See also: RSKopen, RSKplotdata, RSKplotburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
@@ -40,8 +36,7 @@ channel = p.Results.channel;
 
 field = 'downsample';
 if ~isfield(RSK,field)
-    disp('You must read a section of downsample in first!');
-    disp('Use RSKreaddownsample, note that when dataset has less than 40960 samples per channel, downsample does not exist.')
+    disp('Downsample field does not exist when dataset has less than 40960 samples per channel.');
     handles = NaN;
     return
 end

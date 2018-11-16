@@ -11,14 +11,14 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 % Inputs: 
 %    [Required] - RSK - Input RSK structure
 %
-%                 channel - Longname of channel to align (e.g., 
-%                       temperature)
+%                 channel - Longname of channel to align (e.g. temperature)
 %
-%                 lag - The lag (in samples) to apply to the channel. A
-%                       negative lag shifts the channel backwards in time
-%                       (earlier), while a positive lag shifts the channel
-%                       forward in time (later). To apply a different lag
-%                       to each data element, specify the lags in a vector.
+%                 lag - The lag (in samples or seconds) to apply to the 
+%                       channel. A negative lag shifts the channel 
+%                       backwards in time (earlier), while a positive lag 
+%                       shifts the channel forward in time (later). To 
+%                       apply a different lag to each data element, specify
+%                       the lags in a vector.
 %
 %    [Optional] - profile - Profile number. Default is to operate on all of
 %                       data's elements. 
@@ -39,8 +39,8 @@ function RSK = RSKalignchannel(RSK, channel, lag, varargin)
 %                        will reduce the size of values array by "lag"
 %                        samples).  
 %
-%                 lagunits - Units of the lag entry. Can be seconds or
-%                        samples (default).
+%                 lagunits - Units of the lag entry. Can be samples
+%                        (default) or seconds
 %
 %                 visualize - To give a diagnostic plot on specified
 %                        profile number(s). Original and processed data 

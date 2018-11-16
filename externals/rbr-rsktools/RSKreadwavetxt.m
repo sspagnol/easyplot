@@ -31,7 +31,7 @@ function [RBR] = RSKreadwavetxt(file)
 % Website: www.rbr-global.com
 % Last revision: 2016-05-17
 
-metadatafile = [file '/' file '_metadata.txt'];
+%metadatafile = [file '/' file '_metadata.txt'];
 datafile = [file '/' file '_data.txt'];
 wavefile = [file '/' file '_wave.txt'];
 burstfile = [file '/' file '_burst.txt'];
@@ -43,23 +43,29 @@ burstdatastruct = table2struct(readtable(burstfile), 'ToScalar', true);
 channelnames = {'Pressure'; 'Sea pressure'; 'Depth'; 'Tidal slope'; 'Significant wave height'; 'Maximum wave height'; 'Average wave height'; '1/10 wave height'; 'Wave energy'};
 
 % create data matrix
-data = horzcat(datastruct.Pressure, datastruct.SeaPressure, datastruct.Depth, ...
-               datastruct.TidalSlope, wavedatastruct.SignificantWaveHeight, ... 
+ind = find(ismember(datastruct.Time,wavedatastruct.Time));
+
+data = horzcat(datastruct.Pressure(ind), datastruct.SeaPressure(ind), datastruct.Depth(ind), ...
+               datastruct.TidalSlope(ind), wavedatastruct.SignificantWaveHeight, ... 
                wavedatastruct.MaximumWaveHeight, wavedatastruct.AverageWaveHeight, ...
                wavedatastruct.x1_10WaveHeight, wavedatastruct.WaveEnergy);
 sampletimes = datenum(datastruct.Time);
 
 burstsamplinglength = sum(burstdatastruct.Burst == 1);
 n = burstsamplinglength*length(sampletimes) - length(burstdatastruct.Burst);
-burstdatastruct.Burst = [burstdatastruct.Burst; repmat(0, n, 1)];
-burstdatastruct.Pressure = [burstdatastruct.Pressure; repmat(0, n, 1)];
-burstdatastruct.Wave = [burstdatastruct.Wave; repmat(0, n, 1)];
+burstdatastruct.Burst = [burstdatastruct.Burst; zeros(n, 1)];
+burstdatastruct.Pressure = [burstdatastruct.Pressure; zeros(n, 1)];
+burstdatastruct.Wave = [burstdatastruct.Wave; zeros(n, 1)];
 wavedata = struct('burstheight', wavedatastruct.SignificantWaveHeight, ...
                   'burstperiod', wavedatastruct.SignificantWavePeriod, ...
                   'averageperiod', wavedatastruct.AverageWavePeriod, ...
                   'burstdata', reshape(burstdatastruct.Pressure, burstsamplinglength, length(sampletimes)), ...
                   'burstwave', reshape(burstdatastruct.Wave, burstsamplinglength, length(sampletimes)));
 
+sampletimes = sampletimes(ind);   
+wavedata.burstdata = wavedata.burstdata(:,ind);
+wavedata.burstwave = wavedata.burstwave(:,ind);
+              
 % create structures
 RBR.channelnames = channelnames;
 RBR.sampletimes = sampletimes;

@@ -36,11 +36,11 @@ function [RSK, flagidx] = RSKremoveloops(RSK, varargin)
 %    flagidx - Index of the samples that are filtered.
 %
 % Example: 
-%    RSK = RSKopen('file.rsk');
-%    RSK = RSKreadprofiles(RSK);
-%    RSK = RSKremoveloops(RSK);
+%    rsk = RSKopen('file.rsk');
+%    rsk = RSKreadprofiles(rsk);
+%    rsk = RSKremoveloops(rsk);
 %    OR
-%    RSK = RSKremoveloops(RSK,'profile',7:9,'direction','down','threshold',0.3,'visualize',8);
+%    rsk = RSKremoveloops(rsk,'profile',7:9,'direction','down','threshold',0.3,'visualize',8);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
@@ -55,7 +55,6 @@ addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'threshold', 0.25, @isnumeric);
-
 addParameter(p, 'accelerationThreshold', -Inf, @isnumeric);
 addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, varargin{:})
@@ -75,8 +74,10 @@ catch
 end
 
 castidx = getdataindex(RSK, profile, direction);
-if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
-diagChanCol = [getchannelindex(RSK, 'Conductivity'), getchannelindex(RSK, 'Temperature')];
+if visualize ~= 0; 
+    [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
+    diagChanCol = [getchannelindex(RSK, 'Conductivity'), getchannelindex(RSK, 'Temperature')];
+end
 
 k = 1;
 for ndx = castidx
@@ -97,7 +98,7 @@ for ndx = castidx
         flag((depth - cm) < 0) = true;
     end
     
-    flagChannels = ~strcmpi('Depth', {RSK.channels.longName});    
+    flagChannels = ~ismember({RSK.channels.longName},{'Depth','Pressure','Sea Pressure'});
     RSK.data(ndx).values(flag,flagChannels) = NaN;
     flagidx(k).index = find(flag);  
     if visualize ~= 0      

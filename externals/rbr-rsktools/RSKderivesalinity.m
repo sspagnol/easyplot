@@ -1,6 +1,6 @@
 function [RSK] = RSKderivesalinity(RSK)
 
-%RSKderivesalinity - Calculate practical salinity.
+% RSKderivesalinity - Calculate practical salinity.
 %
 % Syntax:  [RSK] = RSKderivesalinty(RSK)
 % 
@@ -21,7 +21,7 @@ function [RSK] = RSKderivesalinity(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-02-01
+% Last revision: 2018-05-29
 
 hasTEOS = ~isempty(which('gsw_SP_from_C'));
 if ~hasTEOS
@@ -35,7 +35,7 @@ Tcol = getchannelindex(RSK, 'Temperature');
 
 
 
-RSK = addchannelmetadata(RSK, 'Salinity', 'PSU');
+RSK = addchannelmetadata(RSK, 'sal_00', 'Salinity', 'PSU');
 Scol = getchannelindex(RSK, 'Salinity');
 [RSKsp, SPcol] = getseapressure(RSK);
 

@@ -37,7 +37,7 @@ function [RSK] = RSKderiveBPR(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-24
+% Last revision: 2018-05-29
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -45,7 +45,7 @@ parse(p, RSK)
 
 RSK = p.Results.RSK;
 
-if ~isstruct(RSK.calibrations)
+if ~isfield(RSK,'calibrations') || ~isstruct(RSK.calibrations)
     RSK = RSKreadcalibrations(RSK);
 end
     
@@ -77,10 +77,10 @@ t3 = RSK.calibrations(PresCaliCol).x8;
 t4 = RSK.calibrations(PresCaliCol).x9;
 t5 = RSK.calibrations(PresCaliCol).x10;
 
-RSK = addchannelmetadata(RSK, 'BPR pressure', 'dbar');
+RSK = addchannelmetadata(RSK, 'bpr_08', 'BPR pressure', 'dbar');
 BPRPrescol = getchannelindex(RSK, 'BPR pressure');
 
-RSK = addchannelmetadata(RSK, 'BPR temperature', '°C');
+RSK = addchannelmetadata(RSK, 'bpr_09', 'BPR temperature', '°C');
 BPRTempcol = getchannelindex(RSK, 'BPR temperature');
 
 castidx = getdataindex(RSK);

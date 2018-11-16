@@ -48,7 +48,7 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 % Example:
 %
 % Replace data acquired during a shallow surface soak with NaN:
-%    RSK = RSKtrim(RSK, 'reference', 'sea pressure', 'range',[-1 1]);
+%    rsk = RSKtrim(rsk, 'reference', 'sea pressure', 'range',[-1 1]);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com

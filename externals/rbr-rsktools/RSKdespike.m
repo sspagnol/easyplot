@@ -52,9 +52,9 @@ function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 %          profile.   
 %
 % Example: 
-%    [RSK, spike] = RSKdespike(RSK,'Turbidity')
+%    [rsk, spike] = RSKdespike(rsk,'Turbidity')
 %     OR
-%    [RSK, spike] = RSKdespike(RSK,'Temperature','profile',3:5,'direction','down',...
+%    [rsk, spike] = RSKdespike(rsk,'Temperature','profile',3:5,'direction','down',...
 %                   'threshold',4,'windowLength',11,'action','nan','visualize',4); 
 %
 % See also: RSKremoveloops, RSKsmooth.

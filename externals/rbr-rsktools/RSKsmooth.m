@@ -39,7 +39,7 @@ function RSK = RSKsmooth(RSK, channel, varargin)
 %
 % Example: 
 %    rsk = RSKopen('file.rsk');
-%    rsk = RSKreadprofiles(rsk, 'profile', 1:10); % read first 10 downcasts
+%    rsk = RSKreadprofiles(rsk, 'profile', 1:10); 
 %    rsk = RSKsmooth(rsk, {'Temperature', 'Salinity'}, 'windowLength', 17);
 %
 % Author: RBR Ltd. Ottawa ON, Canada

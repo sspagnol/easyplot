@@ -26,7 +26,7 @@ function [RSK] = RSKaddchannel(RSK, newChan, channelName, units)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-01-24
+% Last revision: 2018-05-29
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -40,7 +40,7 @@ newChan = p.Results.newChan;
 channelName = p.Results.channelName;
 units = p.Results.units;
 
-RSK = addchannelmetadata(RSK, channelName, units);
+RSK = addchannelmetadata(RSK, 'cnt_00', channelName, units); % 'cnt_00' is a temporaty solution for Ruskin to read, will change in future
 Ncol = getchannelindex(RSK, channelName);
 castidx = getdataindex(RSK);
     

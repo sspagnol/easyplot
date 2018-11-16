@@ -1,6 +1,6 @@
 function RSK = RSKderivevelocity(RSK, varargin)
 
-%RSKcalculatevelocity - Calculate velocity from depth and time.
+% RSKcalculatevelocity - Calculate velocity from depth and time.
 %
 % Syntax:  [RSK] = RSKcalculatevelocity(RSK, [OPTIONS])
 % 
@@ -21,7 +21,7 @@ function RSK = RSKderivevelocity(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-05
+% Last revision: 2018-05-29
 
 
 p = inputParser;
@@ -42,7 +42,7 @@ end
 
 
 
-RSK = addchannelmetadata(RSK, 'Velocity', 'm/s');
+RSK = addchannelmetadata(RSK, 'pvel00', 'Velocity', 'm/s');
 Vcol = getchannelindex(RSK, 'Velocity');
 
 

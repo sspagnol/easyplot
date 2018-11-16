@@ -1,6 +1,6 @@
 function [RSK] = RSKderivedepth(RSK, varargin)
 
-%RSKderivedepth - Calculate depth from pressure.
+% RSKderivedepth - Calculate depth from pressure.
 %
 % Syntax:  [RSK] = RSKderivedepth(RSK, [OPTION])
 % 
@@ -22,7 +22,7 @@ function [RSK] = RSKderivedepth(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-04
+% Last revision: 2018-05-29
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -34,7 +34,7 @@ latitude = p.Results.latitude;
 
 
 
-RSK = addchannelmetadata(RSK, 'Depth', 'm');
+RSK = addchannelmetadata(RSK, 'dpth01', 'Depth', 'm');
 Dcol = getchannelindex(RSK, 'Depth');
 [RSKsp, SPcol] = getseapressure(RSK);
 
