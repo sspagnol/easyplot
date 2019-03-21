@@ -70,26 +70,41 @@ function sample_data = timeOffsetPP_local(sample_data, qcLevel, auto)
     timezones{k} = sample_data{k}.meta.timezone;
     
     if isnan(str2double(timezones{k}))
-        try
-            offsets(k) = str2double(readProperty(timezones{k}, offsetFile));
-        catch
-            if strncmpi(timezones{k}, 'UTC', 3)
-                offsetStr = timezones{k}(4:end);
-                offsets(k) = str2double(offsetStr)*(-1);
-            else
-                offsets(k) = NaN;
-            end
+        % look time through dimensions
+        type = 'dimensions';
+        timeIdx = getVar(sample_data{k}.(type), 'TIME');
+        lpftimeIdx = getVar(sample_data{k}.(type), 'LPFTIME');
+        
+        if timeIdx == 0
+            % look time through variables
+            type = 'variables';
+            timeIdx = getVar(sample_data{k}.(type), 'TIME');
+            lpftimeIdx = getVar(sample_data{k}.(type), 'LPFTIME');
         end
-    else
-        offsets(k) = str2double(timezones{k});
+        offsets(k) = 24.0 * sample_data{k}.(type){timeIdx}.EP_OFFSET;
     end
+    
+%     if isnan(str2double(timezones{k}))
+%         try
+%             offsets(k) = str2double(readProperty(timezones{k}, offsetFile));
+%         catch
+%             if strncmpi(timezones{k}, 'UTC', 3)
+%                 offsetStr = timezones{k}(4:end);
+%                 offsets(k) = str2double(offsetStr)*(-1);
+%             else
+%                 offsets(k) = NaN;
+%             end
+%         end
+%     else
+%         offsets(k) = str2double(timezones{k});
+%     end
     
     if isnan(offsets(k)), offsets(k) = 0; end
   end
   
   if ~auto
       f = figure(...
-          'Name',        'Time Data Offset',...
+          'Name',        'Time Data Offset (in hours)',...
           'Visible',     'off',...
           'MenuBar'  ,   'none',...
           'Resize',      'off',...
@@ -176,18 +191,20 @@ function sample_data = timeOffsetPP_local(sample_data, qcLevel, auto)
       % look time through dimensions
       type = 'dimensions';
       timeIdx = getVar(sample_data{k}.(type), 'TIME');
+      lpftimeIdx = getVar(sample_data{k}.(type), 'LPFTIME');
       
       if timeIdx == 0
           % look time through variables
           type = 'variables';
           timeIdx = getVar(sample_data{k}.(type), 'TIME');
+          lpftimeIdx = getVar(sample_data{k}.(type), 'LPFTIME');
       end
       
       % no time dimension nor variable in this dataset
       if timeIdx == 0, continue; end
       
       % no offset to be applied on this dataset
-      if offsets(k) == 0, continue; end
+      %if offsets(k) == 0, continue; end
       
       signOffset = sign(offsets(k));
       if signOffset >= 0
@@ -198,7 +215,10 @@ function sample_data = timeOffsetPP_local(sample_data, qcLevel, auto)
       
       % otherwise apply the offset
       sample_data{k}.(type){timeIdx}.EP_OFFSET = offsets(k) / 24.0;
-      
+
+      if lpftimeIdx ~= 0
+          sample_data{k}.(type){lpftimeIdx}.EP_OFFSET = offsets(k) / 24.0;
+      end
   end
   
   function keyPressCallback(source,ev)
