@@ -28,24 +28,28 @@ parse(p, RSK)
 RSK = p.Results.RSK;
 
 
+RSK.instruments = doSelect(RSK, 'select * from instruments');
+
 RSK = readchannels(RSK);
 
 RSK.epochs = doSelect(RSK, 'select deploymentID,startTime/1.0 as startTime, endTime/1.0 as endTime from epochs');
-RSK.epochs.startTime = rsktime2datenum(RSK.epochs.startTime);
-RSK.epochs.endTime = rsktime2datenum(RSK.epochs.endTime);
+if ~isempty(RSK.epochs)
+    RSK.epochs.startTime = rsktime2datenum(RSK.epochs.startTime);
+    RSK.epochs.endTime = rsktime2datenum(RSK.epochs.endTime);
+else
+    RSK.epochs = struct('startTime', datenum(1900,1,1,0,0,0),'endTime', datenum(2100,1,1,0,0,0));  
+end
 
 RSK.schedules = doSelect(RSK, 'select * from schedules');
 
 RSK.deployments = doSelect(RSK, 'select * from deployments');
-
-RSK.instruments = doSelect(RSK, 'select * from instruments');
 
 RSK = readpowertable(RSK);
 
 %% Nested function reading power table
     function RSK = readpowertable(RSK)
     if ~isempty(doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table" AND name="power"')) && ...
-       isfield(RSK.instruments, 'firmwareType') && RSK.instruments.firmwareType > 103;
+       ~isempty(RSK.instruments) && isfield(RSK.instruments, 'firmwareType') && RSK.instruments.firmwareType > 103;
         RSK.power = doSelect(RSK, 'select * from power'); 
         if ~isempty(RSK.power) && RSK.power.internalBatteryType == -1; 
             RSK.power = rmfield(RSK.power, {'internalBatteryType','internalBatteryCapacity','internalEnergyUsed'}); 

@@ -2,7 +2,7 @@ function newfile = RSK2RSK(RSK, varargin)
 
 % RSK2RSK - Write current rsk structure into a new rsk file.
 %
-% Syntax: newfile = RSK2RSK(RSKfile, [OPTIONS])
+% Syntax: newfile = RSK2RSK(RSK, [OPTIONS])
 %
 % RSK2RSK writes a new RSK file containing the data and various metadata 
 % from the Matlab rsk structure. It is designed to store post-processed 

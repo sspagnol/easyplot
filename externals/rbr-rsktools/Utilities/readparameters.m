@@ -24,7 +24,9 @@ function RSK = readparameters(RSK)
 
 RSK.parameters = doSelect(RSK, 'select * from parameters');
 
-if iscompatibleversion(RSK, 1, 13, 4)
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
+
+if iscompatibleversion(RSK, 1, 13, 4) && any(strcmpi({tables.name}, 'parameterKeys'))
     RSK.parameterKeys = doSelect(RSK, 'select * from parameterKeys'); 
     if length(RSK.parameters) > 1
         [~, currentidx] = max([RSK.parameters.tstamp]);

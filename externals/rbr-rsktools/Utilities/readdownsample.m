@@ -43,11 +43,20 @@ else
 
     results.tstamp = rsktime2datenum(results.tstamp');
     results.ratio = max([temp.ratio]);
-    if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop')
-        [~, isDerived] = removenonmarinechannels(RSK);
+    
+    isCoda = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && strcmpi(RSK.instruments.model,'RBRcoda');
+    if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && ~isCoda && isfield(RSK,'instrumentChannels')      
+        instrumentChannels = RSK.instrumentChannels;
+        ind = [instrumentChannels.channelStatus] == 4;
+        instrumentChannels(ind) = [];
+        if RSK.toolSettings.readHiddenChannels
+            isDerived = logical([instrumentChannels.channelStatus] == 4);
+        else
+            isDerived = logical([instrumentChannels.channelStatus]);
+        end
         results.values = results.values(:,~isDerived);
     end
-
+        
     RSK.downsample = results;
 end
 

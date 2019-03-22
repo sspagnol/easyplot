@@ -82,7 +82,7 @@ if isfield(RSK,'region')
         end
         k = 1;
         for ndx = 1:length(ProfileRegionID)
-            if ismember(ProfileRegionID(ndx), CommentAssignID)        
+            if ismember(ProfileRegionID(ndx), CommentAssignID) && isfield(RSK.region,'description');       
                 RSK.profiles.comment{ndx,1} = RSK.region(CommentRegionID(k)).description;
                 k = k + 1;
             else

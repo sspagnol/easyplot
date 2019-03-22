@@ -24,13 +24,14 @@ function [v, vsnMajor, vsnMinor]  = readfirmwarever(RSK)
 % Website: www.rbr-global.com
 % Last revision: 2018-09-14
 
-if iscompatibleversion(RSK, 1, 12, 2)
+if iscompatibleversion(RSK, 1, 12, 2) && isfield(RSK.instruments,'firmwareVersion');
     v = RSK.instruments.firmwareVersion;
-else
+elseif isfield(RSK.deployments,'firmwareVersion')
     v = RSK.deployments.firmwareVersion;
+else
+    v = [];
+    return
 end
-
-
 
 vsn = textscan(v,'%s','delimiter','.');
 vsnMajor = str2double(vsn{1}{1});

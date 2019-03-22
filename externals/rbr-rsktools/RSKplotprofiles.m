@@ -74,6 +74,10 @@ for chan = channels
 end
 numchannels = length(chanCol);
 
+if numchannels == 0;
+    error('There are only pressure, sea pressure or depth channel in the rsk file, use RSKplotdata...')
+end
+
 castidx = getdataindex(RSK, profile, direction);
 if strcmpi(reference, 'Depth')
     ycol = getchannelindex(RSK, 'Depth');

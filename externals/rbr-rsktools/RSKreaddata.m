@@ -1,6 +1,6 @@
 function RSK = RSKreaddata(RSK, varargin)
 
-%RSKreaddata - Read the data tables from an RBR RSK SQLite file.
+% RSKreaddata - Read the data tables from an RBR RSK SQLite file.
 %
 % Syntax:  [RSK] = RSKreaddata(RSK, [OPTIONS])
 % 
@@ -94,7 +94,8 @@ results = arrangedata(results);
 t=results.tstamp';
 results.tstamp = rsktime2datenum(t);
 
-if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && isfield(RSK,'instrumentChannels')     
+isCoda = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && strcmpi(RSK.instruments.model,'RBRcoda');
+if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && ~isCoda && isfield(RSK,'instrumentChannels')     
     instrumentChannels = RSK.instrumentChannels;
     ind = [instrumentChannels.channelStatus] == 4;
     instrumentChannels(ind) = [];

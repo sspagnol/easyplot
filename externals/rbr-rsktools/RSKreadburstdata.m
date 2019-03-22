@@ -54,13 +54,18 @@ end
 t1 = datenum2rsktime(t1);
 t2 = datenum2rsktime(t2);
 
+tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
-
-sql = ['select tstamp/1.0 as tstamp,* from burstData where tstamp/1.0 between ' num2str(t1) ' and ' num2str(t2) ' order by tstamp'];
-results = doSelect(RSK, sql);
-if isempty(results)
-    disp('No burstData found in that interval')
-    return
+if any(strcmpi({tables.name}, 'burstData'))
+    sql = ['select tstamp/1.0 as tstamp,* from burstData where tstamp/1.0 between ' num2str(t1) ' and ' num2str(t2) ' order by tstamp'];
+    results = doSelect(RSK, sql);
+    if isempty(results)
+        disp('No burstData found in that interval')
+        return
+    end
+else
+   disp('No burstData in the rsk file.') 
+   return
 end
 
 

@@ -1,8 +1,0 @@
-build
-
-*.o
-
-mksqlite\.mexa64
-/doxy/html
-/obj
-/test/html

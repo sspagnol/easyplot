@@ -31,8 +31,10 @@ parse(p, RSK)
 RSK = p.Results.RSK;
 
 
-if ~(strcmp(RSK.dbInfo(end).type, 'EPdesktop') || strcmp(RSK.dbInfo(end).type, 'skinny'))
-    if iscompatibleversion(RSK, 1, 8, 9) && ~strcmp(RSK.dbInfo(end).type, 'EP')
+isCoda = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && ~isempty(RSK.instruments) && strcmpi(RSK.instruments.model,'RBRcoda');
+
+if ~(strcmp(RSK.dbInfo(end).type, 'EPdesktop') || strcmp(RSK.dbInfo(end).type, 'skinny')) && ~isCoda
+    if iscompatibleversion(RSK, 1, 8, 9) && ~strcmp(RSK.dbInfo(end).type, 'EP') 
         if RSK.toolSettings.readHiddenChannels
             isDerived = logical([RSK.instrumentChannels.channelStatus] == 4);% derived channels have a '4' channelStatus
         else

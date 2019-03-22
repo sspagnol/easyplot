@@ -30,7 +30,7 @@ values = s(2:end,:);
 
 
 blanks = cellfun('isempty',values);
-values(blanks)={0};
+values(blanks)={NaN};
 
 
 

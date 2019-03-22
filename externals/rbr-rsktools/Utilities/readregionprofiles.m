@@ -33,7 +33,9 @@ end
 
 if isfield(RSK,'region') && isempty(RSK.region)
     RSK = rmfield(RSK,'region');
-    RSK = rmfield(RSK,'regionCast');
+    if isfield(RSK,'regionCast')
+        RSK = rmfield(RSK,'regionCast');
+    end
     return
 elseif isfield(RSK,'regionCast') && isempty(RSK.regionCast)
     RSK = rmfield(RSK, 'regionCast');

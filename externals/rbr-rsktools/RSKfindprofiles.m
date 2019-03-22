@@ -54,13 +54,6 @@ pressureThreshold = p.Results.pressureThreshold;
 conductivityThreshold = p.Results.conductivityThreshold;
 
 
-
-if isfield(RSK, 'profiles')
-    RSK = rmfield(RSK, 'profiles');
-end
-
-
-
 %% Set up values
 Pcol = getchannelindex(RSK, 'Pressure');
 pressure = RSK.data.values(:, Pcol);
@@ -82,6 +75,10 @@ end
 if size(wwevt,1) < 2
     disp('No profiles were detected in this dataset with the given parameters.')
     return
+else
+    if isfield(RSK, 'profiles')
+        RSK = rmfield(RSK, 'profiles');
+    end
 end
 
 

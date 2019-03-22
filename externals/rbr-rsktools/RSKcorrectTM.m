@@ -3,7 +3,7 @@ function RSK = RSKcorrectTM(RSK, varargin)
 % RSKcorrectTM - Apply a thermal mass correction to conductivity using
 %                the model of Lueck and Picklo (1990).
 %
-% Syntax:  [RSK] = RSKcorrectTM(RSK, [OPTIONS])
+% Syntax:  [RSK] = RSKcorrectTM(RSK, alpha, beta, [OPTIONS])
 %
 % RSKcorrectTM applies the algorithm developed by Lueck and Picklo
 % (1990) to minimize the effect of conductivity cell thermal mass on

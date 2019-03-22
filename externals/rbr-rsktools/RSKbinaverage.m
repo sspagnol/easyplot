@@ -49,7 +49,8 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-04-06
+% Last revision: 2018-12-17
+
 
 validDirections = {'down', 'up'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -73,16 +74,17 @@ boundary = p.Results.boundary;
 visualize = p.Results.visualize;
 
 
-
-binbytime = strcmpi(binBy, 'Time');
+binByTime = strcmpi(binBy, 'Time');
 castidx = getdataindex(RSK, profile, direction);
 alltstamp = {RSK.data(castidx).tstamp};
 maxlength = max(cellfun('size', alltstamp, 1));
 Y = NaN(maxlength, length(castidx));
 
-if binbytime
+if binByTime
     binSize = binSize/86400;
 end
+
+samplingPeriod = readsamplingperiod(RSK);
 
 if visualize ~= 0; 
     [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
@@ -94,7 +96,7 @@ end
 
 k = 1;
 for ndx = castidx;
-    if binbytime
+    if binByTime
         ref = RSK.data(ndx).tstamp;
         Y(1:length(ref),k) = ref-ref(1);
     else
@@ -106,7 +108,7 @@ for ndx = castidx;
 end
 
 
-[binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction);
+[binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction, binByTime, samplingPeriod);
 samplesinbin = NaN(length(binArray)-1,1);
 k = 1;
 for ndx = castidx
@@ -122,7 +124,7 @@ for ndx = castidx
     RSK.data(ndx).values = binnedValues(:,2:end);
     RSK.data(ndx).samplesinbin = samplesinbin;
     RSK.data(ndx).tstamp = binnedValues(:,1);
-    if ~binbytime
+    if ~binByTime
         RSK.data(ndx).values(:,chanCol) = binCenter;
     end
     k = k + 1;
@@ -135,7 +137,7 @@ if visualize ~= 0
     end
 end 
 
-if binbytime, 
+if binByTime, 
     unit = 'tstamp';
 else
     unit = RSK.channels(chanCol).units;
@@ -147,7 +149,7 @@ RSK = RSKappendtolog(RSK, logentry);
 
 
 %% Nested functions
-    function [binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction)
+    function [binArray, binCenter, boundary] = setupbins(Y, boundary, binSize, direction, binByTime, samplingPeriod)
     % Set up binArray based on the boundaries any binSize given. Boundaries
     % are hard set and binSize fills the space between the boundaries in
     % the same direction as the cast.  
@@ -158,13 +160,21 @@ RSK = RSKappendtolog(RSK, logentry);
             return
         end
 
+        if binByTime
+            boundaryFloor = min(nanmin(Y))-samplingPeriod/86400;
+            boundaryCeil = max(nanmax(Y))+samplingPeriod/86400;
+        else
+            boundaryFloor = floor(min(nanmin(Y)));
+            boundaryCeil = ceil(max(nanmax(Y)));
+        end
+        
         if isempty(boundary)
-            boundary = [ceil(max(nanmax(Y))) floor(min(nanmin(Y)))];
+            boundary = [boundaryCeil boundaryFloor];
         elseif length(boundary) == length(binSize)
             if strcmp(direction, 'up')
-                boundary = [boundary floor(min(nanmin(Y)))];
+                boundary = [boundary boundaryFloor];
             else
-                boundary = [boundary ceil(max(nanmax(Y)))];
+                boundary = [boundary boundaryCeil];
             end
         elseif length(boundary) == length(binSize)+1
         end

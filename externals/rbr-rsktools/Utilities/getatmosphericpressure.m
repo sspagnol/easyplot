@@ -26,7 +26,7 @@ loadconstants
 if isfield(RSK, 'parameterKeys')
     atmrow = strcmpi({RSK.parameterKeys.key}, 'ATMOSPHERE');
     pAtm = str2double(RSK.parameterKeys(atmrow).value);
-elseif isfield(RSK, 'parameters')
+elseif isfield(RSK, 'parameters') && ~isempty(RSK.parameters)
     pAtm = RSK.parameters.atmosphere;
 else 
     pAtm = defaultpAtm;
