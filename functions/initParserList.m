@@ -42,6 +42,12 @@ parserList.message{ii}='Choose Netcdf *.nc files:';
 parserList.parser{ii}='netcdfParse';
 
 ii=ii+1;
+parserList.name{ii}='Netcdf IMOS Aggregate (nc)';
+parserList.wildcard{ii}={'*.nc'};
+parserList.message{ii}='Choose Netcdf *.nc files:';
+parserList.parser{ii}='netcdfAggParse';
+
+ii=ii+1;
 parserList.name{ii}='Netcdf Other (nc)';
 parserList.wildcard{ii}={'*.nc'};
 parserList.message{ii}='Choose Netcdf *.nc files:';

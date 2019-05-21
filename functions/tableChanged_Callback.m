@@ -41,9 +41,6 @@ modifiedCol = get(hEvent,'Column');
 theInstrument  = hModel.getValueAt(modifiedRow,idModel);
 theFile   = hModel.getValueAt(modifiedRow,idFile);
 theSerial = hModel.getValueAt(modifiedRow,idSerial);
-if isempty(theSerial)
-    theSerial = '';
-end
 theVariable   = hModel.getValueAt(modifiedRow,idVariable);
 plotStatus = double(hModel.getValueAt(modifiedRow,idShow));
 EP_iSlice = hModel.getValueAt(modifiedRow,idSlice);
@@ -58,9 +55,10 @@ end
 % update flags/values in userData.sample_data for the matching instrument
 for ii=1:numel(userData.sample_data) % loop over files
     for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
+                    %strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
         iMatch = strcmp(userData.sample_data{ii}.meta.instrument_model_shortname, theInstrument) && ...
             strcmp([userData.sample_data{ii}.inputFile userData.sample_data{ii}.inputFileExt], theFile) &&...
-            strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
+            strcmp(userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment, theSerial) &&...
             strcmp(userData.sample_data{ii}.variables{jj}.name, theVariable);
         if iMatch
             userData.sample_data{ii}.variablePlotStatus(jj) = plotStatus;

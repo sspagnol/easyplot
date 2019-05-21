@@ -25,6 +25,9 @@ end
 
 userData = getappdata(hFig, 'UserData');
 if isempty(userData.sample_data)
+    plotPanel = findobj(hFig, 'Tag','plotPanel');
+    hLegend = findobj(plotPanel.Children,'Tag','legend');
+    delete(hLegend);
     hash.remove(hObject);
     return; 
 end
@@ -291,7 +294,8 @@ for ii = 1:numel(userData.sample_data)
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
 
-        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        %instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         legendString = strrep(instStr,'_','\_');
         try

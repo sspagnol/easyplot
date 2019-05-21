@@ -54,8 +54,12 @@ else
     
 end
 
+if ~isfield(sam, 'geospatial_lat_min')
 sam.geospatial_lat_min = [];
+end
+if ~isfield(sam, 'geospatial_lat_max')
 sam.geospatial_lat_max = [];
+end
 sam.time_coverage_start = sam.dimensions{idTime}.data(1);
 sam.time_coverage_end = sam.dimensions{idTime}.data(end);
 sam.dimensions{idTime}.comment = '';
