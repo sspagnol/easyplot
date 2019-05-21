@@ -2,8 +2,9 @@ function [sam, latitude] = add_EP_PSAL(sam, defaultLatitude)
 %add_EP_PSAL Calculate simplified PSAL value
 
 latitude = defaultLatitude;
-% data set already contains salinity
-if getVar(sam.variables, 'PSAL'), return; end
+
+% data set may already contains salinity, but calculate EP_PSAL always
+%if getVar(sam.variables, 'PSAL'), return; end
 
 cndcIdx       = getVar(sam.variables, 'CNDC');
 tempIdx       = getVar(sam.variables, 'TEMP');
