@@ -144,8 +144,8 @@ else
                     
                     other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
                     other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
-                    max_dep = max(str2double(other_EP_instrument_deployment));
-                    max_dep = updateIfEmpty(max_dep, 0, max_dep);
+                    other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
+                    max_dep = max(other_EP_instrument_deployment{:});
                     userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
                     userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
                 else
@@ -177,8 +177,8 @@ else
                         
                         other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
                         other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
-                        max_dep = max(str2double(other_EP_instrument_deployment));
-                        max_dep = updateIfEmpty(max_dep, 0, max_dep);
+                        other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
+                        max_dep = max(other_EP_instrument_deployment{:});
                         userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
                         userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
                     end
