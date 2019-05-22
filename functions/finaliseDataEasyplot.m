@@ -27,6 +27,12 @@ if ~isfield(sam.meta, 'instrument_model_shortname')
     sam.meta.instrument_model_shortname = sam.meta.instrument_model;
 end
 
+if isfield(sam, 'featureType')
+    if strcmp(sam.featureType, 'timeSeriesProfile')
+        sam.meta.instrument_model_shortname = 'GRIDDED';
+        sam.meta.instrument_serial_no = 'GRIDDED';
+    end
+end
 %%
 sam.meta.instrument_serial_no = regexprep(sam.meta.instrument_serial_no, '[^ -~]', '%');
 

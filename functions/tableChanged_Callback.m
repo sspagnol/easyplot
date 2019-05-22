@@ -47,9 +47,11 @@ EP_iSlice = hModel.getValueAt(modifiedRow,idSlice);
 
 % if deselecting mark it as -1
 if plotStatus == 0
-    plotStatus = -1;
+    plotStatus = -1; % delete plot
+elseif modifiedCol == idSlice
+    plotStatus = -2; % existing plot, changed islice
 else
-    plotStatus = 2;
+    plotStatus = 2; % new plot
 end
 
 % update flags/values in userData.sample_data for the matching instrument

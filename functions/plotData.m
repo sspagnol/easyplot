@@ -73,6 +73,7 @@ for ii=1:numel(userData.sample_data)
         end
     end
 end
+
 % variables already plotted
 for ii=1:numel(userData.sample_data)
     iPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
@@ -88,8 +89,32 @@ for ii=1:numel(userData.sample_data)
         end
     end
 end
+
+% variables changed iSlice
+
 % variables added since last plot
 for ii=1:numel(userData.sample_data)
+    % test for changed islice plots, delete old line, and mark as new
+    iNewPlotVars = find(userData.sample_data{ii}.variablePlotStatus == -2)';
+    if ~isempty(iNewPlotVars)
+        for jj = iNewPlotVars
+            if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
+                theVar = userData.sample_data{ii}.variables{jj}.name;
+                if isfield (plotVarCounter, theVar)
+                    plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
+                else
+                    plotVarCounter.(theVar) = 0;
+                end
+                % delete the plot,
+                delete(userData.sample_data{ii}.variables{jj}.hLine);
+                userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
+                varDeleteNames{end+1}=theVar;
+                userData.sample_data{ii}.variablePlotStatus(jj) = 2;
+            end
+        end
+    end
+    
+    % find new plots to add
     iNewPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
     if ~isempty(iNewPlotVars)
         for jj = iNewPlotVars
