@@ -63,9 +63,9 @@ sam = EP_addVar(...
     coordinates);
 
 % update plot status
-if isfield(sam, 'variablePlotStatus')
-    if sam.variablePlotStatus(presRelIdx) == 2
-        sam.variablePlotStatus(getVar(sam.variables, 'EP_DEPTH')) = 2;
+if isfield(sam, 'EP_variablePlotStatus')
+    if sam.EP_variablePlotStatus(presRelIdx) == 2
+        sam.EP_variablePlotStatus(getVar(sam.variables, 'EP_DEPTH')) = 2;
     end
 end
 end

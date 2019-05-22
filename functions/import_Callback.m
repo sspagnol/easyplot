@@ -106,7 +106,7 @@ else
             theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
         
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, theFile)), userData.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));

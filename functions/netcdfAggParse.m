@@ -64,7 +64,7 @@ for i = 1:length(instrument_type)
     sample_data{counter}.dimensions = dimensions;
     sample_data{counter}.variables = variables;
     sample_data{counter}.meta = meta;
-    sample_data{counter}.inputFile = source_file{i};
+    sample_data{counter}.EP_inputFile = source_file{i};
 
     % update global attributes
     idLAT = getVar(netcdfData.variables, 'LATITUDE');

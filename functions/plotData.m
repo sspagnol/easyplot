@@ -54,7 +54,7 @@ hLine = gobjects(0);
 % count up plots per variable, order is important
 % variables to delete
 for ii=1:numel(userData.sample_data)
-    iDeletePlotVars = find(userData.sample_data{ii}.variablePlotStatus == -1)';
+    iDeletePlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == -1)';
     if ~isempty(iDeletePlotVars)
         for jj = iDeletePlotVars
             if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
@@ -68,7 +68,7 @@ for ii=1:numel(userData.sample_data)
                 delete(userData.sample_data{ii}.variables{jj}.hLine);
                 userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
                 varDeleteNames{end+1}=theVar;
-                userData.sample_data{ii}.variablePlotStatus(jj) = 0;
+                userData.sample_data{ii}.EP_variablePlotStatus(jj) = 0;
             end
         end
     end
@@ -76,7 +76,7 @@ end
 
 % variables already plotted
 for ii=1:numel(userData.sample_data)
-    iPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 1)';
+    iPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == 1)';
     if ~isempty(iPlotVars)
         for jj = iPlotVars
             theVar = userData.sample_data{ii}.variables{jj}.name;
@@ -95,7 +95,7 @@ end
 % variables added since last plot
 for ii=1:numel(userData.sample_data)
     % test for changed islice plots, delete old line, and mark as new
-    iNewPlotVars = find(userData.sample_data{ii}.variablePlotStatus == -2)';
+    iNewPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == -2)';
     if ~isempty(iNewPlotVars)
         for jj = iNewPlotVars
             if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
@@ -109,13 +109,13 @@ for ii=1:numel(userData.sample_data)
                 delete(userData.sample_data{ii}.variables{jj}.hLine);
                 userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
                 varDeleteNames{end+1}=theVar;
-                userData.sample_data{ii}.variablePlotStatus(jj) = 2;
+                userData.sample_data{ii}.EP_variablePlotStatus(jj) = 2;
             end
         end
     end
     
     % find new plots to add
-    iNewPlotVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
+    iNewPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == 2)';
     if ~isempty(iNewPlotVars)
         for jj = iNewPlotVars
             theVar = userData.sample_data{ii}.variables{jj}.name;
@@ -196,8 +196,8 @@ switch upper(userData.EP_plotType)
     case 'VARS_OVERLAY'
         nSubPlots = 1;
         for ii=1:numel(userData.sample_data)
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.variablePlotStatus));
-            iVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.EP_variablePlotStatus));
+            iVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
             %markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
             userData.sample_data{ii}.axisIndex(iVars) = 1;
         end
@@ -205,8 +205,8 @@ switch upper(userData.EP_plotType)
     case 'VARS_STACKED'
         nSubPlots = numel(varNames);
         for ii=1:numel(userData.sample_data)
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.variablePlotStatus));
-            iVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.EP_variablePlotStatus));
+            iVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
             markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
             userData.sample_data{ii}.axisIndex(iVars) = cell2mat(arrayfun(@(x) find(strcmp(x,varNames)), markedVarNames, 'UniformOutput', false));
         end
@@ -243,9 +243,9 @@ end
 % loop over sample_data and plot the marked variables into previously
 % calculated subplot/axis number
 for ii = 1:numel(userData.sample_data)
-    iVars = find(userData.sample_data{ii}.variablePlotStatus == 2)';
+    iVars = find(userData.sample_data{ii}.EP_variablePlotStatus == 2)';
     if redoSubplots
-        iVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+        iVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
     end
     for jj = iVars
         legendString = {};
@@ -319,8 +319,8 @@ for ii = 1:numel(userData.sample_data)
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
 
-        %instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no);
-        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
+        %instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no);
+        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         legendString = strrep(instStr,'_','\_');
         try
@@ -396,7 +396,7 @@ for ii = 1:numel(userData.sample_data)
             end
             hLine.UserData.legendString = legendString;
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
-            userData.sample_data{ii}.variablePlotStatus(jj) = 1;
+            userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
         catch
             error('PLOTDATA: plot failed.');
         end

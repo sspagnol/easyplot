@@ -111,9 +111,9 @@ sam = EP_addVar(...
     coordinates);
 
 % update plot status
-if isfield(sam, 'variablePlotStatus')
-    if (sam.variablePlotStatus(tempIdx) == 2) || (sam.variablePlotStatus(cndcIdx) == 2) || (sam.variablePlotStatus(presRelIdx) == 2)
-        sam.variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
+if isfield(sam, 'EP_variablePlotStatus')
+    if (sam.EP_variablePlotStatus(tempIdx) == 2) || (sam.EP_variablePlotStatus(cndcIdx) == 2) || (sam.EP_variablePlotStatus(presRelIdx) == 2)
+        sam.EP_variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
     end
 end
 
