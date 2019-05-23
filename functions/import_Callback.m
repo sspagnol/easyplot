@@ -138,6 +138,7 @@ else
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.EP_isNew = true;
+                    % count up deployments of this instrument
                     instrument_serial_no = userData.sample_data{end}.meta.instrument_serial_no;
                     other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data(1:end-1), 'UniformOutput', false);
                     iInstruments = strcmp(instrument_serial_no, other_instrument_serial_no);

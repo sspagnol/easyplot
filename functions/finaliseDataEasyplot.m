@@ -21,6 +21,26 @@ if exist([sam.meta.parser 'Cleanup'], 'file')
     sam = parserCleanup(sam);
 end
 
+
+%%
+instrument_model = sam.meta.instrument_model;
+instrument_make = sam.meta.instrument_make;
+instrument_serial_no = sam.meta.instrument_serial_no;
+instrument_serial_no = regexprep(instrument_serial_no, '[^ -~]', '%');
+tokens = regexp(instrument_serial_no, '(\w+)-(\w+)$', 'tokens');
+% In current aggregate files the model/make/serial need some tidying up.
+if ~isempty(tokens)
+    if strcmp(instrument_model, instrument_make) & ~isempty(tokens{1}{1})
+        new_instrument_model = tokens{1}{1};
+    elseif ~isempty(tokens{1}{1})
+        new_instrument_model = [instrument_model ' - ' tokens{1}{1}];
+    end
+    new_instrument_serial = tokens{1}{2};
+    
+    sam.meta.instrument_model = new_instrument_model;
+    sam.meta.instrument_serial_no = new_instrument_serial;
+end
+
 %% for display purposes create a shortened instrument model name
 % if not already done so from cleanup stage
 if ~isfield(sam.meta, 'EP_instrument_model_shortname')
@@ -33,8 +53,6 @@ if isfield(sam, 'featureType')
         sam.meta.instrument_serial_no = 'GRIDDED';
     end
 end
-%%
-sam.meta.instrument_serial_no = regexprep(sam.meta.instrument_serial_no, '[^ -~]', '%');
 
 %% make all dimension names upper case
 for ii=1:numel(sam.dimensions)
