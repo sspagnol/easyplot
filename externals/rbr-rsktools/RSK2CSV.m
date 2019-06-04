@@ -148,8 +148,8 @@ RBR.endtime = datestr(RSK.epochs.endTime, 'dd/mm/yyyy HH:MM:SS PM');
 % Set up data tables and output accordingly. When the structure comes from
 % RSKreaddata, one CSV file is saved, when it comes from RSKreadprofiles,
 % multiple CSV files are saved.
-[~,inputfilename,~] = fileparts(RSK.toolSettings.filename);
-filename = ([inputfilename '.csv']); 
+[~,EP_inputFilename,~] = fileparts(RSK.toolSettings.filename);
+filename = ([EP_inputFilename '.csv']); 
 nchannels = length(channels);
 fmt_time = 'yyyy-mm-dd HH:MM:ss.FFF';
 channel_name_unit = strcat(RBR.channelnames, {'('}, RBR.channelunits, {'),   '});
@@ -197,7 +197,7 @@ for castidx = select_cast(1:directions:end);
     
     % File name added with 'profile#' when rsk has profiles
     if isProfile
-        filename = ([inputfilename, '_profile' num2str(RSK.data(castidx).profilenumber, '%04d') '.csv']); 
+        filename = ([EP_inputFilename, '_profile' num2str(RSK.data(castidx).profilenumber, '%04d') '.csv']); 
     end
 
     fid = fopen([outputdir '/' filename],'w');

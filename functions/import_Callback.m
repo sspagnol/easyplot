@@ -45,6 +45,8 @@ if iParse == 1
     % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502, BASEDIR
     % D:\ITF\Moorings\Field\20150803_ITF11Trip6247\Data\ITFFTB-1502\58521508.asc, SBE39Parse
     % FTB10000.000, workhorseParse
+    pause(0.1); % need to pause to get uigetfile to operate correctly
+    com.mathworks.mwswing.MJFileChooserPerPlatform.setUseSwingDialog(1) % Try to fix Dialog issue
     [theFile, thePath, FILTERINDEX] = uigetfile('*.csv', parserList.message{iParse}, 'MultiSelect','off');
     fileID = fopen(fullfile(thePath,theFile));
     C = textscan(fileID, '%s%s', 'Delimiter', ',');
@@ -71,6 +73,7 @@ else
     % user selected files for one particular instrument type
     filterSpec=fullfile(userData.EP_previousDataDir,strjoin(parserList.wildcard{iParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
+    com.mathworks.mwswing.MJFileChooserPerPlatform.setUseSwingDialog(1) % Try to fix Dialog issue
     [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
     allFiles = fullfile(thePath, theFiles);
     if ~iscell(allFiles)
@@ -103,7 +106,7 @@ else
             theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
         
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFile)), userData.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, theFile)), userData.sample_data, 'UniformOutput', false))));
         if notLoaded
             try
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));
@@ -135,6 +138,17 @@ else
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.EP_isNew = true;
+                    % count up deployments of this instrument
+                    instrument_serial_no = userData.sample_data{end}.meta.instrument_serial_no;
+                    other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data(1:end-1), 'UniformOutput', false);
+                    iInstruments = strcmp(instrument_serial_no, other_instrument_serial_no);
+                    
+                    other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
+                    other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
+                    other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
+                    max_dep = max(other_EP_instrument_deployment{:});
+                    userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
+                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
@@ -157,6 +171,17 @@ else
                         userData.sample_data{end+1} = tmpStruct;
                         clear('tmpStruct');
                         userData.sample_data{end}.EP_isNew = true;
+                        
+                        instrument_serial_no = userData.sample_data{end}.meta.instrument_serial_no;
+                        other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data(1:end-1), 'UniformOutput', false);
+                        iInstruments = strcmp(instrument_serial_no, other_instrument_serial_no);
+                        
+                        other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
+                        other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
+                        other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
+                        max_dep = max(other_EP_instrument_deployment{:});
+                        userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
+                        userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
                     end
                 end
                 userData.EP_defaultLatitude = defaultLatitude;

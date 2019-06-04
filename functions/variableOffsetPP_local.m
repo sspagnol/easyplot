@@ -406,8 +406,8 @@ for k = 1:nSampleData
             % save offsets and scales
             vars{m}.EP_OFFSET = appliedOffsetsNum{k}{m};
             vars{m}.EP_SCALE = appliedScalesNum{k}{m};
-            if sample_data{k}.variablePlotStatus(m) == 1
-                sample_data{k}.variablePlotStatus(m) = 2;
+            if sample_data{k}.EP_variablePlotStatus(m) == 1
+                sample_data{k}.EP_variablePlotStatus(m) = 2;
             end
             %             variableOffsetComment = ['variableOffsetPP: ' vars{m}.name ' values modified '...
             %                 'following new_data = offset + (scale * data) with offset = ' ...

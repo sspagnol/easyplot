@@ -50,7 +50,7 @@ end
 %  error occurs, it sets cwd back to the stored value.
 %  - Otherwise just calls the parser and runs the transformation.
 %
-function result = load_yaml(inputfilename, nosuchfileaction, treatasdata)
+function result = load_yaml(EP_inputFilename, nosuchfileaction, treatasdata)
 
     persistent nsfe;
 
@@ -66,7 +66,7 @@ function result = load_yaml(inputfilename, nosuchfileaction, treatasdata)
    
     yamlobj = org.yaml.snakeyaml.Yaml(); % It appears that Java objects cannot be persistent...!?
     if ~tadf
-        [filepath, filename, fileext] = fileparts(inputfilename);
+        [filepath, filename, fileext] = fileparts(EP_inputFilename);
         if isempty(filepath)
             pathstore = cd();
         else
@@ -77,7 +77,7 @@ function result = load_yaml(inputfilename, nosuchfileaction, treatasdata)
         if ~tadf
             result = scan(yamlobj.load(fileread([filename, fileext])));
         else
-            result = scan(yamlobj.load(inputfilename));
+            result = scan(yamlobj.load(EP_inputFilename));
         end;
     catch ex
         if ~tadf

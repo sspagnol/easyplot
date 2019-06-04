@@ -342,7 +342,7 @@ setappdata(hFig, 'UserData', userData);
             [pathStr, fileStr, extStr] = fileparts(theFullFile);
             theFile = [fileStr extStr];
             
-            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, theFullFile)), userData.sample_data, 'UniformOutput', false))));
+            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, theFullFile)), userData.sample_data, 'UniformOutput', false))));
             defaultLatitude = userData.EP_defaultLatitude;
             if notLoaded
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));
@@ -429,7 +429,7 @@ setappdata(hFig, 'UserData', userData);
         varNames = {};
         % variables already plotted
         for ii=1:numel(userData.sample_data)
-            iPlotVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+            iPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
             if ~isempty(iPlotVars)
                 for jj = iPlotVars
                     theVar = userData.sample_data{ii}.variables{jj}.name;
@@ -466,7 +466,7 @@ setappdata(hFig, 'UserData', userData);
             tmpStruct.filename = userData.sample_data{ii}.toolbox_input_file;
             tmpStruct.parser = userData.sample_data{ii}.meta.parser;
             plotVars = cellfun(@(x) x.name, userData.sample_data{ii}.variables, 'UniformOutput', false);
-            plotVars = plotVars(logical(userData.sample_data{ii}.variablePlotStatus));
+            plotVars = plotVars(logical(userData.sample_data{ii}.EP_variablePlotStatus));
             plotVars = strjoin(plotVars, ', ');
             tmpStruct.variables = plotVars;
             if isfield(userData.sample_data{ii}.meta, 'latitude') && ~isempty(userData.sample_data{ii}.meta.latitude)

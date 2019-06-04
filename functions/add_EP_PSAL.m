@@ -2,8 +2,9 @@ function [sam, latitude] = add_EP_PSAL(sam, defaultLatitude)
 %add_EP_PSAL Calculate simplified PSAL value
 
 latitude = defaultLatitude;
-% data set already contains salinity
-if getVar(sam.variables, 'PSAL'), return; end
+
+% data set may already contains salinity, but calculate EP_PSAL always
+%if getVar(sam.variables, 'PSAL'), return; end
 
 cndcIdx       = getVar(sam.variables, 'CNDC');
 tempIdx       = getVar(sam.variables, 'TEMP');
@@ -110,9 +111,9 @@ sam = EP_addVar(...
     coordinates);
 
 % update plot status
-if isfield(sam, 'variablePlotStatus')
-    if (sam.variablePlotStatus(tempIdx) == 2) || (sam.variablePlotStatus(cndcIdx) == 2) || (sam.variablePlotStatus(presRelIdx) == 2)
-        sam.variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
+if isfield(sam, 'EP_variablePlotStatus')
+    if (sam.EP_variablePlotStatus(tempIdx) == 2) || (sam.EP_variablePlotStatus(cndcIdx) == 2) || (sam.EP_variablePlotStatus(presRelIdx) == 2)
+        sam.EP_variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
     end
 end
 

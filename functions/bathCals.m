@@ -113,7 +113,7 @@ plotcals;
         iu = unique(instModels);
         
         ref = userData.sample_data{refinst};
-        refTemp = ref.variables{ref.variablePlotStatus>0}.data;
+        refTemp = ref.variables{ref.EP_variablePlotStatus>0}.data;
         refTime = ref.dimensions{1}.data;
         refTimeDiff = nanmedian(diff(refTime));
         tmin1 = userData.calx(1);
@@ -162,8 +162,8 @@ plotcals;
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
-            if ~any(data{ii}.variablePlotStatus>0), continue; end
-            instTemp = data{ii}.variables{data{ii}.variablePlotStatus>0}.data;
+            if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
+            instTemp = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
             igIns1 = instTime >= tmin1 & instTime <= tmax1;
             if isfield(userData,'calx2')
                 igIns2 = instTime >= tmin2 & instTime <= tmax2;

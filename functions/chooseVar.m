@@ -13,7 +13,7 @@ plotVar=[];
 varList= {};
 for ii=1:numel(sample_data)
     for jj=1:numel(sample_data{ii}.variables)
-        if sample_data{ii}.isPlottableVar(jj)
+        if sample_data{ii}.EP_isPlottableVar(jj)
             varList{end + 1}=sample_data{ii}.variables{jj}.name;
         end
     end

@@ -194,9 +194,9 @@ if candoLpf
         sam.variables{idx} = varStruct;
         
         % update plot status
-        if isfield(sam, 'variablePlotStatus')
-            if sam.variablePlotStatus(getVar(sam.variables, sam.variables{ii}.name)) == 2
-                sam.variablePlotStatus(idx) = 2;
+        if isfield(sam, 'EP_variablePlotStatus')
+            if sam.EP_variablePlotStatus(getVar(sam.variables, sam.variables{ii}.name)) == 2
+                sam.EP_variablePlotStatus(idx) = 2;
             end
         end
         

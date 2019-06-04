@@ -21,14 +21,38 @@ if exist([sam.meta.parser 'Cleanup'], 'file')
     sam = parserCleanup(sam);
 end
 
-%% for display purposes create a shortened instrument model name
-% if not already done so from cleanup stage
-if ~isfield(sam.meta, 'instrument_model_shortname')
-    sam.meta.instrument_model_shortname = sam.meta.instrument_model;
-end
 
 %%
-sam.meta.instrument_serial_no = regexprep(sam.meta.instrument_serial_no, '[^ -~]', '%');
+instrument_model = sam.meta.instrument_model;
+instrument_make = sam.meta.instrument_make;
+instrument_serial_no = sam.meta.instrument_serial_no;
+instrument_serial_no = regexprep(instrument_serial_no, '[^ -~]', '%');
+tokens = regexp(instrument_serial_no, '(\w+)-(\w+)$', 'tokens');
+% In current aggregate files the model/make/serial need some tidying up.
+if ~isempty(tokens)
+    if strcmp(instrument_model, instrument_make) & ~isempty(tokens{1}{1})
+        new_instrument_model = tokens{1}{1};
+    elseif ~isempty(tokens{1}{1})
+        new_instrument_model = [instrument_model ' - ' tokens{1}{1}];
+    end
+    new_instrument_serial = tokens{1}{2};
+    
+    sam.meta.instrument_model = new_instrument_model;
+    sam.meta.instrument_serial_no = new_instrument_serial;
+end
+
+%% for display purposes create a shortened instrument model name
+% if not already done so from cleanup stage
+if ~isfield(sam.meta, 'EP_instrument_model_shortname')
+    sam.meta.EP_instrument_model_shortname = sam.meta.instrument_model;
+end
+
+if isfield(sam, 'featureType')
+    if strcmp(sam.featureType, 'timeSeriesProfile')
+        sam.meta.EP_instrument_model_shortname = 'GRIDDED';
+        sam.meta.instrument_serial_no = 'GRIDDED';
+    end
+end
 
 %% make all dimension names upper case
 for ii=1:numel(sam.dimensions)
@@ -39,27 +63,31 @@ idTime  = getVar(sam.dimensions, 'TIME');
 
 if isfield(sam,'toolbox_input_file')
     [PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
-    sam.inputFilePath = PATHSTR;
-    sam.inputFile = NAME;
-    sam.inputFileExt = EXT;
-    sam.easyplot_input_file = sam.toolbox_input_file;
+    sam.EP_inputFilePath = PATHSTR;
+    sam.EP_inputFile = NAME;
+    sam.EP_inputFileExt = EXT;
+    sam.EP_inputFullFilename = sam.toolbox_input_file;
 else
     [PATHSTR,NAME,EXT] = fileparts(fileName);
-    sam.inputFilePath = PATHSTR;
-    sam.inputFile = NAME;
-    sam.inputFileExt = EXT;
-    sam.easyplot_input_file = fileName;
+    sam.EP_inputFilePath = PATHSTR;
+    sam.EP_inputFile = NAME;
+    sam.EP_inputFileExt = EXT;
+    sam.EP_inputFullFilename = fileName;
     % for v2.5+ need toolbox_input_file
     sam.toolbox_input_file = fileName;
     
 end
 
+if ~isfield(sam, 'geospatial_lat_min')
 sam.geospatial_lat_min = [];
+end
+if ~isfield(sam, 'geospatial_lat_max')
 sam.geospatial_lat_max = [];
+end
 sam.time_coverage_start = sam.dimensions{idTime}.data(1);
 sam.time_coverage_end = sam.dimensions{idTime}.data(end);
 sam.dimensions{idTime}.comment = '';
-sam.meta.site_id = sam.inputFile;
+sam.meta.site_id = sam.EP_inputFile;
 
 % if ~isfield(sample_data,'utc_offset_hours')
 %     sample_data.utc_offset_hours = 0;
@@ -106,19 +134,19 @@ sam = add_EP_TIMEDIFF(sam);
 % done after adding other variables
 sam = add_EP_LPF(sam);
 
-% update isPlottableVar, must be done last
-sam.isPlottableVar = false(1,numel(sam.variables));
+% update EP_isPlottableVar, must be done last
+sam.EP_isPlottableVar = false(1,numel(sam.variables));
 % plot status, -1=delete, 0=not plotted, 1=plot
-sam.variablePlotStatus = zeros(1,numel(sam.variables));
+sam.EP_variablePlotStatus = zeros(1,numel(sam.variables));
 for kk=1:numel(sam.variables)
     isEmptyDim = isempty(sam.variables{kk}.dimensions);
     isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data(:)));
     if ~isEmptyDim && isData
-        sam.isPlottableVar(kk) = true;
-        sam.variablePlotStatus(kk) = 0;
+        sam.EP_isPlottableVar(kk) = true;
+        sam.EP_variablePlotStatus(kk) = 0;
     end
 end
-sam.variablePlotStatus = sam.variablePlotStatus(:);
+sam.EP_variablePlotStatus = sam.EP_variablePlotStatus(:);
 sam.meta.latitude = defaultLatitude;
 
 %%
@@ -159,7 +187,7 @@ for ii=1:numel(sam.variables)
     QC.yMax = NaN;
     % is this an imos nc file
     isIMOS = isfield(sam, 'Conventions') && ~isempty(strfind(sam.Conventions, 'IMOS')) &&...
-        strcmp(sam.inputFileExt, '.nc');
+        strcmp(sam.EP_inputFileExt, '.nc');
     
     %theVar = sam.variables{ii}.name;
     idTime  = getVar(sam.dimensions, 'TIME');

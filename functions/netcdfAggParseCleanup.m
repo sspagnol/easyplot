@@ -7,7 +7,9 @@ function [ sam ] = netcdfParseCleanup( sam )
 
 for ii = 1:length(instrument_model)
     if ~isempty(regexp(sam.meta.instrument_model, instrument_model{ii}, 'once'))
-        sam.meta.EP_instrument_model_shortname  = regexprep(sam.meta.instrument_model, instrument_model{ii}, EP_instrument_model_shortname{ii});
+        new_instrument_model = regexprep(sam.meta.instrument_model, instrument_model{ii}, EP_instrument_model_shortname{ii});
+        sam.meta.instrument_model = new_instrument_model;
+        sam.meta.EP_instrument_model_shortname  = new_instrument_model;
     end
 end
                            

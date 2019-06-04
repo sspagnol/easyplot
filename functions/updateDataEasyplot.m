@@ -49,7 +49,7 @@ for ii=1:numel(sam.variables)
     QC.yMax = NaN;
     % is this an imos nc file
     isIMOS = isfield(sam, 'Conventions') && ~isempty(strfind(sam.Conventions, 'IMOS')) &&...
-        strcmp(sam.inputFileExt, '.nc');
+        strcmp(sam.EP_inputFileExt, '.nc');
     
     %theVar = sam.variables{ii}.name;
     idTime  = getVar(sam.dimensions, 'TIME');

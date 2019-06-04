@@ -31,9 +31,9 @@ if strcmp(selectionType,'open')
         else
             % find sample_data struct associated with filename and delete
             % any plots
-            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
+            iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, filename)), userData.sample_data, 'UniformOutput', false))));
             for ii=iFile
-                iDeletePlotVars = find(userData.sample_data{ii}.variablePlotStatus > 0)';
+                iDeletePlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
                 if ~isempty(iDeletePlotVars)
                     for jj = iDeletePlotVars
                         delete(userData.sample_data{ii}.variables{jj}.hLine);
@@ -68,9 +68,20 @@ if strcmp(selectionType,'normal')
     file_list = get(filelistPanelListbox,'String');
     % Item selected in list box
     filename = file_list{index_selected};
-    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.easyplot_input_file, filename)), userData.sample_data, 'UniformOutput', false))));
-    idTime  = getVar(userData.sample_data{iFile}.dimensions, 'TIME');
-    newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
+    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, filename)), userData.sample_data, 'UniformOutput', false))));
+    if length(iFile) == 1
+        idTime  = getVar(userData.sample_data{iFile}.dimensions, 'TIME');
+        newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
+    else
+        tstart = +Inf;
+        tend = -Inf;
+        for i = 1:length(iFile)
+            idTime  = getVar(userData.sample_data{iFile(i)}.dimensions, 'TIME');
+            tstart = min(userData.sample_data{iFile(i)}.dimensions{idTime}.data(1), tstart);
+            tend   = max(userData.sample_data{iFile(i)}.dimensions{idTime}.data(end), tend);
+        end
+        newXLimits=[tstart tend];
+    end
     zoom(gca,'reset');
     set(gca,'XLim',newXLimits);
     setappdata(hFig, 'UserData', userData);
