@@ -45,12 +45,15 @@ for i = 1:length(instrument_type)
     % copy other variables
     v = struct;
     vnames = cellfun(@(x) x.name, netcdfData.variables,  'UniformOutput', false);
-    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_type'});
+    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_type', 'deployment_code'});
     for j = 1:length(vnames)
         v = struct;
         vname = char(vnames{j});
         idVar = getVar(netcdfData.variables, vname);
         v = netcdfData.variables{idVar};
+        if isfield(v, 'instance_dimension') & strcmp(v.instance_dimension, 'instrument')
+            continue;
+        end
         v.data = v.data(instrument_index == i);
         if isempty(v.data)
             continue;
@@ -65,17 +68,18 @@ for i = 1:length(instrument_type)
     sample_data{counter}.variables = variables;
     sample_data{counter}.meta = meta;
     sample_data{counter}.EP_inputFile = source_file{i};
-
-    % update global attributes
-    idLAT = getVar(netcdfData.variables, 'LATITUDE');
-    idLON = getVar(netcdfData.variables, 'LONGITUDE');
-    lat = netcdfData.variables{idLAT}.data;
-    lon = netcdfData.variables{idLON}.data;
-    for j = 1:length(lat)
-        sample_data{counter}.geospatial_lat_max = lat(j);
-        sample_data{counter}.geospatial_lat_min = lat(j);
-        sample_data{counter}.geospatial_lon_max = lon(j);
-        sample_data{counter}.geospatial_lon_min = lon(j);
-    end
+end
     
+% update global attributes
+% idLAT = getVar(netcdfData.variables, 'LATITUDE');
+% idLON = getVar(netcdfData.variables, 'LONGITUDE');
+% lat = netcdfData.variables{idLAT}.data;
+% lon = netcdfData.variables{idLON}.data;
+for j = 1:length(sample_data)
+    sample_data{j}.geospatial_lat_max = netcdfData.geospatial_lat_max;
+    sample_data{j}.geospatial_lat_max = netcdfData.geospatial_lat_max;
+    sample_data{j}.geospatial_lon_max = netcdfData.geospatial_lon_max;
+    sample_data{j}.geospatial_lon_min = netcdfData.geospatial_lon_min;
+end
+
 end
