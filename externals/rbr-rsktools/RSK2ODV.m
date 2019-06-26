@@ -149,8 +149,8 @@ if hasSP, colSP = getchannelindex(RSK,'Sea Pressure'); end
 % Set up data tables and output accordingly. When the structure comes from
 % RSKreaddata, one txt file is saved, when it comes from RSKreadprofiles,
 % multiple txt files are saved.
-[~,EP_inputFilename,~] = fileparts(RSK.toolSettings.filename);
-filename = ([EP_inputFilename '.txt']); 
+[~,inputfilename,~] = fileparts(RSK.toolSettings.filename);
+filename = ([inputfilename '.txt']); 
 nchannels = length(channels);
 fmt_time = 'yyyy-mm-ddTHH:MM:ss.FFF';
 channel_name_unit = strcat(RBR.channelnames, {'['}, RBR.channelunits, {']'});
@@ -244,7 +244,7 @@ for castidx = select_cast(1:directions:end);
     
     % File name added with 'profile#' when rsk has profiles
     if isProfile
-        filename = ([EP_inputFilename, '_profile' num2str(RSK.data(castidx).profilenumber, '%04d') '.txt']); 
+        filename = ([inputfilename, '_profile' num2str(RSK.data(castidx).profilenumber, '%04d') '.txt']); 
     end
 
     fid = fopen([outputdir '/' filename],'w');

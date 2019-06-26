@@ -76,7 +76,8 @@ else
     if isfield(sam.meta, 'latitude')
         latitude = sam.meta.latitude;
     else
-        prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
+        [~, name, ext] = fileparts(sam.toolbox_input_file);
+        prompt = [[name ext], sprintf('\n'),  'Enter approximate latitude (decimal degrees, -ve S):'];
         dlg_title = 'Latitude';
         num_lines = 1;
         defaultans = {num2str(defaultLatitude)};
@@ -109,13 +110,6 @@ sam = EP_addVar(...
     dimensions, ...
     salinityComment, ...
     coordinates);
-
-% update plot status
-if isfield(sam, 'EP_variablePlotStatus')
-    if (sam.EP_variablePlotStatus(tempIdx) == 2) || (sam.EP_variablePlotStatus(cndcIdx) == 2) || (sam.EP_variablePlotStatus(presRelIdx) == 2)
-        sam.EP_variablePlotStatus(getVar(sam.variables, 'EP_PSAL')) = 2;
-    end
-end
 
 end
 

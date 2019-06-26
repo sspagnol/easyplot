@@ -18,7 +18,8 @@ end
 if isfield(sam.meta, 'latitude')
     latitude = sam.meta.latitude;
 else
-    prompt = {'Enter approximate latitude (decimal degrees, -ve S):'};
+    [~, name, ext] = fileparts(sam.toolbox_input_file);
+    prompt = [[name ext], sprintf('\n'),  'Enter approximate latitude (decimal degrees, -ve S):'];
     dlg_title = 'Latitude';
     num_lines = 1;
     defaultans = {num2str(defaultLatitude)};
