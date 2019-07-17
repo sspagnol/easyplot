@@ -15,20 +15,8 @@ if isfield(userData, 'sample_data')
     if ~isempty(plotVar)
         userData.plotVarNames = {plotVar};
         userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
-        userData.treePanelData = generateTreeData(userData.sample_data);
-        %setappdata(theParent, 'UserData', userData);
-        
-        %     %model = handles.jtable.getModel.getActualModel;
-        %     model = getOriginalModel(handles.jtable);
-        %     model.groupAndRefresh;
-        %     handles.jtable.repaint;
-        
-        % surely I don't have to delete and recreate jtable
-        %     if isfield(handles,'jtable')
-        %         %delete(handles.jtable);
-        %         handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-        %     end
-        userData.jtable = createTreeTable(treePanel, userData);
+        treePanelData = generateTreeData(userData.sample_data);
+        updateTreeDisplay(treePanel, treePanelData);
         
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);

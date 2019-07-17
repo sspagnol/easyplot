@@ -45,19 +45,13 @@ if strcmp(selectionType,'open')
             %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
             set(filelistPanelListbox,'Value',1); % Matlab workaround, add this line so that the list can be changed
             set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data));
-            userData.treePanelData = generateTreeData(userData.sample_data);
-            %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
-            % surely I don't have to delete and recreate jtable
-            %         if isfield(handles,'jtable')
-            %             %delete(handles.jtable);
-            %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-            %         end
-            userData.jtable = createTreeTable(treePanel, userData);
+            
+            treePanelData = generateTreeData(userData.sample_data);
+            updateTreeDisplay(treePanel, treePanelData);
+            
             userData.EP_redoPlots = true;
             setappdata(hFig, 'UserData', userData);
             plotData(plotPanel);
-            % set(handle(getOriginalModel(handles.jtable),'CallbackProperties'), 'TableChangedCallback', {@tableVisibility_Callback, ancestor(hObject,'figure')});
-            
             %drawnow;
         end
     end

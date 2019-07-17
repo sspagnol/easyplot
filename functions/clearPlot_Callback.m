@@ -25,18 +25,25 @@ if isfield(userData, 'sample_data')
     
     % clear tree table
     % https://undocumentedmatlab.com/blog/treetable#comment-308645
-    jtree = userData.jtable;
-    jtreePanel = jtree.getParent.getParent.getParent;
-    jtreePanelParent = jtreePanel.getParent;
-    jtreePanelParent.remove(jtreePanel);
-    jtreePanelParent.repaint;
+%     jtree = userData.jtable;
+%     jtreePanel = jtree.getParent.getParent.getParent;
+%     jtreePanelParent = jtreePanel.getParent;
+%     jtreePanelParent.remove(jtreePanel);
+%     jtreePanelParent.repaint;
     
+    tUserData = getappdata(treePanel, 'UserData');
+    tUserData.treePanelData = {};
+    tUserData.jtable.JTable.setModel(javax.swing.table.DefaultTableModel({}, tUserData.treePanelHeader));
+    tUserData.jtable.JTable.repaint;
+    setappdata(treePanel, 'UserData', tUserData);
+
     userData.sample_data = {};
     userData.EP_redoPlots = true;
     userData.plotLimits.TIME.RAW.xMin = NaN;
     userData.plotLimits.TIME.RAW.xMax = NaN;
     userData.plotLimits.MULTI.RAW.yMin = NaN;
     userData.plotLimits.MULTI.RAW.yMax = NaN;
+    
     setappdata(hFig, 'UserData', userData);
 end
 

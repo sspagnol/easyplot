@@ -164,6 +164,16 @@ plotPanel.BackgroundColor = [1 1 1];
 %     set(filelistPanel,'BackgroundColor','white');
 % end
 
+%
+tUserData = getappdata(treePanel, 'UserData');
+tUserData.treePanelData = {};
+tUserData.treePanelHeader = {'Instrument','File','Serial','Variable','Show','Slice'};
+tUserData.treePanelColumnGroupBy = {true, true, true, false, false, false};
+tUserData.treePanelColumnTypes = {'', '', '', 'char', 'logical', 'integer'};
+tUserData.treePanelColumnEditable = {'', '', '', false, true, true};
+setappdata(treePanel, 'UserData', tUserData);
+createTreeTable(treePanel);
+
 % data min/max
 userData.plotLimits.TIME.xMin=NaN;
 userData.plotLimits.TIME.xMax=NaN;
@@ -226,6 +236,12 @@ set(dcm_h, 'UpdateFcn', @customDatacursorText)
 % callback for mouse click on plot
 set(hFig,'WindowButtonDownFcn', @mouseDownListener);
 
+userData.msgPanel = msgPanel;
+userData.filelistPanel = filelistPanel;
+userData.filelistPanelListbox = filelistPanelListbox;
+userData.treePanel = treePanel;
+userData.plotPanel = plotPanel;
+
 setappdata(hFig, 'UserData', userData);
 
 %% --- Executes when user attempts to close figure1.
@@ -287,6 +303,11 @@ setappdata(hFig, 'UserData', userData);
         
         hFig = ancestor(hObject,'figure');
         userData=getappdata(hFig, 'UserData');
+        %treePanel = userData.treePanel;
+        treePanel = findobj(hFig, 'Tag','treePanel');
+        tUserData = getappdata(treePanel, 'UserData');
+        delete(tUserData.jtable);
+        
         try
             % save path
             userData.ini.startDialog.dataDir=userData.EP_previousDataDir;
@@ -383,6 +404,9 @@ setappdata(hFig, 'UserData', userData);
                     clear('tmpStruct');
                     userData.sample_data{end}.isNew = true;
                     isNew(end+1) = true;
+                    [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
+                    userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
+                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
@@ -411,6 +435,9 @@ setappdata(hFig, 'UserData', userData);
                         clear('tmpStruct');
                         userData.sample_data{end}.isNew = true;
                         isNew(end+1) = true;
+                        [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
+                        userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
+                        userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
                     end
                 end
                 if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
@@ -442,8 +469,10 @@ setappdata(hFig, 'UserData', userData);
         userData.dataLimits = findVarExtents(userData.sample_data, varNames);
 
         set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);
-        userData.treePanelData = generateTreeData(userData.sample_data);
-        userData.jtable = createTreeTable(treePanel, userData);
+        treePanelData = generateTreeData(userData.sample_data);
+        updateTreeDisplay(treePanel, treePanelData);
+
+        %userData.jtable = createTreeTable(treePanel, userData);
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
     end

@@ -11,6 +11,7 @@ userData=getappdata(hFig, 'UserData');
 msgPanel = findobj(hFig, 'Tag','msgPanel');
 msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
 plotPanel = findobj(hFig, 'Tag','plotPanel');
+treePanel = userData.treePanel;
 
 if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
     [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
@@ -31,7 +32,14 @@ switch ButtonName
         % set CreateFcn callback in case user double click on fig file to
         % open it
         set(hFig,'CreateFcn','openfig_Callback(gcbo)');
+        tUserData = getappdata(treePanel, 'UserData');
+        jtable = tUserData.jtable;
+        tUserData.jtable = [];
+        setappdata(treePanel, 'UserData', tUserData);
         saveas(plotPanel, fullfile(PATHNAME,regexprep(FILENAME,'\.png','\_ep\.fig','ignorecase')), 'fig');
+        tUserData = get(treePanel, 'UserData');
+        tUserData.jtable = jtable;
+        setappdata(treePanel, 'UserData', tUserData);
         set(msgPanelText,'String','Exported FIG file.');
 end % switch
 

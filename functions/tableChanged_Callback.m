@@ -1,5 +1,5 @@
 %%
-function tableVisibility_Callback(hModel, hEvent, hObject)
+function tableVisibility_Callback(hModel, hEvent, treePanel)
 % TABLEVISIBILITYCALLBACK callback for treeTable visibility column
 %
 % Inputs:
@@ -10,22 +10,29 @@ function tableVisibility_Callback(hModel, hEvent, hObject)
 % cannot use turn off the callback trick here
 % from "Undocumented Secrets of MATLAB-Java Programming" pg 167
 % prevent re-entry
+
 persistent hash;
 if isempty(hash)
     hash = java.util.Hashtable;
 end
-if ~isempty(hash.get(hObject))
+if ~isempty(hash.get(treePanel))
     return;
 end
-hash.put(hObject,1);
+hash.put(treePanel,1);
 
-if ishghandle(hObject)
-    userData=getappdata(ancestor(hObject,'figure'), 'UserData');
-else
-    hash.remove(hObject);
+if ~ishghandle(treePanel)
+    hash.remove(treePanel);
     disp('I am stuck in tableVisibility_Callback');
     return;
 end
+
+hFig = ancestor(treePanel,'figure');
+userData=getappdata(hFig, 'UserData');
+
+tUserData=getappdata(treePanel, 'UserData');
+%jtable = tUserData.jtable;
+%jtable.setCBEnabled(false);
+%oldCallback = get(jtable, 'TableChangedCallback');
 
 %treePanelHeader = {'Instrument','File','#','Variable','Show','Slice'};
 idModel = 0;
@@ -55,6 +62,9 @@ else
 end
 
 % update flags/values in userData.sample_data for the matching instrument
+% NOTE: testing of valid values and then hModel.setValueAt causes another
+% tablechange
+
 for ii=1:numel(userData.sample_data) % loop over files
     for jj = find(cellfun(@(x) strcmp(x.name, theVariable), userData.sample_data{ii}.variables))
                     %strcmp(userData.sample_data{ii}.meta.instrument_serial_no , theSerial) &&...
@@ -86,17 +96,20 @@ for ii=1:numel(userData.sample_data) % loop over files
     end
 end
 
-% model = getOriginalModel(handles.jtable);
-% model.groupAndRefresh;
-% handles.jtable.repaint;
+treePanelData = generateTreeData(userData.sample_data);
+updateTreeDisplay(treePanel, treePanelData)
 
-setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+setappdata(hFig, 'UserData', userData);
 
-plotData(ancestor(hObject,'figure'));
+plotData(hFig);
 
 % release rentrancy flag
-hash.remove(hObject);
+hash.remove(treePanel);
 
+%jtable.setCBEnabled(true);
+
+%set(treePanel, 'TableChangedCallback', oldCallback);
+    
 end  % tableChangedCallback
 
 

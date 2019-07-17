@@ -22,7 +22,8 @@ msgPanel = findobj(hFig, 'Tag','msgPanel');
 msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
 filelistPanel= findobj(hFig, 'Tag','filelistPanel');
 filelistPanelListbox  = findobj(filelistPanel, 'Tag','filelistPanelListbox');
-treePanel = findobj(hFig, 'Tag','treePanel');
+%treePanel = findobj(hFig, 'Tag','treePanel');
+treePanel = userData.treePanel;
 
 parserList=userData.parserList;
 
@@ -138,17 +139,11 @@ else
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.EP_isNew = true;
-                    % count up deployments of this instrument
-                    instrument_serial_no = userData.sample_data{end}.meta.instrument_serial_no;
-                    other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data(1:end-1), 'UniformOutput', false);
-                    iInstruments = strcmp(instrument_serial_no, other_instrument_serial_no);
                     
-                    other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
-                    other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
-                    other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
-                    max_dep = max(other_EP_instrument_deployment{:});
-                    userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
-                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
+                    % count up deployments of this instrument
+                    [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
+                    userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
+                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
                 else
                     % one data set may have generated more than one sample_data struct
                     % eg AWAC .wpr with waves in .wap etc
@@ -172,16 +167,10 @@ else
                         clear('tmpStruct');
                         userData.sample_data{end}.EP_isNew = true;
                         
-                        instrument_serial_no = userData.sample_data{end}.meta.instrument_serial_no;
-                        other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data(1:end-1), 'UniformOutput', false);
-                        iInstruments = strcmp(instrument_serial_no, other_instrument_serial_no);
-                        
-                        other_EP_instrument_deployment = cellfun(@(x) x.meta.EP_instrument_deployment, userData.sample_data(1:end-1), 'UniformOutput', false);
-                        other_EP_instrument_deployment = other_EP_instrument_deployment(iInstruments);
-                        other_EP_instrument_deployment = updateIfEmpty(other_EP_instrument_deployment, {0}, other_EP_instrument_deployment);
-                        max_dep = max(other_EP_instrument_deployment{:});
-                        userData.sample_data{end}.meta.EP_instrument_deployment = max_dep + 1;
-                        userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = [userData.sample_data{end}.meta.instrument_serial_no '#' num2str(max_dep + 1)];
+                        % count up deployments of this instrument
+                        [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
+                        userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
+                        userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
                     end
                 end
                 userData.EP_defaultLatitude = defaultLatitude;
@@ -220,54 +209,9 @@ else
         EP_isNew=cellfun(@(x) x.EP_isNew, userData.sample_data);
         userData.sample_data = markPlotVar(userData.sample_data, plotVar, EP_isNew);
         userData.plotVarNames = sort(unique({userData.plotVarNames{:} plotVar}));
-        userData.treePanelData = generateTreeData(userData.sample_data);
-        %ssetappdata(ancestor(hObject,'figure'), 'UserData', userData);
-        %         if isfield(handles,'jtable')
-        %             %delete(handles.jtable);
-        %             handles.jtable.getModel.getActualModel.getActualModel.setRowCount(0);
-        %         end
+        treePanelData = generateTreeData(userData.sample_data);
         
-        userData.jtable = createTreeTable(treePanel, userData);
-        
-        %% trying to just change the table data and redraw
-        % [data,headers] = getTableData(handles.jtable);
-        %  setTableData(jtable,handles.treePanelData,headers);
-        %       jt.setModel(javax.swing.table.DefaultTableModel(handles.treePanelData,{'','Instrument','Variable','Show','Slice'}));
-        %         model.setDataVector(tdc,num2cell(handles.treePanelHeader));
-        %         model.groupAndRefresh;
-        %         jt.repaint;
-        
-        % model=handles.jtable.getModel.getActualModel.getActualModel;
-        %   td = model.getDataVector.toArray.cell;
-        %   tdc = cellfun(@(c)c.toArray.cell, td, 'uniform',false);
-        
-        % jData=java.util.Vector(size(handles.treePanelData,1));
-        % for ii = 1 : size(handles.treePanelData,1)
-        %         jVec = java.util.Vector(size(handles.treePanelData,2));
-        %         for jj = 1 : size(handles.treePanelData,2)
-        %             jVec.add(handles.treePanelData{ii,jj});
-        %         end
-        %         jData.addElement(jVec);
-        %         clear('jVec');
-        % end
-        %
-        % jHeader= java.util.Vector(numel(handles.treePanelHeader));
-        % for ii = 1 : numel(handles.treePanelHeader)
-        %   jHeader.add(handles.treePanelHeader{ii});
-        % end
-        %
-        % jt=handles.jtable;
-        % jt.setModel(javax.swing.table.DefaultTableModel(jData,jHeader));
-        % %jt.setModel(MultiClassTableModel(jData,jHeader));
-        % CustomizableCellRenderer
-        % javax.swing.table.DefaultTableCellRenderer
-        % % model=handles.jtable.getModel.getActualModel.getActualModel
-        % % model.groupAndRefresh;
-        % mmodel = jt.getModel
-        % jmodel = com.jidesoft.grid.DefaultGroupTableModel(mmodel)
-        % jmodel.groupAndRefresh;
-        % jt.repaint;
-        
+        updateTreeDisplay(userData.treePanel, treePanelData);
         
         oldWarnState = warning('off','MATLAB:hg:JavaSetHGProperty');
         setappdata(ancestor(hObject,'figure'), 'UserData', userData);

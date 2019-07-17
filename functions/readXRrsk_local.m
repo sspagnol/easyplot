@@ -72,7 +72,8 @@ sample_data = struct;
 
 sample_data.toolbox_input_file                = filename;
 sample_data.meta.instrument_make              = 'RBR';
-sample_data.meta.instrument_model             = char(RSK.instruments.model);
+sample_data.meta.instrument_model = genvarname(char(unicode2native(RSK.instruments.model, 'US-ASCII')));
+sample_data.meta.instrument_model = strrep(sample_data.meta.instrument_model, '0x1A', '3');
 try
     sample_data.meta.instrument_firmware          = RSK.instruments.firmwareVersion;
 catch

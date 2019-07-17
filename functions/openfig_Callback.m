@@ -66,8 +66,9 @@ hEPmanualAxisLimitsButton = uipushtool(hToolbar,'CData',img, ...
     'ClickedCallback', 'manualAxisLimits_Callback(gcbf)');
 
 if isfield(userData, 'sample_data')
-    userData.treePanelData = generateTreeData(userData.sample_data);
-    userData.jtable = createTreeTable(treePanel, userData);
+    treePanelData = generateTreeData(userData.sample_data);
+    updateTreeDisplay(treePanel, treePanelData);
+    
     setappdata(hFig, 'UserData', userData);
     plotData(hFig);
     zoomYextent_Callback(hObject);
