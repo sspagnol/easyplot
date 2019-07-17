@@ -28,7 +28,6 @@ if localInBounds(axH)
                 theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
                 theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
                 listData(end+1,:)={userData.sample_data{ii}.variables{jj}.name,...
-                    %strcat(userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.instrument_serial_no),...
                     strcat(userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment),...
                     datestr(tData(1),'yyyy-mm-dd HH:MM:SS.FFF'),...
                     datestr(tData(end),'yyyy-mm-dd HH:MM:SS.FFF'),...
@@ -59,6 +58,11 @@ if localInBounds(axH)
     
     jscrollpane = findjobj(mtable);
     jtable = jscrollpane.getViewport.getView;
+    
+%     jscrollpane = javaObjectEDT(mtable);
+%     viewport    = javaObjectEDT(jscrollpane.getViewport);
+%     jtable      = javaObjectEDT(viewport.getView);
+    
     % Now turn the JIDE sorting on
     jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
     jtable.setAutoResort(true);

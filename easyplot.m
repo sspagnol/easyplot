@@ -197,6 +197,14 @@ try
         userData.EP_previousDataDir=thePath;
     end
 end
+try
+    thePath=userData.ini.startDialog.ymlDir;
+    if exist(thePath)
+        userData.EP_previousYmlDir=thePath;
+    else
+        userData.EP_previousYmlDir=userData.EP_easyplotDir;
+    end
+end
 if ~isfield(userData.ini.plotting,'doMultilineXLabel')
     userData.ini.plotting.doMultilineXLabel = false;
 end
@@ -341,16 +349,21 @@ setappdata(hFig, 'UserData', userData);
             userData.sample_data={};
         end
         
-        for kk=1:numel(userData.sample_data)
-            userData.sample_data{kk}.isNew = false;
+        [ymlFileName, ymlPathName, ~] = uigetfile(userData.EP_previousYmlDir, '*.yml','');
+        if isempty(ymlFileName)
+            return;
         end
         
-        [ymlFileName, ymlPathName, ~] = uigetfile('*.yml','');
         ymlData = yml.read(fullfile(ymlPathName,ymlFileName));
         % test if no file selected
         if ~isfield(ymlData, 'files')
             return;
         end
+        
+        for kk=1:numel(userData.sample_data)
+            userData.sample_data{kk}.isNew = false;
+        end
+        
         nFiles = numel(ymlData.files);
         % a bit more paranoia
         if nFiles == 0
@@ -472,7 +485,6 @@ setappdata(hFig, 'UserData', userData);
         treePanelData = generateTreeData(userData.sample_data);
         updateTreeDisplay(treePanel, treePanelData);
 
-        %userData.jtable = createTreeTable(treePanel, userData);
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
     end
@@ -504,10 +516,10 @@ setappdata(hFig, 'UserData', userData);
             ymlData.files{ii} = tmpStruct;
         end
         
-        %ymlData.plottype = userData.EP_plotType;
-        
         [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
         yml.write(fullfile(ymlPathName,ymlFileName),ymlData);
+        userData.EP_previousYmlDir = ymlPathName;
+        setappdata(hFig, 'UserData', userData);
     end
 %%
     function timeOffsets_Callback(hObject, eventdata, handles)
