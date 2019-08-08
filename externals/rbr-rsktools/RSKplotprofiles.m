@@ -12,12 +12,12 @@ function handles = RSKplotprofiles(RSK, varargin)
 % Inputs: 
 %    [Required] - RSK - Structure containing the logger metadata and data.
 %
-%    [Optional] - profile - Profile number to plot. Default is to plot 
-%                        all detected profiles.
-%
-%                 channel - Variables to plot (e.g., temperature, salinity,
+%    [Optional] - channel - Variables to plot (e.g., temperature, salinity,
 %                        etc). Default is all channel (excluding pressure
 %                        and sea pressure).
+%
+%                 profile - Profile number to plot. Default is to plot 
+%                        all detected profiles.
 % 
 %                 direction - 'up' for upcast, 'down' for downcast or
 %                        'both'. Default is to use all directions
@@ -36,14 +36,14 @@ function handles = RSKplotprofiles(RSK, varargin)
 %    rsk = RSKopen('profiles.rsk');
 %    rsk = RSKreadprofiles(rsk, 'direction', 'down');
 %    % plot selective downcasts and output handles for customization 
-%    hdls = RSKplotprofiles(rsk, 'profile', [1 5 10], 'channel', {'Conductivity', 'Temperature'});
+%    hdls = RSKplotprofiles(rsk, 'channel', {'Conductivity', 'Temperature'}, 'profile', [1 5 10]);
 %
 % See also: RSKreadprofiles, RSKreaddata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-10-26
+% Last revision: 2019-04-15
 
 validDirections = {'down', 'up', 'both'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -126,23 +126,32 @@ for chan = chanCol
         handles(ii,n) = plot(RSK.data(ndx).values(:, chan), ydata,'color',clrs(ii,:),'linestyle',line1);
         hold on
 
-        if(stepsize > 1)
+        if stepsize > 1 && ndx+1 <= max(castidx)
             ydata = RSKy.data(ndx+1).values(:, ycol);
             handles(ii+1,n) = plot(RSK.data(ndx+1).values(:, chan), ydata,'color',clrs(ii,:),'linestyle',line2);
         end
 
         pmax = max([pmax; ydata]);
         ii = ii+1;
-        if(stepsize > 1), ii = ii+1; end
+        if stepsize > 1, 
+            ii = ii+1; 
+        end
     end
 
     ylim([0 pmax])
     title(RSK.channels(chan).longName);
     xlabel(RSK.channels(chan).units);
     ylabel([RSKy.channels(ycol).longName ' [' RSKy.channels(ycol).units ']'])
-    n = n+1;
+    n = n+1;  
     grid on
 end
+
+if stepsize > 1 && strcmp(RSKy.data(1).direction,'up')
+    legend('upcast','downcast')
+elseif stepsize > 1 && strcmp(RSKy.data(1).direction,'down')
+    legend('downcast','upcast')
+end
+
 ax = findall(gcf,'type','axes');
 set(ax, 'ydir', 'reverse')
 linkaxes(ax,'y')

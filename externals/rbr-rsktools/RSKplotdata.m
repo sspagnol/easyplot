@@ -29,7 +29,9 @@ function [handles,axes] = RSKplotdata(RSK, varargin)
 %
 %                 showcast - Show cast direction when set as true. Default
 %                       is false. It is recommended to show the cast 
-%                       direction patch for time series data only.
+%                       direction patch for time series data only. This
+%                       argument will not work when pressure channel is not
+%                       available.
 %
 % Output:
 %     handles - Line object of the plot.
@@ -50,7 +52,8 @@ function [handles,axes] = RSKplotdata(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-09-26
+% Last revision: 2019-06-12
+
 
 validDirections = {'down', 'up'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -74,20 +77,34 @@ if ~isfield(RSK,'data')
     error('You must read a section of data in first! Use RSKreaddata...')
 end
 
-if length(RSK.data) == 1 && ~isempty(profile)
-    error('RSK structure does not contain any profiles, use RSKreadprofiles.')
+if length(RSK.data) == 1 && ~isempty(profile) && ~isfield(RSK.data,'direction')
+    error('RSK structure does not contain any profiles, use RSKreadprofiles or RSKtimeseries2profiles.')
 end
 
 if isempty(profile); 
     profile = 1; 
 end
 
+chanCol = [];
+channels = cellchannelnames(RSK, channel);
+for chan = channels
+    chanCol = [chanCol getchannelindex(RSK, chan{1})];
+end
+
 if showcast  
+    try
+        pCol = getchannelindex(RSK,'Pressure');
+    catch
+        error('There is no pressure channel, no cast can be shown.')
+    end    
+    if ~ismember(pCol, chanCol) 
+        error('Please specify pressure in channel input so that showcast could work')
+    end
     if length(RSK.data) ~= 1;
         error('RSK structure must be time series for showcast, use RSKreaddata.')
     end
     if ~isfield(RSK,'regionCast') || ~isfield(RSK,'profiles')
-        error('RSK does not have cast events for profiles, use RSKfindprofiles.')
+        error('RSK does not have cast events for profiles, use RSKfindprofiles or RSKtimeseries2profiles.')
     end
 end
 
@@ -99,18 +116,6 @@ end
 if size(castidx,2) ~= 1 
     error('RSKplotdata can only plot one cast and direction. To plot multiple casts or directions, use RSKplotprofiles.')
 end
-    
-
-pCol = getchannelindex(RSK,'Pressure');
-chanCol = [];
-channels = cellchannelnames(RSK, channel);
-for chan = channels
-    chanCol = [chanCol getchannelindex(RSK, chan{1})];
-end
-
-if ~ismember(pCol, chanCol) && showcast;
-    error('No pressure channel found for showcast, please specify pressure in channel input.')
-end
 
 [handles,axes] = channelsubplots(RSK, 'data', 'chanCol', chanCol, 'castidx', castidx);
 
@@ -119,7 +124,6 @@ if isfield(RSK.data,'profilenumber') && isfield(RSK.data,'direction');
 end
 
 if showcast     
-    pCol = getchannelindex(RSK,'Pressure');
     pmax = max(RSK.data.values(:,pCol));
     
     % Construct vectors of patch vertices from RSK.profiles
@@ -145,5 +149,3 @@ if showcast
 end
 
 end
-
-

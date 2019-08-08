@@ -1,8 +1,8 @@
 function castidx = getdataindex(RSK, varargin)
 
-%GETDATAINDEX - Return the index of data elements requested.
+% GETDATAINDEX - Return the index of data elements requested.
 %
-% Syntax:  [castIdx] = GETDATAINDEX(RSK, [OPTIONS])
+% Syntax:  [castidx] = GETDATAINDEX(RSK, [OPTIONS])
 % 
 % Selects the data elements that fulfill the requirements described by the 
 % profile number and direction arguments.
@@ -24,15 +24,14 @@ function castidx = getdataindex(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-04
+% Last revision: 2019-04-16
 
-
-validationFcn = @(x) ischar(x) || isempty(x);
+checkDirection = @(x) ischar(x) || isempty(x);
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addOptional(p, 'profile', [], @isnumeric);
-addOptional(p, 'direction', [], validationFcn);
+addOptional(p, 'direction', [], checkDirection);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
@@ -40,56 +39,28 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 
 
-profile = profile(:)';
+isProfile = isfield(RSK.data,'direction') && isfield(RSK.data,'profilenumber');
 
-if size(RSK.data,2) == 1 && ~isfield(RSK.data,'direction') && ~isfield(RSK.data,'profilenumber')
-    castidx = 1;
-    if ~isempty(profile) && profile ~= 1  
-        error('The profile requested is greater than the total amount of profiles in this RSK structure.');
-    end 
-    return
+if isProfile    
+    if isempty(direction) || strcmpi(direction,'both')        
+        if isempty(profile)            
+            castidx = 1:length(RSK.data);            
+        else           
+            castidx = find(ismember([RSK.data.profilenumber],profile));           
+        end        
+    elseif strcmpi(direction,'up') || strcmpi(direction,'down')       
+        if isempty(profile)            
+            castidx = find(ismember({RSK.data.direction},direction));            
+        else           
+            castidx = find(ismember([RSK.data.profilenumber],profile) & ismember({RSK.data.direction},direction));           
+        end      
+    end    
+else    
+    castidx = 1;          
 end
 
-profilecast = size(RSK.profiles.order,2);
-ndata = length(RSK.data);
-
-if ~isempty(direction) && profilecast == 1 && ~strcmp(RSK.profiles.order, direction) && ~strcmp(direction,'both')
-    error(['There is no ' direction 'cast in this RSK structure.']);
-end
-
-
-
-if isempty(profile) && isempty(direction)
-    castidx = 1:ndata;
-elseif ~isempty(profile)
-    if max(profile) > ndata/profilecast
-        error('The profile requested is greater than the total amount of profiles in this RSK structure.');
-    end
-    
-    if profilecast == 2
-        if isempty(direction) || strcmp(direction, 'both')
-            castidx = [(profile*2)-1 profile*2];
-            castidx = sort(castidx);
-        elseif strcmp(RSK.profiles.order{1}, direction)
-            castidx = (profile*2)-1;
-        else
-            castidx = profile*2;
-        end
-    else
-        castidx = profile;
-    end
-else
-    if profilecast == 2
-        if strcmp(direction, 'both')
-            castidx = 1:ndata;
-        elseif strcmp(RSK.profiles.order{1}, direction)
-            castidx = 1:2:ndata;
-        else
-            castidx = 2:2:ndata;
-        end
-    else
-        castidx = 1:ndata;
-    end
+if isempty(castidx)     
+    error('The profile or direction requested does not exist in this RSK structure.');
 end
      
 end

@@ -1,8 +1,8 @@
 %% RSKtools for Matlab processing RBR data
-% RSKtools v3.0.0;
+% RSKtools v3.2.0;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2018-11-14
+% 2019-07-16
 
 %% Introduction
 % RSKtools includes a series of functions to post-process RBR logger
@@ -16,7 +16,7 @@
 % command prompt.
 %
 % Review 
-% <http://rbr-global.com/wp-content/uploads/2018/11/Standard.pdf
+% <http://rbr-global.com/wp-content/uploads/2019/07/Standard.pdf
 % RSKtools Getting Started> for an introduction on how to load RBR
 % data into Matlab from RSK files, make plots, and access the data.
 
@@ -169,11 +169,11 @@ rsk = RSKderivesalinity(rsk);
 % illustrate how this is done by computing Absolute Salinity and
 % adding it to the RSK structure
 p = getchannelindex(rsk,'sea pressure');
-sp= getchannelindex(rsk,'salinity');
+sp = getchannelindex(rsk,'salinity');
 
 ncast = length(rsk.data);
 sa = repmat(struct('values',[]),1,ncast);
-for k=1:ncast,
+for k = 1:ncast,
   sa(k).values = gsw_SA_from_SP(rsk.data(k).values(:,sp),...
                                 rsk.data(k).values(:,p),-150,49);
 end
@@ -224,31 +224,31 @@ figure
 RSKimages(rsk,'channel','chlorophyll','direction','up'); 
 
 
-%% Add station metadata
-% |RSKaddmetadata| appends station metadata to the profile data
+%% Add station data
+% |RSKaddstationdata| appends station data to the profile data
 % structure.  The allowable fields are: latitude, longitude, station,
 % cruise, vessel, depth, date, weather, crew, comment and
 % description. The function is vectorized, which allows multiple
-% metadata inputs for multiple profiles. When there is only one
-% metadata input specified for multiple profiles, all profiles will be
-% assigned with the same value.
+% station data inputs for multiple profiles. When there is only one
+% station data input specified for multiple profiles, all profiles 
+% will be assigned with the same value.
 %
-% Station metadata is written into both the CSV and ODV file headers
+% Station data is written into both the CSV and ODV file headers
 % when the data is exported with |RSK2CSV| and |RSK2ODV|.
 
-% apply the same metadata to each profile
-rsk = RSKaddmetadata(rsk,'latitude',45,'longitude',-25,...
+% apply the same station data to each profile
+rsk = RSKaddstationdata(rsk,'latitude',45,'longitude',-25,...
                          'station',{'SK1'},'vessel',{'R/V RBR'},...
                          'cruise',{'Skootamatta Lake 1'});
 
 % or use vectorized inputs
-rsk = RSKaddmetadata(rsk,'profile',4:6,'station',{'S1','S2','S3'},...
+rsk = RSKaddstationdata(rsk,'profile',4:6,'station',{'S1','S2','S3'},...
                          'latitude',[45,44,46],...
                          'longitude',[-25,-24,-23],...
                          'comment','RSKtools demo');
 
 %% 
-% To view the metadata in the 4th profile:
+% To view the station data in the 4th profile:
 disp(rsk.data(4))
 
 
@@ -282,7 +282,7 @@ disp(rsk.data(4))
 % manual> for detailed RSKtools function documentation.
 %
 % * the
-% <http://rbr-global.com/wp-content/uploads/2018/11/Standard.pdf
+% <http://rbr-global.com/wp-content/uploads/2019/07/Standard.pdf
 % RSKtools Getting Started> for an introduction on how to load RBR
 % data into Matlab from RSK files, make plots, and access the data.
 

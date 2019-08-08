@@ -22,7 +22,7 @@ function RSK = readheaderfull(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-10
+% Last revision: 2019-06-26
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -56,6 +56,10 @@ end
 
 if any(strcmpi({tables.name}, 'downsample_caches'))
     RSK = readdownsample(RSK);
+end
+
+if any(strcmpi({tables.name}, 'instrumentSensors'))
+    RSK.instrumentSensors = doSelect(RSK, 'select * from instrumentSensors'); 
 end
 
 end

@@ -97,14 +97,16 @@ results.tstamp = rsktime2datenum(t);
 isCoda = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && strcmpi(RSK.instruments.model,'RBRcoda');
 if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && ~isCoda && isfield(RSK,'instrumentChannels')     
     instrumentChannels = RSK.instrumentChannels;
-    ind = [instrumentChannels.channelStatus] == 4;
-    instrumentChannels(ind) = [];
-    if RSK.toolSettings.readHiddenChannels
-        isDerived = logical([instrumentChannels.channelStatus] == 4);
-    else
-        isDerived = logical([instrumentChannels.channelStatus]);
+    if isfield(instrumentChannels,'channelStatus')
+        ind = [instrumentChannels.channelStatus] == 4  | [instrumentChannels.channelStatus] == 14;
+        instrumentChannels(ind) = [];
+        if RSK.toolSettings.readHiddenChannels
+            isDerived = logical([instrumentChannels.channelStatus] == 4);
+        else
+            isDerived = logical([instrumentChannels.channelStatus]);
+        end
+        results.values = results.values(:,~isDerived);
     end
-    results.values = results.values(:,~isDerived);
 end
 
 %% Put data into data field of RSK structure.

@@ -15,7 +15,7 @@ function RSK2ODV(RSK, varargin)
 % Notes: Cruise, station, longitude, latitude and bottom depth are set to 
 % `C1`, `S1`, `0.0`, `0.0` and `0.0` respectively as default. They will be 
 % filled automatically with Ruskin annotations if they were added by the 
-% user. Alternatively, they can be populated with RSKaddmetadata.m.
+% user. Alternatively, they can be populated with RSKaddstationdata.m.
 % 
 % Output samples as below:
 %
@@ -107,7 +107,9 @@ if ~isProfile && (~isempty(profile) || ~isempty(direction))
     error('RSK structure is not organized into profiles. Use RSKreadprofiles or RSKtimeseries2profiles.');
 end
 
-if isempty(direction); direction = 'both'; end;
+if isempty(direction); 
+    direction = 'both'; 
+end;
 
 if ~strcmp('both', direction) && isProfile && ...
     (all(strcmp('up',{RSK.data.direction})) && ~strcmp(direction,'up') || all(strcmp('down',{RSK.data.direction})) && ~strcmp(direction,'down'))
@@ -144,7 +146,6 @@ RBR.endtime = datestr(RSK.epochs.endTime, 'dd/mm/yyyy HH:MM:SS PM');
 
 % Check if Sea_Pressure exists in output data, if yes, get the index
 hasSP = any(strcmpi('Sea_Pressure', RBR.channelnames));
-if hasSP, colSP = getchannelindex(RSK,'Sea Pressure'); end
 
 % Set up data tables and output accordingly. When the structure comes from
 % RSKreaddata, one txt file is saved, when it comes from RSKreadprofiles,
@@ -167,7 +168,7 @@ log = RSK.log(:,2);
 
 % Check if cast direction includes both upcast and downcast?
 directions = 1;
-if isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 && strcmp(direction,'both')
+if isfield(RSK,'profiles') && isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 && strcmp(direction,'both')
     directions = 2;
 end
 
@@ -195,30 +196,30 @@ for castidx = select_cast(1:directions:end);
         RBR(directionidx).sampletimes = cellstr(datestr(RSK.data(directionidx).tstamp, fmt_time));
         N = length(RBR(directionidx).sampletimes);       
 
-        if isProfile && isfield(RSK.data,'cruise') && ~isempty(RSK.data(directionidx).cruise)
+        if isfield(RSK.data,'cruise') && ~isempty(RSK.data(directionidx).cruise)
             temp = RSK.data(castidx).cruise;
             RBR(directionidx).cruise = repmat(num2str(temp{1}), N,1);
         else
             RBR(directionidx).cruise = repmat('C1', N,1);
         end       
-        if isProfile && isfield(RSK.data,'station') && ~isempty(RSK.data(directionidx).station)
+        if isfield(RSK.data,'station') && ~isempty(RSK.data(directionidx).station)
             temp = RSK.data(castidx).station;
             RBR(directionidx).station = repmat(num2str(temp{1}), N,1);
         else
             RBR(directionidx).station = repmat('S1', N,1);
         end 
         RBR(directionidx).type = repmat('C', N,1);  
-        if isProfile && isfield(RSK.data,'latitude') && ~isnan(RSK.data(directionidx).latitude)
+        if isfield(RSK.data,'latitude') && ~isnan(RSK.data(directionidx).latitude)
             RBR(directionidx).latitude = (RSK.data(directionidx).latitude)*ones(N,1);
         else
             RBR(directionidx).latitude = zeros(N,1);
         end
-        if isProfile && isfield(RSK.data,'longitude') && ~isnan(RSK.data(directionidx).longitude)
+        if isfield(RSK.data,'longitude') && ~isnan(RSK.data(directionidx).longitude)
             RBR(directionidx).longitude = (RSK.data(directionidx).longitude)*ones(N,1);
         else
             RBR(directionidx).longitude = zeros(N,1);
         end  
-        if isProfile && isfield(RSK.data,'depth') && ~isnan(RSK.data(directionidx).depth)
+        if isfield(RSK.data,'depth') && ~isnan(RSK.data(directionidx).depth)
             RBR(directionidx).bottomdepth = (RSK.data(directionidx).depth)*ones(N,1);
         else
             RBR(directionidx).bottomdepth = zeros(N,1);
@@ -232,7 +233,7 @@ for castidx = select_cast(1:directions:end);
             tempdata(:,channelIdx) = [];
             RBR(directionidx).data = [dataSP, tempdata];
         end
-        data2fill{d} = [cellstr(RBR(directionidx).cruise), cellstr(RBR(directionidx).station),...
+            data2fill{d} = [cellstr(RBR(directionidx).cruise), cellstr(RBR(directionidx).station),...
             cellstr(RBR(directionidx).type), RBR(directionidx).sampletimes, num2cell(RBR(directionidx).longitude), ...
             num2cell(RBR(directionidx).latitude), num2cell(RBR(directionidx).bottomdepth), num2cell(RBR(directionidx).data)];  
         
@@ -271,12 +272,16 @@ for castidx = select_cast(1:directions:end);
     fprintf(fid,'%s\n',['// Serial=' RBR.serial]);   
     fprintf(fid,'%s\n','//Processing history:');
     for l = 1:length(log), fprintf(fid,'%s\n',['//' log{l}]); end
-    if isProfile && isfield(RSK.data,'comment');
+    if isfield(RSK.data,'comment');
         temp = RSK.data(castidx).comment;
         fprintf(fid,'%s\n',['//Comment: ' num2str(temp{1})]);
-        if ~isempty(comment), fprintf(fid,'%s\n',['//' comment]); end
+        if ~isempty(comment), 
+            fprintf(fid,'%s\n',['//' comment]); 
+        end
     else
-        if ~isempty(comment), fprintf(fid,'%s\n',['//Comment: ' comment]); end
+        if ~isempty(comment), 
+            fprintf(fid,'%s\n',['//Comment: ' comment]); 
+        end
     end
     fprintf(fid,'\n');    
     

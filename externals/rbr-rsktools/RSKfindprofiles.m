@@ -1,16 +1,16 @@
-function RSK = RSKfindprofiles(RSK, varargin)
+function [RSK,hasProfile] = RSKfindprofiles(RSK, varargin)
 
 % RSKfindprofiles - Find profiles in a time series using pressure
 %                  and conductivity data (if it exists). 
 %
-% Syntax:  [RSK] = RSKfindprofiles(RSK, [OPTIONS])
+% Syntax:  [RSK,hasProfile] = RSKfindprofiles(RSK, [OPTIONS])
 % 
 % Implements the algorithm used by the logger and Ruskin to find
 % upcasts or downcasts by looking for pressure reversals.  The
 % algorithm distinguishes between upcasts and downcasts, and stores
 % the start and end time for each as 'tstart' and 'tend' in the
-% profile field of the RSK structure. If RSK.profiles already exists, it
-% will be removed and replaced.
+% profile field of the RSK structure. If profiles are detected when 
+% RSK.profiles already exists, it will be removed and replaced.
 %
 % Inputs: 
 %    [Required] - RSK - Structure containing logger metadata and data
@@ -31,6 +31,9 @@ function RSK = RSKfindprofiles(RSK, varargin)
 %         Use RSKreadprofiles to parse and organize the time series into 
 %         profiles by applying the start and end times.
 %
+%   hasProfile - logical value to check if given RSK data has profiles or
+%         not. (true or false)
+%
 % Example:
 %    rsk = RSKopen(fname);
 %    rsk = RSKreaddata(rsk);
@@ -41,7 +44,7 @@ function RSK = RSKfindprofiles(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-30
+% Last revision: 2019-04-10
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -55,7 +58,11 @@ conductivityThreshold = p.Results.conductivityThreshold;
 
 
 %% Set up values
-Pcol = getchannelindex(RSK, 'Pressure');
+try
+    Pcol = getchannelindex(RSK, 'Pressure');
+catch
+    Pcol = getchannelindex(RSK, 'Sea Pressure');
+end
 pressure = RSK.data.values(:, Pcol);
 timestamp = RSK.data.tstamp;
 
@@ -72,10 +79,12 @@ end
 
 %% Run profile detection
 [wwevt] = detectprofiles(pressure, timestamp, conductivity, pressureThreshold, conductivityThreshold);
-if size(wwevt,1) < 2
+if length(find((wwevt(:,2) == 1 | wwevt(:,2) == 2))) < 2
+    hasProfile = false;
     disp('No profiles were detected in this dataset with the given parameters.')
     return
 else
+    hasProfile = true;
     if isfield(RSK, 'profiles')
         RSK = rmfield(RSK, 'profiles');
     end
@@ -172,7 +181,7 @@ if isfield(RSK, 'regionCast')
 end
 
 % Create new RSK.region and RSK.regionCast
-for n = 1:length(upstart)
+for n = 1:min(length(upstart),length(downstart))
     nprofile = n*3-2;
     RSK.region(nprofile).datasetID = 1;
     RSK.region(nprofile).regionID = nprofile;
@@ -205,6 +214,36 @@ for n = 1:length(upstart)
     RSK.regionCast(nregionCast+1).regionID = nprofile+2;
     RSK.regionCast(nregionCast+1).regionProfileID = nprofile;
     RSK.regionCast(nregionCast+1).type = upper(lastType);
+    
+end
+
+% when there is unequal number of upcasts and downcasts, add the last one
+% single cast
+if length(upstart) ~= length(downstart) 
+    
+    n = max(length(upstart),length(downstart));
+    nprofile = n*3-2;
+    RSK.region(nprofile).datasetID = 1;
+    RSK.region(nprofile).regionID = nprofile;
+    RSK.region(nprofile).type = 'PROFILE';
+    RSK.region(nprofile).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
+    RSK.region(nprofile).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
+    RSK.region(nprofile).label = ['Profile ' num2str(n)];
+    RSK.region(nprofile).description = 'RSKtools-generated profile.';
+
+    RSK.region(nprofile+1).datasetID = 1;
+    RSK.region(nprofile+1).regionID = nprofile+1;
+    RSK.region(nprofile+1).type = 'CAST'; 
+    RSK.region(nprofile+1).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
+    RSK.region(nprofile+1).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
+    RSK.region(nprofile+1).label = [firstType 'cast ' num2str(n)];
+    RSK.region(nprofile+1).description = 'RSKtools-generated cast.';
+
+    nregionCast = n*2-1;
+    RSK.regionCast(nregionCast).regionID = nprofile+1;
+    RSK.regionCast(nregionCast).regionProfileID = nprofile;
+    RSK.regionCast(nregionCast).type = upper(firstType);
+
 end
 
 end

@@ -2,7 +2,7 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 
 % RSKtrim - Remove or replace values that fall in a certain range.
 %
-% Syntax:  [RSK] = RSKtrim(RSK, [OPTIONS])
+% Syntax:  [RSK, trimidx] = RSKtrim(RSK, reference, range, [OPTIONS])
 % 
 % Flags values that fall within the range of the specified reference
 % channel, time, or index.  Flagged samples can be replaced with NaN
@@ -11,15 +11,8 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 % Inputs: 
 %    [Required] - RSK - Input RSK structure
 %
-%
-%    [Optional] - profile - Profile number. Default is to operate
-%                       on all profiles.
-%
-%                 direction - 'up' for upcast, 'down' for downcast, or
-%                       'both' for all. Defaults to all directions available.
-%
 %                 reference - Channel that determines which samples will be
-%                       in the range and trimmed.  To trim according to time,
+%                       in the range and trimmed. To trim according to time,
 %                       use 'time', or, to trim by index, choose 'index'.  
 %
 %                 range - A 2 element vector of minimum and maximum
@@ -27,10 +20,17 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 %                       the range (including the edges) will be trimmed.
 %                       If 'reference' is 'time', then range must be in
 %                       Matlab datenum format.
-%                 
-%                 channel - Apply the flag to specified channels.
+%
+%    [Optional] - channel - Apply the flag to specified channels.
 %                       Default is all channels. When action is set to 
 %                       'remove`, specifying channel will not work.
+%
+%                 profile - Profile number. Default is to operate
+%                       on all profiles.
+%
+%                 direction - 'up' for upcast, 'down' for downcast, or
+%                       'both' for all. Defaults to all directions 
+%                       available.              
 %                           
 %                 action - Action to apply to the flagged values.  Can be 
 %                       'nan' (default) or 'remove' or 'interp'.
@@ -48,12 +48,13 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 % Example:
 %
 % Replace data acquired during a shallow surface soak with NaN:
-%    rsk = RSKtrim(rsk, 'reference', 'sea pressure', 'range',[-1 1]);
+%    rsk = RSKtrim(rsk, 'sea pressure', [-1 1]);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-07
+% Last revision: 2019-04-09
+
 
 validAction = {'remove', 'nan','interp'};
 checkAction = @(x) any(validatestring(x,validAction));
@@ -63,21 +64,21 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
+addRequired(p, 'reference', @ischar);
+addRequired(p, 'range', @isnumeric);
+addParameter(p, 'channel','all');
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
-addParameter(p, 'reference', 'index');
-addParameter(p, 'range', [], @isnumeric);
-addParameter(p, 'channel','all');
 addParameter(p, 'action', 'nan', checkAction);
 addParameter(p, 'visualize', 0, @isnumeric);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
-profile = p.Results.profile;
-direction = p.Results.direction;
 reference = p.Results.reference;
 range = p.Results.range;
 channel = p.Results.channel;
+profile = p.Results.profile;
+direction = p.Results.direction;
 action = p.Results.action;
 visualize = p.Results.visualize;
 

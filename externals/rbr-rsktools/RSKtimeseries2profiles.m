@@ -63,11 +63,16 @@ if length(RSK.data) ~= 1 || isfield(RSK.data,'direction') || isfield(RSK.data,'p
     error('RSK structure already has profiles.')
 end
 
-RSK = RSKfindprofiles(RSK,'pressureThreshold',pressureThreshold,'conductivityThreshold',conductivityThreshold);
+[RSK,hasProfile] = RSKfindprofiles(RSK,'pressureThreshold',pressureThreshold,'conductivityThreshold',conductivityThreshold);
+
+if ~hasProfile
+    return
+end
 
 direction = RSK.profiles.order;
 hasDescription = isfield(RSK.region,'description');
 ProfileRegionID = strcmpi({RSK.region.type},'PROFILE') == 1;
+CastRegionID = strcmpi({RSK.region.type},'CAST') == 1;
 
 alltstart = [];
 alltend = [];
@@ -83,6 +88,7 @@ castidx = 1:length(alltstart);
 RSK.profiles.originalindex = castidx;
 
 dir2fill = cell(length(castidx),1); % append data.direction to each cast
+pronum2fill = zeros(size(castidx));
 if size(RSK.profiles.order, 2) == 1
     dir2fill(:) = direction;
     pronum2fill = castidx;
@@ -90,11 +96,14 @@ if size(RSK.profiles.order, 2) == 1
         description2fill(:) = {RSK.region(ProfileRegionID).description};
     end
 else
-    dir2fill(1:2:end) = RSK.profiles.order(1);
-    dir2fill(2:2:end) = RSK.profiles.order(2);
-    pronum2fill = reshape(repmat(castidx(1:length(castidx)/2), 2, 1),length(castidx),1);
+    dir2fill(1:2:end) = direction(1);
+    dir2fill(2:2:end) = direction(2);
+    pronum2fill(1:2:end) = 1:round(length(castidx)/2);   
+    for j = 2:2:length(pronum2fill)
+        pronum2fill(j) = pronum2fill(j-1);
+    end      
     if hasDescription
-        description2fill(:) = reshape(repmat({RSK.region(ProfileRegionID).description}, 2 ,1),length(castidx),1);
+        description2fill(:) = {RSK.region(CastRegionID).description};
     end
 end
 

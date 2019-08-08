@@ -50,7 +50,7 @@ function RSK = RSKreadprofiles(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-10-30
+% Last revision: 2019-04-12
 
 
 validDirections = {'down', 'up', 'both'};
@@ -71,8 +71,12 @@ if ~isfield(RSK, 'profiles')
     error('No profiles in this RSK, try RSKreaddata or RSKfindprofiles');
 end
 if strcmpi(direction{1}, 'both')
-    if any(strcmpi({RSK.regionCast.type},'down')) && any(strcmpi({RSK.regionCast.type},'up'))
-        direction = {'down', 'up'};
+    if any(strcmpi({RSK.regionCast.type},'down')) && any(strcmpi({RSK.regionCast.type},'up'))        
+        if find(strcmpi({RSK.regionCast.type},'down'),1) < find(strcmpi({RSK.regionCast.type},'up'),1)        
+            direction = {'down', 'up'};
+        else
+            direction = {'up','down'}; 
+        end
     elseif any(strcmpi({RSK.regionCast.type},'down'))==1 && any(strcmpi({RSK.regionCast.type},'up'))~=1
         direction = {'down'};    
     elseif any(strcmpi({RSK.regionCast.type},'down'))~=1 && any(strcmpi({RSK.regionCast.type},'up'))==1
@@ -84,7 +88,7 @@ hasGPS = isfield(RSK.profiles,'GPS');
 hasComment = isfield(RSK.profiles,'comment');
 hasDescription = isfield(RSK.region,'description');
 ProfileRegionID = strcmpi({RSK.region.type},'PROFILE') == 1;
-
+CastRegionID = strcmpi({RSK.region.type},'CAST') == 1;
 
 alltstart = [];
 alltend = [];
@@ -98,20 +102,17 @@ alltend = sort(alltend);
 
 RSK.profiles.order = direction;
 profilecast = size(RSK.profiles.order, 2);
-if profilecast == 2 && (alltstart(1) == RSK.profiles.upcast.tstart(1))
-    RSK.profiles.order = {'up', 'down'};
-end
-
-
 
 if ~isempty(profile)
-    if max(profile) > length(alltstart)/profilecast
-        disp('The profile selected is greater than the total amount of profiles in this file.');
+    if max(profile) > round(length(alltstart)/profilecast)
+        disp('The profile or cast selected does not exist in this file.');
         return
     end
     if profilecast == 2
         castidx = [(profile*2)-1 profile*2];
-        castidx = sort(castidx);
+        castidx = sort(castidx);       
+        % trim the last index if there is unequal number of up and downcast
+        castidx = castidx(ismember(sort([3*profile - 1, 3*profile]),find(CastRegionID)));    
     else
         castidx = profile;
     end
@@ -121,15 +122,16 @@ end
 RSK.profiles.originalindex = castidx;
 
 dir2fill = cell(length(castidx),1); % append data.direction to each cast
+pronum2fill = zeros(size(castidx));
 if size(RSK.profiles.order, 2) == 1
     dir2fill(:) = direction;
     pronum2fill = castidx;
     if hasGPS
-        lat2fill(:) = RSK.profiles.GPS.latitude;
-        lon2fill(:) = RSK.profiles.GPS.longitude;
+        lat2fill(:) = RSK.profiles.GPS.latitude(castidx);
+        lon2fill(:) = RSK.profiles.GPS.longitude(castidx);
     end
     if hasComment
-        comment2fill(:) = RSK.profiles.comment;
+        comment2fill(:) = RSK.profiles.comment(castidx);
     end
     if hasDescription
         description2fill(:) = {RSK.region(ProfileRegionID).description};
@@ -137,20 +139,39 @@ if size(RSK.profiles.order, 2) == 1
 else
     dir2fill(1:2:end) = RSK.profiles.order(1);
     dir2fill(2:2:end) = RSK.profiles.order(2);
-    pronum2fill = reshape(repmat(castidx(1:length(castidx)/2), 2, 1),length(castidx),1);
+    
+    pronum2fill(1:2:end) = 1:round(length(castidx)/2);   
+    for j = 2:2:length(pronum2fill)
+        pronum2fill(j) = pronum2fill(j-1);
+    end  
+        
     if hasGPS
-        lat2fill(:) = reshape(repmat(RSK.profiles.GPS.latitude', 2 ,1),length(castidx),1);
-        lon2fill(:) = reshape(repmat(RSK.profiles.GPS.longitude', 2 ,1),length(castidx),1);
+        lat2fill = cell(length(castidx),1);
+        lon2fill = cell(length(castidx),1);
+        
+        lat2fill(1:2:end) = RSK.profiles.GPS.latitude(round(castidx(1:2:end)/2));
+        for j = 2:2:length(lat2fill)
+            lat2fill(j) = lat2fill(j-1);    
+        end
+       
+        lon2fill(1:2:end) = RSK.profiles.GPS.latitude(round(castidx(1:2:end)/2));
+        for j = 2:2:length(lon2fill)
+            lon2fill(j) = lon2fill(j-1);    
+        end
     end
-    if hasComment
-        comment2fill(:) = reshape(repmat(RSK.profiles.comment', 2 ,1),length(castidx),1);
+    if hasComment       
+        comment2fill = cell(length(castidx),1);
+        
+        comment2fill(1:2:end) = RSK.profiles.comment(round(castidx(1:2:end)/2));
+        for j = 2:2:length(comment2fill)
+            comment2fill(j) = comment2fill(j-1);    
+        end        
     end
     if hasDescription
-        description2fill(:) = reshape(repmat({RSK.region(ProfileRegionID).description}, 2 ,1),length(castidx),1);
+        description2fill(:) = {RSK.region(CastRegionID).description};
     end
 end
 
-k = 1;
 data(length(castidx)).tstamp = [];
 data(length(castidx)).values = [];
 data(length(castidx)).direction = [];
@@ -160,9 +181,14 @@ if hasGPS
     data(length(castidx)).latitude = [];
     data(length(castidx)).longitude = [];
 end
-if hasComment, data(length(castidx)).comment = []; end
-if hasDescription, data(length(castidx)).description = []; end
+if hasComment, 
+    data(length(castidx)).comment = []; 
+end
+if hasDescription, 
+    data(length(castidx)).description = []; 
+end
 
+k = 1;
 for ndx = castidx
     tmp = RSKreaddata(RSK, 't1', alltstart(ndx), 't2', alltend(ndx));
     data(k).tstamp = tmp.data.tstamp;
@@ -173,8 +199,12 @@ for ndx = castidx
         data(k).latitude = lat2fill(k);
         data(k).longitude = lon2fill(k);
     end
-    if hasComment, data(k).comment = comment2fill(k); end
-    if hasDescription, data(k).description = description2fill(k); end
+    if hasComment, 
+        data(k).comment = comment2fill(k); 
+    end
+    if hasDescription, 
+        data(k).description = description2fill(k); 
+    end
     k = k + 1;
 end
 

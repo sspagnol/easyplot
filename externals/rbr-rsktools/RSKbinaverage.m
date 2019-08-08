@@ -49,16 +49,15 @@ function [RSK, samplesinbin] = RSKbinaverage(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-12-17
+% Last revision: 2019-04-17
 
 
-validDirections = {'down', 'up'};
-checkDirection = @(x) any(validatestring(x,validDirections));
+checkDirection = @(x) ischar(x) || isempty(x);
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'profile', [], @isnumeric);
-addParameter(p, 'direction', 'down', checkDirection);
+addParameter(p, 'direction', '', checkDirection);
 addParameter(p, 'binBy', 'sea pressure', @ischar);
 addParameter(p, 'binSize', 1, @isnumeric);
 addParameter(p, 'boundary', [], @isnumeric);
@@ -73,6 +72,14 @@ binSize = p.Results.binSize;
 boundary = p.Results.boundary;
 visualize = p.Results.visualize;
 
+
+if isempty(direction);
+    if isfield(RSK.data,'direction') && all(ismember({RSK.data.direction},'up'))
+        direction = 'up';
+    elseif isfield(RSK.data,'direction')
+        direction = 'down';
+    end
+end
 
 binByTime = strcmpi(binBy, 'Time');
 castidx = getdataindex(RSK, profile, direction);
@@ -161,8 +168,8 @@ RSK = RSKappendtolog(RSK, logentry);
         end
 
         if binByTime
-            boundaryFloor = min(nanmin(Y))-samplingPeriod/86400;
-            boundaryCeil = max(nanmax(Y))+samplingPeriod/86400;
+            boundaryFloor = min(nanmin(Y))-samplingPeriod/86400/2;
+            boundaryCeil = max(nanmax(Y))+samplingPeriod/86400/2;
         else
             boundaryFloor = floor(min(nanmin(Y)));
             boundaryCeil = ceil(max(nanmax(Y)));

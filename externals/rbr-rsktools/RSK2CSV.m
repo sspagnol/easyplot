@@ -78,7 +78,7 @@ function RSK2CSV(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-04-03
+% Last revision: 2019-04-08
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -160,7 +160,7 @@ log = RSK.log(:,2);
 
 % Check if both upcast and downcast needs reading?
 directions = 1;
-if isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 && strcmp(direction,'both')
+if isfield(RSK,'profiles') && isfield(RSK.profiles,'order') && length(RSK.profiles.order) ~= 1 && strcmp(direction,'both')
     directions = 2;
 end
 
@@ -172,7 +172,7 @@ else
     fmt_data = ['%s,',repmat(['%' templen '.4f,'], 1, nchannels-1), ['%' templen '.4f'], '\n'];
 end
 
-% Determin which profile(s) for output
+% Determine which profile(s) for output
 if isProfile,
     select_cast = getdataindex(RSK, profile, direction);
 else
@@ -210,52 +210,52 @@ for castidx = select_cast(1:directions:end);
     fprintf(fid,'%s\n','//Processing history:');
     for l = 1:length(log), fprintf(fid,'%s\n',['//' log{l}]); end
     
-    if isProfile && isfield(RSK.data,'cruise') && ~isempty(RSK.data(castidx).cruise)
+    if isfield(RSK.data,'cruise') && ~isempty(RSK.data(castidx).cruise)
         temp = RSK.data(castidx).cruise;
         fprintf(fid,'%s\n',['//Cruise: ' num2str(temp{1})]);
     else
         fprintf(fid,'%s\n','//Cruise:');
     end
-    if isProfile && isfield(RSK.data,'station') && ~isempty(RSK.data(castidx).station)
+    if isfield(RSK.data,'station') && ~isempty(RSK.data(castidx).station)
         temp = RSK.data(castidx).station;
         fprintf(fid,'%s\n',['//Station: ' num2str(temp{1})]);
     else
         fprintf(fid,'%s\n','//Station:');
     end
-    if isProfile && isfield(RSK.data,'latitude')
+    if isfield(RSK.data,'latitude')
         fprintf(fid,'%s\n',['//Latitude: ' num2str(RSK.data(castidx).latitude)]);
     else
         fprintf(fid,'%s\n','//Latitude:');
     end
-    if isProfile && isfield(RSK.data,'longitude')
+    if isfield(RSK.data,'longitude')
         fprintf(fid,'%s\n',['//Longitude: ' num2str(RSK.data(castidx).longitude)]);
     else
         fprintf(fid,'%s\n','//Longitude:');
     end
-    if isProfile && isfield(RSK.data,'depth')
+    if isfield(RSK.data,'depth')
         fprintf(fid,'%s\n',['//Depth: ' num2str(RSK.data(castidx).depth)]);
     else
         fprintf(fid,'%s\n','//Depth:');
     end
-    if isProfile && isfield(RSK.data,'date') && ~isempty(RSK.data(castidx).date)
+    if isfield(RSK.data,'date') && ~isempty(RSK.data(castidx).date)
         temp = RSK.data(castidx).date;
         fprintf(fid,'%s\n',['//Date: ' num2str(temp{1})]);
     else
         fprintf(fid,'%s\n','//Date:');
     end
-    if isProfile && isfield(RSK.data,'weather') && ~isempty(RSK.data(castidx).weather)
+    if isfield(RSK.data,'weather') && ~isempty(RSK.data(castidx).weather)
         temp = RSK.data(castidx).weather;
         fprintf(fid,'%s\n',['//Weather: ' num2str(temp{1})]);
     else
         fprintf(fid,'%s\n','//Weather:');
     end
-    if isProfile && isfield(RSK.data,'crew') && ~isempty(RSK.data(castidx).crew)
+    if isfield(RSK.data,'crew') && ~isempty(RSK.data(castidx).crew)
         temp = RSK.data(castidx).crew;
         fprintf(fid,'%s\n',['//Crew: ' num2str(temp{1})]);
     else
         fprintf(fid,'%s\n','//Crew:'); 
     end
-    if isProfile && isfield(RSK.data,'comment');
+    if isfield(RSK.data,'comment');
         temp = RSK.data(castidx).comment;
         if ~isempty(temp), fprintf(fid,'%s\n',['//Comment: ' num2str(temp{1})]); end
         if ~isempty(comment), fprintf(fid,'%s\n',['//' comment]); end

@@ -29,7 +29,7 @@ function newfile = RSK2RSK(RSK, varargin)
 % Example:
 %    rsk = RSKopen('rsk_file.rsk');
 %    rsk = RSKreadprofiles(rsk);
-%    rsk = RSKaddmetadata(rsk,'profile',1:3,'latitude',[45,44,46],'longitude',[-25,-24,-23]);
+%    rsk = RSKaddstationdata(rsk,'profile',1:3,'latitude',[45,44,46],'longitude',[-25,-24,-23]);
 %    outputdir = '/Users/Tom/Jerry';
 %    newfile = RSK2RSK(rsk,'outputdir',outputdir,'suffix','processed');
 %
@@ -90,14 +90,11 @@ function createSchema(nchannel)
     mksqlite('CREATE TABLE IF NOT EXISTS deployments (deploymentID INTEGER PRIMARY KEY, serialID INTEGER, comment TEXT, loggerStatus TEXT, firmwareVersion TEXT, loggerTimeDrift long, timeOfDownload long, name TEXT, sampleSize INTEGER, hashtag INTEGER)');
     mksqlite('CREATE TABLE IF NOT EXISTS schedules (scheduleID INTEGER PRIMARY KEY, deploymentID INTEGER NOT NULL, samplingPeriod long, repetitionPeriod long, samplingCount INTEGER, mode TEXT, altitude DOUBLE, gate VARCHAR(512))');
     mksqlite('CREATE TABLE IF NOT EXISTS epochs (deploymentID INTEGER PRIMARY KEY, startTime LONG, endTime LONG)');
-    mksqlite('CREATE TABLE IF NOT EXISTS events (deploymentID INTEGER NOT NULL, tstamp long NOT NULL, type INTEGER NOT NULL, sampleIndex INTEGER NOT NULL, channelIndex INTEGER)');
-    mksqlite('CREATE TABLE IF NOT EXISTS errors (deploymentID INTEGER NOT NULL,tstamp long NOT NULL,type INTEGER NOT NULL,sampleIndex INTEGER NOT NULL,channelOrder INTEGER NOT NULL)');
     mksqlite('CREATE TABLE IF NOT EXISTS region (datasetID INTEGER NOT NULL,regionID INTEGER PRIMARY KEY,type VARCHAR(50),tstamp1 LONG,tstamp2 LONG,label VARCHAR(512),`description` TEXT)');
     mksqlite('CREATE TABLE IF NOT EXISTS regionCast (regionID INTEGER,regionProfileID INTEGER,type STRING,FOREIGN KEY(regionID) REFERENCES REGION(regionID) ON DELETE CASCADE )');
     mksqlite('CREATE TABLE IF NOT EXISTS regionProfile (regionID INTEGER,FOREIGN KEY(regionID) REFERENCES REGION(regionID) ON DELETE CASCADE )');
     mksqlite('CREATE TABLE IF NOT EXISTS regionGeoData (regionID INTEGER,latitude DOUBLE,longitude DOUBLE,FOREIGN KEY(regionID) REFERENCES REGION(regionID) ON DELETE CASCADE )');
     mksqlite('CREATE TABLE IF NOT EXISTS regionComment (regionID INTEGER,content VARCHAR(1024),FOREIGN KEY(regionID) REFERENCES REGION(regionID) ON DELETE CASCADE )');
-    mksqlite('CREATE TABLE IF NOT EXISTS downloads (deploymentID INTEGER NOT NULL, part INTEGER NOT NULL, offset INTEGER NOT NULL, data BLOB, PRIMARY KEY (deploymentID, part))');
     createTabledata(nchannel);
 end
 
@@ -144,7 +141,7 @@ function insertSchedules(RSK)
 end
 
 function insertEpochs(RSK,data) 
-    formatAndTransact('INSERT INTO epochs VALUES','(%i,%f,%f)',num2cell([RSK.epochs.deploymentID, min([round(datenum2rsktime(data.tstamp(1))),[RSK.region.tstamp1]]), max([round(datenum2rsktime(data.tstamp(end))),[RSK.region.tstamp2]])]));
+    formatAndTransact('INSERT INTO epochs VALUES','(%i,%f,%f)',num2cell([RSK.epochs.deploymentID, round(datenum2rsktime(data.tstamp(1))), round(datenum2rsktime(data.tstamp(end)))]));
 end
 
 function insertChannels(RSK)

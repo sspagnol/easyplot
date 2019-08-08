@@ -37,6 +37,10 @@ RSK = p.Results.RSK;
 patm = p.Results.patm;
 
 
+if isempty(patm)
+    patm = getatmosphericpressure(RSK);
+end
+
 if isvector(patm) && length(patm) > 1
     if length(RSK.data) ~= 1
         error('Input atmosphere pressure is a vector, use RSKreaddata to flatten data into time series..')
@@ -49,11 +53,12 @@ end
 try
     Pcol = getchannelindex(RSK, 'Pressure');
 catch
-    Pcol = getchannelindex(RSK, 'BPR pressure');
-end
-
-if isempty(patm)
-    patm = getatmosphericpressure(RSK);
+    try
+        Pcol = getchannelindex(RSK, 'BPR pressure');
+    catch
+        disp('There is no pressure channel available, sea pressure is set to 0.')
+        Pcol = 0;
+    end
 end
 
 RSK = addchannelmetadata(RSK, 'pres08', 'Sea Pressure', 'dbar');
@@ -61,7 +66,11 @@ SPcol = getchannelindex(RSK, 'Sea Pressure');
 
 castidx = getdataindex(RSK);
 for ndx = castidx
-    seapressure = RSK.data(ndx).values(:, Pcol) - patm;
+    if Pcol == 0
+        seapressure = zeros(size(RSK.data(ndx).values(:,1)));
+    else
+        seapressure = RSK.data(ndx).values(:, Pcol) - patm;
+    end
     RSK.data(ndx).values(:,SPcol) = seapressure;
 end
 

@@ -1,11 +1,11 @@
-function channelIdx = getchannelindex(RSK, channel)
+function varargout = getchannelindex(RSK, channel)
 
-%GETCHANNELINDEX - Return index of channels.
+% GETCHANNELINDEX - Return index of channels.
 %
-% Syntax:  [channelIdx] = GETCHANNELINDEX(RSK, channel)
+% Syntax:  [channelIdx1,channelIdx2,...] = GETCHANNELINDEX(RSK, channel)
 % 
 % Finds the channel index in the RSK of the channel longNames given. If the
-% channel is not in the RSK, it returns an error.
+% channel(s) is not in the RSK, it returns an error.
 %
 % Inputs:
 %   RSK - RSK structure
@@ -13,20 +13,30 @@ function channelIdx = getchannelindex(RSK, channel)
 %   channel - LongName as written in RSK.channels.
 %
 % Outputs:
-%    channelIdx - Array containing the index of channels.
 %
-% See also: RSKplotdata, RSKsmooth, RSKderivedepth.
+%   channelIdx(n) - Index of channels, note that the index must be in the
+%   same sequence as the input, when there are multiple inputs.
+%
+% See also: getdataindex, getcastdirection.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-04
+% Last revision: 2019-04-04
 
-if any(strcmpi(channel, {RSK.channels.longName}));
-    chanCol = find(strcmpi(channel, {RSK.channels.longName}));
-    channelIdx = chanCol(1);
+if ~iscell(channel)
+    channel = {channel};    
+end
+
+if all(ismember(lower(channel),lower({RSK.channels.longName})))    
+    [~,~,channelIdx] = intersect(lower(channel),lower({RSK.channels.longName}),'stable');
+    varargout = cell(size(channelIdx));
+    for i = 1:length(channelIdx)
+        varargout{i} = channelIdx(i); 
+    end
 else
-    error(['There is no ' channel ' channel in this file.']);
+    channelNotFound = channel(~ismember(lower(channel),lower({RSK.channels.longName})));
+    error(['There is no ' strjoin(channelNotFound) ' channel in this file.']);   
 end
 
 end
