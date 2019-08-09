@@ -349,7 +349,7 @@ setappdata(hFig, 'UserData', userData);
             userData.sample_data={};
         end
         
-        [ymlFileName, ymlPathName, ~] = uigetfile(userData.EP_previousYmlDir, '*.yml','');
+        [ymlFileName, ymlPathName, ~] = uigetfile(fullfile(userData.EP_previousYmlDir, '*.yml'),'');
         if isempty(ymlFileName)
             return;
         end
