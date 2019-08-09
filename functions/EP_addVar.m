@@ -79,9 +79,9 @@ if ~isempty(coordinates)
 end
 
 % create an empty flags matrix for the new variable
-sam.variables{idxVar}.flags(1:numel(sam.variables{end}.data)) = rawFlag;
+sam.variables{idxVar}.flags(1:numel(sam.variables{idxVar}.data)) = rawFlag;
 sam.variables{idxVar}.flags = reshape(...
-    sam.variables{idxVar}.flags, size(sam.variables{end}.data));
+    sam.variables{idxVar}.flags, size(sam.variables{idxVar}.data));
 
 % ensure that the new variable is populated  with all
 % required NetCDF  attributes - all existing fields are
