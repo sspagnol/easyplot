@@ -353,6 +353,9 @@ setappdata(hFig, 'UserData', userData);
         if isempty(ymlFileName)
             return;
         end
+        if ymlFileName == 0.0
+            return;
+        end
         
         ymlData = yml.read(fullfile(ymlPathName,ymlFileName));
         % test if no file selected
