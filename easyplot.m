@@ -325,6 +325,7 @@ setappdata(hFig, 'UserData', userData);
             else
                 userData.ini.plotting.doMultilineXLabel = 'false';
             end
+            userData.ini.startDialog.ymlDir = userData.EP_previousYmlDir;
             % inelegant code to handle if user double clicked on a '_ep.fig' and stored
             % EPdir is different to current.
             [tmpEPdir, ~, ~] = fileparts(which('easyplot'));
