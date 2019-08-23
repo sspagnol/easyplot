@@ -16,9 +16,26 @@ for ii = 1:numel(graphs)
 
     hTags = arrayfun(@(x) x.Tag, h, 'UniformOutput', false);
     uTags = unique(hTags);
-    nColors = length(uTags);
-    [LIA,LOCB] = ismember(hTags, uTags);
     
+    LIA = [];
+    LOCB = [];
+    switch userData.EP_lineColourType
+        case 'LINECOLOUR_PER_INSTRUMENT_PER_DEPLOYMENT'
+            nColors = length(uTags);
+            [LIA,LOCB] = ismember(hTags, uTags);
+        case 'LINECOLOUR_PER_INSTRUMENT'
+            m = cellfun(@(x) strtrim(regexp(x, '[\w_]+-([\w\s-]+)#','tokens')), hTags, 'UniformOutput', false);
+            iTags = cellfun(@(x) x{1}, m);
+            uTags = unique(iTags);
+            nColors = length(uTags);
+            [LIA,LOCB] = ismember(iTags, uTags);
+        case 'LINECOLOUR_PER_INSTRUMENTTYPE'
+            m = cellfun(@(x) strtrim(regexp(x, '[\w_]+-([\w\s]+)-','tokens')), hTags, 'UniformOutput', false);
+            iTags = cellfun(@(x) x{1}, m);
+            uTags = unique(iTags);
+            nColors = length(uTags);
+            [LIA,LOCB] = ismember(iTags, uTags);
+    end
     % mapping = round(linspace(1,64,length(h)))';
     % colors = colormap('jet');
     %   func = @(x) colorspace('RGB->Lab',x);
