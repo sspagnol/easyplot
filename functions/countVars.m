@@ -1,4 +1,4 @@
-function [sample_data, varNames, varDeleteNames, varNewNames] = countVars(sample_data)
+function [sample_data, varNames, varDeleteNames, varNewNames, plotVarCounter] = countVars(sample_data)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% create list of variable names that will be plotted, delete plots as required

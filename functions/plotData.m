@@ -48,7 +48,7 @@ graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Col
 hLine = gobjects(0);
 
 %%
-[userData.sample_data, varNames, varDeleteNames, varNewNames] = countVars(userData.sample_data);
+[userData.sample_data, varNames, varDeleteNames, varNewNames, plotVarCounter] = countVars(userData.sample_data);
 
 isEmptyPlotPanel = isempty(plotPanel.Children);
 isAnyEmptyGraphs = any(arrayfun(@(x) isempty(x.Children), graphs));
@@ -102,7 +102,7 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
 end
 
 %% update axis index
-[userData.sample_data, nSubPlots] = calcAxisIndex(userData.sample_data, userData.EP_plotType);
+[userData.sample_data, nSubPlots] = calcAxisIndex(userData.sample_data, userData.EP_plotType, varNames);
 
 %% determine QC use
 try

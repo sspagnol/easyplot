@@ -1,4 +1,4 @@
-function [sample_data, nSubPlots] = calcAxisIndex(sample_data, plotType)
+function [sample_data, nSubPlots] = calcAxisIndex(sample_data, plotType, varNames)
 %CALCAXISINDEX calculate axis index
 
 % VARS_OVERLAY : one plot with all vars
