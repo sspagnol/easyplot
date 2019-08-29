@@ -212,76 +212,30 @@ for ii = 1:numel(userData.sample_data)
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         legendString = strrep(instStr,'_','\_');
         try
-            if isvector(userData.sample_data{ii}.variables{jj}.data)
-                % 1D var
-                xdataVar = userData.sample_data{ii}.dimensions{idTime}.data;
-                theOffset = userData.sample_data{ii}.dimensions{idTime}.EP_OFFSET;
-                theScale = userData.sample_data{ii}.dimensions{idTime}.EP_SCALE;
-                xdataVar = theOffset + (theScale .* xdataVar);
-                
-                ydataVar = userData.sample_data{ii}.variables{jj}.data;
-                theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
-                theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
-                ydataVar = theOffset + (theScale .* ydataVar);
-                
-                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
-                    varFlags = userData.sample_data{ii}.variables{jj}.flags;
-                    iGood = ismember(varFlags, goodFlags);
-                    ydataVar(~iGood) = NaN;
-                end
-                
-                if userData.EP_plotYearly
-                    yyyy = year(xdataVar);
-                    yStart = yyyy(1);
-                    yEnd = yyyy(end);
-                    for yr = yStart:yEnd
-                        yGood = yyyy == yr;
-                        hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
-                            'YData',ydataVar(yGood), ...
-                            'LineStyle',lineStyle, 'Marker', markerStyle,...
-                            'DisplayName', legendString, 'Tag', instStr);
-                    end
-                else
-                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
-                        'YData',ydataVar, ...
+            % xdata
+            xdataVar = getXdata(userData.sample_data{ii}.dimensions{idTime});
+            
+            % ydata
+            ydataVar = getYdata(userData.sample_data{ii}.variables{jj}, useQCflags);
+            
+            if userData.EP_plotYearly
+                yyyy = year(xdataVar);
+                yStart = yyyy(1);
+                yEnd = yyyy(end);
+                for yr = yStart:yEnd
+                    yGood = yyyy == yr;
+                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
+                        'YData',ydataVar(yGood), ...
                         'LineStyle',lineStyle, 'Marker', markerStyle,...
                         'DisplayName', legendString, 'Tag', instStr);
                 end
             else
-                % 2D var
-                xdataVar = userData.sample_data{ii}.dimensions{idTime}.data;
-                theOffset = userData.sample_data{ii}.dimensions{idTime}.EP_OFFSET;
-                theScale = userData.sample_data{ii}.dimensions{idTime}.EP_SCALE;
-                xdataVar = theOffset + (theScale .* xdataVar);
-                
-                EP_iSlice = userData.sample_data{ii}.variables{jj}.EP_iSlice;
-                ydataVar = userData.sample_data{ii}.variables{jj}.data(:,EP_iSlice);
-                theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
-                theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
-                ydataVar = theOffset + (theScale .* ydataVar);
-                if useQCflags & isfield(userData.sample_data{ii}.variables{jj}, 'flags')
-                    varFlags = userData.sample_data{ii}.variables{jj}.flags(:,EP_iSlice);
-                    iGood = ismember(varFlags, goodFlags);
-                    ydataVar(~iGood) = NaN;
-                end
-                if userData.EP_plotYearly
-                    yyyy = year(xdataVar);
-                    yStart = yyyy(1);
-                    yEnd = yyyy(end);
-                    for yr = yStart:yEnd
-                        yGood = yyyy == yr;
-                        hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
-                            'YData',ydataVar(yGood), ...
-                            'LineStyle',lineStyle, 'Marker', markerStyle,...
-                            'DisplayName', legendString, 'Tag', instStr);
-                    end
-                else
-                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
-                        'YData',ydataVar, ...
-                        'LineStyle',lineStyle, 'Marker', markerStyle,...
-                        'DisplayName', legendString, 'Tag', instStr);
-                end
+                hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
+                    'YData',ydataVar, ...
+                    'LineStyle',lineStyle, 'Marker', markerStyle,...
+                    'DisplayName', legendString, 'Tag', instStr);
             end
+            
             hLine.UserData.legendString = legendString;
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
@@ -289,13 +243,11 @@ for ii = 1:numel(userData.sample_data)
             error('PLOTDATA: plot failed.');
         end
         hold(graphs(ihAx),'on');
-        %legendStr{ihAx}{end+1}=strrep(instStr,'_','\_');
-        %graphs(ihAx).UserData.legendStrings = legendStr{ihAx};
         set(msgPanelText,'String',strcat('Plot : ', instStr));
     end
 end
 
-%% update line colours
+%% update line colours, labels and legends
 updateLineColour( hFig );
 
 if redoSubplots
@@ -309,26 +261,13 @@ if redoSubplots
     % not the best when have multiline xticklabels, not sure why yet.
     addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
-    % update date labels, only pass one axis and it will update any others
-    %updateDateLabel([], struct('Axes', graphs(1)), false);
-    % update legends, xticklabels and per axis userdata
+    % update ylabels
     for ii=1:length(graphs)
         set(hFig,'CurrentAxes', graphs(ii));
         updateYlabel( graphs(ii) );
         grid(graphs(ii),'on');
     end
 end
-
-% for ii=1:length(graphs)
-%     set(hFig,'CurrentAxes', graphs(ii));
-%     hLegend = legend(graphs(ii),'show');
-%     % can have multiple lines per instrument when EP_plotYearly = true
-%     % make unique strings
-%     hStrings = hLegend.String;
-%     [uStrings, IA, IC] = unique(hStrings, 'stable');
-%     hLegend.String = hLegend.String(IA);
-%     hLegend.FontSize = 8;
-% end
 
 updateLegends(hFig);
 
