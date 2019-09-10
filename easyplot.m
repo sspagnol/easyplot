@@ -14,23 +14,40 @@ hFig = figure(...
     'NumberTitle', 'off',...
     'Tag',         'mainWindow');
 
+% hFig = uifigure(...
+%     'Name',        'Easyplot', ...
+%     'Visible',     'on',...
+%     'Color',       [1 1 1],...
+%     'Resize',      'on',...
+%     'NumberTitle', 'off',...
+%     'Tag',         'mainWindow');
+
 set(hFig,'CloseRequestFcn',@exit_Callback);
 
 userData=getappdata(hFig,'UserData');
 
 % add menu items
 m=uimenu(hFig, 'Label', 'Easyplot');
+uimenu(m, 'Label', 'Plot Time as Day Number', 'Checked','off', 'Callback', @plotYearly_Callback);
+
 sm1=uimenu(m, 'Label', 'Plot Vars As...');
 uimenu(sm1, 'Label', 'VARS_OVERLAY', 'Checked','on','Callback', @plotType_Callback);
 uimenu(sm1, 'Label', 'VARS_STACKED', 'Callback', @plotType_Callback);
-uimenu(m, 'Label', 'Plot Time as Day Number', 'Checked','off', 'Callback', @plotYearly_Callback);
-uimenu(m, 'Label', 'Use QC flags', 'Callback', @useQCflags_Callback);
-uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
-uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback);
+
+sm2=uimenu(m, 'Label', 'Plot Line Colours As...');
+uimenu(sm2, 'Label', 'LINECOLOUR_PER_INSTRUMENT_PER_DEPLOYMENT', 'Checked','on','Callback', @lineColourType_Callback);
+uimenu(sm2, 'Label', 'LINECOLOUR_PER_INSTRUMENT', 'Callback', @lineColourType_Callback);
+uimenu(sm2, 'Label', 'LINECOLOUR_PER_INSTRUMENTTYPE', 'Callback', @lineColourType_Callback);
+%uimenu(sm2, 'Label', 'LINECOLOUR_PER_DEPLOYMENTID', 'Callback', @lineColourType_Callback);
+uimenu(m, 'Label', 'Plot Using QC flags', 'Callback', @useQCflags_Callback);
+
+uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback, 'Separator','on');
 uimenu(m, 'Label', 'Do Variable Offset', 'Callback', @variableOffsets_Callback);
-uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback);
+uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
+
+uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback, 'Separator','on');
 uimenu(m, 'Label', 'Save filelist (YML)', 'Callback', @saveFilelist_Callback);
-uimenu(m, 'Label', 'Save Image', 'Callback', @saveImage_Callback);
+uimenu(m, 'Label', 'Save Image', 'Callback', @saveImage_Callback, 'Separator','on');
 uimenu(m, 'Label', 'Quit', 'Callback', @exit_Callback,...
     'Separator','on','Accelerator','Q');
 
@@ -148,10 +165,10 @@ end
 set(hFig, 'Units', 'normalized');
 
 % set widget positions
-set(msgPanel,       'Position', posUi2(hFig, 100, 100,   1:5,  1:25,  0));
-set(filelistPanel,  'Position', posUi2(hFig, 100, 100,  6:45,  1:25,  0));
-set(treePanel,      'Position', posUi2(hFig, 100, 100, 45:100,  1:25, 0.01));
-set(plotPanel,      'Position', posUi2(hFig, 100, 100, 1:100, 26:100,  0));
+set(msgPanel,       'Position', posUi2(hFig, 100, 100,    1:5,  1:25,  0));
+set(filelistPanel,  'Position', posUi2(hFig, 100, 100,   6:45,  1:25,  0));
+set(treePanel,      'Position', posUi2(hFig, 100, 100,  45:100,  1:25, 0.01));
+set(plotPanel,      'Position', posUi2(hFig, 100, 100,   1:100, 26:100,  0));
 
 set(msgPanelText,       'Position', posUi2(msgPanel, 100, 100,   1:100,  1:100,  0.01));
 set(filelistPanelListbox,       'Position', posUi2(filelistPanel, 100, 100,   1:100,  1:100,  0.01));
@@ -182,6 +199,7 @@ userData.plotLimits.MULTI.yMax=NaN;
 
 % default single plot with any selected variables
 userData.EP_plotType = 'VARS_OVERLAY';
+userData.EP_lineColourType = 'LINECOLOUR_PER_INSTRUMENT_PER_DEPLOYMENT';
 userData.EP_plotYearly = false;
 
 % if plot IMOS netcdf files, plot using raw/good qc flags
@@ -252,7 +270,7 @@ userData.plotPanel = plotPanel;
 
 setappdata(hFig, 'UserData', userData);
 
-%% --- Executes when user attempts to close figure1.
+%% --- Executes when user changes plot type.
     function plotType_Callback(hObject, eventdata, handles)
         % hObject    handle to figure1 (see GCBO)
         % eventdata  reserved - to be defined in a future version of MATLAB
@@ -269,6 +287,31 @@ setappdata(hFig, 'UserData', userData);
         else
             set(hObject,'Checked','on');
             iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), hObject.Parent.Children);
+            set(hObject.Parent.Children(iCheckOff),'Checked','off');
+        end
+        
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
+        
+    end
+
+%% --- Executes when user changes line colour type.
+    function lineColourType_Callback(hObject, eventdata, handles)
+        % hObject    handle to figure1 (see GCBO)
+        % eventdata  reserved - to be defined in a future version of MATLAB
+        % handles    structure with handles and user data (see GUIDATA)
+        
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        oldLineColourType = userData.EP_lineColourType;
+        userData.EP_lineColourType = hObject.Label;
+        
+        if strcmp(userData.EP_lineColourType, oldLineColourType)
+            set(hObject,'Checked','on');
+        else
+            set(hObject,'Checked','on');
+            iCheckOff = arrayfun(@(x) strcmp(x.Label, oldLineColourType), hObject.Parent.Children);
             set(hObject.Parent.Children(iCheckOff),'Checked','off');
         end
         
@@ -325,6 +368,7 @@ setappdata(hFig, 'UserData', userData);
             else
                 userData.ini.plotting.doMultilineXLabel = 'false';
             end
+            userData.ini.startDialog.ymlDir = userData.EP_previousYmlDir;
             % inelegant code to handle if user double clicked on a '_ep.fig' and stored
             % EPdir is different to current.
             [tmpEPdir, ~, ~] = fileparts(which('easyplot'));

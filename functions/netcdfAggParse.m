@@ -45,13 +45,13 @@ for i = 1:length(instrument_type)
     % copy other variables
     v = struct;
     vnames = cellfun(@(x) x.name, netcdfData.variables,  'UniformOutput', false);
-    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_type', 'deployment_code'});
+    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_type', 'deployment_code', 'instrument_burst_duration', 'instrument_burst_interval', 'instrument_burst_interval'});
     for j = 1:length(vnames)
         v = struct;
         vname = char(vnames{j});
         idVar = getVar(netcdfData.variables, vname);
         v = netcdfData.variables{idVar};
-        if isfield(v, 'instance_dimension') & strcmp(v.instance_dimension, 'instrument')
+        if isfield(v, 'instance_dimension') && strcmp(v.instance_dimension, 'instrument')
             continue;
         end
         v.data = v.data(instrument_index == i);

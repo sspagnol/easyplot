@@ -44,97 +44,11 @@ figure(hFig); %make figure current
 msgPanel = findobj(hFig, 'Tag','msgPanel');
 msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
 plotPanel = findobj(hFig, 'Tag','plotPanel');
-
-%% create list of variable names that will be plotted, delete plots as required
-varNames={};
-varDeleteNames={};
-varNewNames={};
-plotVarCounter = struct;
+graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 hLine = gobjects(0);
-% count up plots per variable, order is important
-% variables to delete
-for ii=1:numel(userData.sample_data)
-    iDeletePlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == -1)';
-    if ~isempty(iDeletePlotVars)
-        for jj = iDeletePlotVars
-            if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
-                theVar = userData.sample_data{ii}.variables{jj}.name;
-                if isfield (plotVarCounter, theVar)
-                    plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
-                else
-                    plotVarCounter.(theVar) = 0;
-                end
-                % delete the plot,
-                delete(userData.sample_data{ii}.variables{jj}.hLine);
-                userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
-                varDeleteNames{end+1}=theVar;
-                userData.sample_data{ii}.EP_variablePlotStatus(jj) = 0;
-            end
-        end
-    end
-end
-
-% variables already plotted
-for ii=1:numel(userData.sample_data)
-    iPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == 1)';
-    if ~isempty(iPlotVars)
-        for jj = iPlotVars
-            theVar = userData.sample_data{ii}.variables{jj}.name;
-            if isfield (plotVarCounter, theVar)
-                plotVarCounter.(theVar) = plotVarCounter.(theVar) + 1;
-            else
-                plotVarCounter.(theVar) = 1;
-            end
-            varNames{end+1}=theVar;
-        end
-    end
-end
-
-% variables changed iSlice
-
-% variables added since last plot
-for ii=1:numel(userData.sample_data)
-    % test for changed islice plots, delete old line, and mark as new
-    iNewPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == -2)';
-    if ~isempty(iNewPlotVars)
-        for jj = iNewPlotVars
-            if isfield(userData.sample_data{ii}.variables{jj}, 'hLine')
-                theVar = userData.sample_data{ii}.variables{jj}.name;
-                if isfield (plotVarCounter, theVar)
-                    plotVarCounter.(theVar) = plotVarCounter.(theVar) - 1;
-                else
-                    plotVarCounter.(theVar) = 0;
-                end
-                % delete the plot,
-                delete(userData.sample_data{ii}.variables{jj}.hLine);
-                userData.sample_data{ii}.variables{jj} = rmfield(userData.sample_data{ii}.variables{jj},'hLine');
-                varDeleteNames{end+1}=theVar;
-                userData.sample_data{ii}.EP_variablePlotStatus(jj) = 2;
-            end
-        end
-    end
-    
-    % find new plots to add
-    iNewPlotVars = find(userData.sample_data{ii}.EP_variablePlotStatus == 2)';
-    if ~isempty(iNewPlotVars)
-        for jj = iNewPlotVars
-            theVar = userData.sample_data{ii}.variables{jj}.name;
-            if isfield (plotVarCounter, theVar)
-                plotVarCounter.(theVar) = plotVarCounter.(theVar) + 1;
-            else
-                plotVarCounter.(theVar) = 1;
-            end
-            varNewNames{end+1}=theVar;
-        end
-    end
-end
-%plotVarCounter
-varNames=sort(unique(varNames));
-varDeleteNames=sort(unique(varDeleteNames));
-varNewNames=sort(unique(varNewNames));
 
 %%
-graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+[userData.sample_data, varNames, varDeleteNames, varNewNames, plotVarCounter] = countVars(userData.sample_data);
 
 isEmptyPlotPanel = isempty(plotPanel.Children);
 isAnyEmptyGraphs = any(arrayfun(@(x) isempty(x.Children), graphs));
@@ -144,15 +58,15 @@ isNewSubplot = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
     (~isempty(varNames) && ~isempty(varNewNames) && ...
     ~any(strcmp(varNewNames, varNames)));
 
-% require || result redoSubplots = false
-isNotP1 = strcmpi(userData.EP_plotType, 'VARS_OVERLAY') && ... % overlay
-    ~isempty(varNames);                                     % have plotted some variable
-% stacked and there is some variable to plot 
-isNotP2 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
-    all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
-% stacked and no new vars plotted
-isNotP3 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
-    ~isempty(varNames) && isempty(varNewNames);
+% % require || result redoSubplots = false
+% isNotP1 = strcmpi(userData.EP_plotType, 'VARS_OVERLAY') && ... % overlay
+%     ~isempty(varNames);                                     % have plotted some variable
+% % stacked and there is some variable to plot 
+% isNotP2 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
+%     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
+% % stacked and no new vars plotted
+% isNotP3 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
+%     ~isempty(varNames) && isempty(varNewNames);
 
 % require || result redoSubplots = true
 redoSubplots = false;
@@ -187,33 +101,8 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
     end
 end
 
-%% testing number of subplots calculation
-% VARS_OVERLAY : one plot with all vars
-% VARS_STACKED : subplots with common vars per subplot
-% VARS_SINGLE : subplot per var, not implemented yet
-% for each marked variable assign it an subplot/axis number
-switch upper(userData.EP_plotType)
-    case 'VARS_OVERLAY'
-        nSubPlots = 1;
-        for ii=1:numel(userData.sample_data)
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.EP_variablePlotStatus));
-            iVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
-            %markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
-            userData.sample_data{ii}.axisIndex(iVars) = 1;
-        end
-        
-    case 'VARS_STACKED'
-        nSubPlots = numel(varNames);
-        for ii=1:numel(userData.sample_data)
-            userData.sample_data{ii}.axisIndex = zeros(size(userData.sample_data{ii}.EP_variablePlotStatus));
-            iVars = find(userData.sample_data{ii}.EP_variablePlotStatus > 0)';
-            markedVarNames = arrayfun(@(x) userData.sample_data{ii}.variables{x}.name, iVars, 'UniformOutput', false);
-            userData.sample_data{ii}.axisIndex(iVars) = cell2mat(arrayfun(@(x) find(strcmp(x,varNames)), markedVarNames, 'UniformOutput', false));
-        end
-        
-    otherwise
-        disp('help');
-end
+%% update axis index
+[userData.sample_data, nSubPlots] = calcAxisIndex(userData.sample_data, userData.EP_plotType, varNames);
 
 %% determine QC use
 try
@@ -276,7 +165,7 @@ for ii = 1:numel(userData.sample_data)
                 if userData.EP_plotYearly
                     set(graphs(ihAx),'XLim',[1 367])
                 else
-                    if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                    if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
                         set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
                     else
                         set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
@@ -292,7 +181,7 @@ for ii = 1:numel(userData.sample_data)
                 if userData.EP_plotYearly
                     set(graphs(ihAx),'XLim',[1 367])
                 else
-                    if isfield(userData.plotLimits, 'TIME') & isfinite(userData.plotLimits.TIME.xMin) & isfinite(userData.plotLimits.TIME.xMax)
+                    if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
                         set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
                     else
                         set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
