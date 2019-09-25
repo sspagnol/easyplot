@@ -202,6 +202,7 @@ for ii = 1:numel(userData.sample_data)
             markerStyle='none';
         end
         
+        % if plotting LPF variable use LPF time
         if strfind(theVar, 'LPF_')
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'LPFTIME');
         else
