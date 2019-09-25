@@ -66,7 +66,11 @@ for i = 1:length(instrument_id)
         if isempty(v.data)
             continue;
         end
-        v.flags = v.flags(instrument_index == i);
+        if isfield(v,'flags')
+            v.flags = v.flags(instrument_index == i);
+        else
+            v.flags = ones(size(v.data), 'uint8');
+        end
         variables{end+1} = v;
     end
     
