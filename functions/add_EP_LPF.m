@@ -22,9 +22,9 @@ goodFlag  = imosQCFlag('good', qcSet, 'flag');
 %pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
 goodFlags = uint8([rawFlag, goodFlag]); %, pGoodFlag];
 
-% only do LPF on PRES, PRES_REL. Search is setup such to avoid bursted
-% names
-iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'^PRES$|^PRES_REL|^DEPTH|^EP_DEPTH','once')), sam.variables, 'UniformOutput', false)));
+% only do LPF on PRES, PRES_REL and DEPTH. Search is setup such to avoid bursted
+% names, and aggregated stats variables (eg DEPTH_std)
+iLpfVars = find(cell2mat(cellfun(@(x) ~isempty(regexp(x.name,'^PRES$|^PRES_REL$|^DEPTH$|^EP_DEPTH$','once')), sam.variables, 'UniformOutput', false)));
 if isempty(iLpfVars), return; end
 
 % filtering burst data like WQMs can be problematic, totally experimental

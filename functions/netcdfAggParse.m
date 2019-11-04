@@ -7,22 +7,27 @@ idTIME = getVar(netcdfData.variables, 'TIME');
 
 instrument_index = netcdfData.variables{getVar(netcdfData.variables, 'instrument_index')}.data;
 source_file = netcdfData.variables{getVar(netcdfData.variables, 'source_file')}.data;
-instrument_type = netcdfData.variables{getVar(netcdfData.variables, 'instrument_type')}.data;
+% older test aggregate files instrument_id was call instrument_type
+idVar = getVar(netcdfData.variables, 'instrument_id');
+if idVar == 0
+    idVar = getVar(netcdfData.variables, 'instrument_type');
+end    
+instrument_id = netcdfData.variables{idVar}.data;
 
 sample_data = {};
 counter = 0;
-for i = 1:length(instrument_type)
+for i = 1:length(instrument_id)
     meta = struct;
     dimensions = {};
     variables  = {};
     
     meta.file_name =  source_file{i};
-    meta.instrument_model = char(instrument_type{i});
-    strs = strsplit(instrument_type{i}, ' ');
+    meta.instrument_model = char(instrument_id{i});
+    strs = strtrim(strsplit(instrument_id{i}, ';'));
     meta.instrument_make = char(strs{1});
-    instrument_model = strjoin(strs(2:end-1), ' ');
+    instrument_model = char(strs{2});
     meta.instrument_model = updateIfEmpty(instrument_model, meta.instrument_make, instrument_model);
-    meta.instrument_serial_no = char(strs{end});
+    meta.instrument_serial_no = char(strs{3});
     
     % copy TIME
     v = struct;
@@ -45,11 +50,14 @@ for i = 1:length(instrument_type)
     % copy other variables
     v = struct;
     vnames = cellfun(@(x) x.name, netcdfData.variables,  'UniformOutput', false);
-    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_type', 'deployment_code', 'instrument_burst_duration', 'instrument_burst_interval', 'instrument_burst_interval'});
+    vnames = setdiff(vnames, {'TIME', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH', 'instrument_index', 'source_file', 'instrument_id', 'instrument_type', 'deployment_code', 'instrument_burst_duration', 'instrument_burst_interval', 'instrument_burst_interval'});
     for j = 1:length(vnames)
         v = struct;
         vname = char(vnames{j});
         idVar = getVar(netcdfData.variables, vname);
+        if idVar == 0
+            continue;
+        end
         v = netcdfData.variables{idVar};
         if isfield(v, 'instance_dimension') && strcmp(v.instance_dimension, 'instrument')
             continue;
@@ -58,7 +66,11 @@ for i = 1:length(instrument_type)
         if isempty(v.data)
             continue;
         end
-        v.flags = v.flags(instrument_index == i);
+        if isfield(v,'flags')
+            v.flags = v.flags(instrument_index == i);
+        else
+            v.flags = ones(size(v.data), 'uint8');
+        end
         variables{end+1} = v;
     end
     

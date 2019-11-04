@@ -72,9 +72,9 @@ sample_data = struct;
 
 sample_data.toolbox_input_file                = filename;
 sample_data.meta.instrument_make              = 'RBR';
-modelstring = matlab.lang.makeValidName(RSK.instruments.model, 'ReplacementStyle','hex');
+modelstring = matlab.lang.makeValidName(char(unicode2native(RSK.instruments.model, 'US-ASCII')), 'ReplacementStyle','hex');
 % known model string unicode replacements
-modelstring = regexprep(modelstring, '0xB3$', '3'); % subscripted 3
+modelstring = regexprep(modelstring, '0x1A$', '3'); % subscripted 3
 modelstring = regexprep(modelstring, '^TR0x2D', 'TR-'); % 'TR-'
 modelstring = regexprep(modelstring, '^TDR0x2D', 'TDR-'); % 'TDR-'
 sample_data.meta.instrument_model = modelstring;
