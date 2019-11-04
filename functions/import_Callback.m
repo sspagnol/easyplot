@@ -58,7 +58,11 @@ if iParse == 1
     [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), fileList, 'UniformOutput', false);
     % find first directory only file, make that the base directory
     iDir = cellfun(@isdir , fileList);
-    baseDir = fileList{find(iDir),1};
+    if any(iDir)
+        baseDir = fileList{find(iDir,1)};
+    else
+        baseDir = fileparts(fileList{1});
+    end
     FILEpaths(iDir) = [];
     FILEnames(iDir) = [];
     FILEexts(iDir) = [];
