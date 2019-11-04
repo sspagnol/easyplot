@@ -50,7 +50,7 @@ theFile   = hModel.getValueAt(modifiedRow,idFile);
 theSerial = hModel.getValueAt(modifiedRow,idSerial);
 theVariable   = hModel.getValueAt(modifiedRow,idVariable);
 plotStatus = double(hModel.getValueAt(modifiedRow,idShow));
-EP_iSlice = hModel.getValueAt(modifiedRow,idSlice);
+EP_iSlice = str2num(hModel.getValueAt(modifiedRow,idSlice));
 
 % if deselecting mark it as -1
 if plotStatus == 0
