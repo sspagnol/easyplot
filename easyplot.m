@@ -430,7 +430,12 @@ setappdata(hFig, 'UserData', userData);
                 drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 parser = str2func(theParser);
-                structs = parser( {theFullFile}, 'timeSeries' );
+                try
+                    structs = parser( {theFullFile}, 'timeSeries' );
+                catch
+                    warning({'Unable to load file :' theFullFile});
+                    continue;
+                end
                 isNew = false(size(userData.sample_data));
                 if numel(structs) == 1
                     % only one struct generated for one raw data file
