@@ -51,6 +51,9 @@ theSerial = hModel.getValueAt(modifiedRow,idSerial);
 theVariable   = hModel.getValueAt(modifiedRow,idVariable);
 plotStatus = double(hModel.getValueAt(modifiedRow,idShow));
 EP_iSlice = hModel.getValueAt(modifiedRow,idSlice);
+if ischar(EP_iSlice)
+    EP_iSlice = str2num(EP_iSlice);
+end
 
 % if deselecting mark it as -1
 if plotStatus == 0

@@ -1,5 +1,14 @@
 function updateTreeDisplay(treePanel, treePanelData)
 
+persistent hash;
+if isempty(hash)
+    hash = java.util.Hashtable;
+end
+if ~isempty(hash.get(treePanel))
+    return;
+end
+hash.put(treePanel,1);
+
 tUserData = getappdata(treePanel, 'UserData');
 tUserData.treePanelData = treePanelData;
 
@@ -20,5 +29,8 @@ set(handle(getOriginalModel(jtable.JTable),'CallbackProperties'), 'TableChangedC
 
 tUserData.jtable = jtable;
 setappdata(treePanel, 'UserData', tUserData);
+
+% release rentrancy flag
+hash.remove(treePanel);
 
 end
