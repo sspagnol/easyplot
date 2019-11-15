@@ -1,4 +1,4 @@
-function xf=pl66tn(x,dt,T);
+function xf=pl66tn(x,dt,T)
 % PL66TN: pl66t for variable dt and T
 % xf=PL66TN(x,dt,T) computes low-passed series xf from x
 % using pl66 filter, with optional sample interval dt (hrs)
@@ -26,7 +26,10 @@ function xf=pl66tn(x,dt,T);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % default to pl64
-if (nargin==1); dt=1; T=33; end
+if (nargin==1)
+    dt=1;
+    T=33;
+end
 
 cutoff=T/dt;
 fq=1./cutoff;
@@ -36,7 +39,10 @@ nw=round(nw);
 nw2=2.*nw;
 
 [npts,ncol]=size(x);
-if (npts<ncol);x=x';[npts,ncol]=size(x);end
+if (npts<ncol)
+    x=x';
+    [npts,ncol]=size(x);
+end
 xf=x;
 
 % generate filter weights
@@ -57,12 +63,17 @@ jm=[nw:-1:1];
 
 for ic=1:ncol
     % ['column #',num2str(ic)]
-    jgd=find(~isnan(x(:,ic)));
-    npts=length(jgd);
+    %jgd=find(~isnan(x(:,ic)));
+    %npts=length(jgd);
+    jgd = ~isnan(x(:,ic));
+    npts = sum(jgd);
     if (npts>nw2)
         %detrend time series, then add trend back after filtering
         xdt=detrend(x(jgd,ic));
         trnd=x(jgd,ic)-xdt;
+        % from NaN toolbox
+        [xdt, trnd] = detrend(x(jgd,ic));
+        
         y=[cs(jm).*xdt(jm);xdt;cs(j).*xdt(npts+1-j)];
         % filter
         yf=filter(wts,1.0,y);

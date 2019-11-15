@@ -13,7 +13,9 @@ tUserData = getappdata(treePanel, 'UserData');
 tUserData.treePanelData = treePanelData;
 
 jtable = tUserData.jtable;
-
+if isempty(jtable)
+   jtable = createTreeTable(treePanel);
+end
 jtable.setTableData(treePanelData);
 
 % Make 'Show' column width small as practible
