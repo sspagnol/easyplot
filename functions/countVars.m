@@ -51,7 +51,7 @@ end
 % variables added since last plot
 for ii=1:numel(sample_data)
     % test for changed islice plots, delete old line, and mark as new
-    iNewPlotVars = find(sample_data{ii}.EP_variablePlotStatus == -2)';
+    iNewPlotVars = find(sample_data{ii}.EP_variablePlotStatus == 3)';
     if ~isempty(iNewPlotVars)
         for jj = iNewPlotVars
             if isfield(sample_data{ii}.variables{jj}, 'hLine')

@@ -59,7 +59,7 @@ end
 if plotStatus == 0
     plotStatus = -1; % delete plot
 elseif modifiedCol == idSlice
-    plotStatus = -2; % existing plot, changed islice
+    plotStatus = 3; % existing plot, changed islice
 else
     plotStatus = 2; % new plot
 end
