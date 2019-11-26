@@ -270,7 +270,7 @@ end
         %toc
         labels = [cellstr(labels), newlabels];
         ind=~cellfun(@isempty,newlabels);
-        labels{ind} = {alabels{ind} newlabels{ind}};
+        labels{ind} = {labels{ind} newlabels{ind}};
     end
 
 end

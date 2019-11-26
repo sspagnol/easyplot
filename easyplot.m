@@ -433,7 +433,7 @@ setappdata(hFig, 'UserData', userData);
                 try
                     structs = parser( {theFullFile}, 'timeSeries' );
                 catch
-                    warning({'Unable to load file :' theFullFile});
+                    warning(['Unable to load file : ' theFullFile]);
                     continue;
                 end
                 isNew = false(size(userData.sample_data));
