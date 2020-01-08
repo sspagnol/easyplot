@@ -148,25 +148,10 @@ if candoLpf
             varFlags = sam.variables{ii}.flags;
             newVarFlags = interp1(qdata, single(varFlags(qindex)), filterTime, 'nearest', 0);
         end
-        % butterworth low pass filter with 40h cutoff, using
-        % matlab function as has zero phase shift
-        order=4;
-        cutoff_freq=1/(40*3600);
+
         dT=sampleInterval;
-        Fs=1/dT;
-        ftype='low';
-        nyquist_freq = Fs/2;  % Nyquist frequency
-        Wn=cutoff_freq/nyquist_freq;    % non-dimensional frequency
-        % butterworth
-        if license('test','Signal_Toolbox')
-            [z,p,k] = butter(order,Wn,ftype);
-            [sos,g] = zp2sos(z,p,k);
-            filterData=filtfilt(sos,g,double(newRawData)) + meansignal;
-        else
-            filterData=pl66tn(newRawData,dT/3600,33);
-            filterData = filterData + meansignal;
-        end
-        
+        filterData=pl66tn(newRawData,dT/3600,33);
+        filterData = filterData + meansignal;
         
         % if not enough lpf data skip
         if sum(isnan(filterData))==numel(filterData)
@@ -179,6 +164,35 @@ if candoLpf
         varStruct.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sam.variables{ii}.name, 'type')));
         varStruct.dimensions = idLpfTime;
         varStruct.data = filterData;
+        varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
+        if isfield(sam.variables{ii}, 'flags')
+            varStruct.flags = uint8(newVarFlags);
+        end
+        varStruct.EP_OFFSET = 0.0;
+        varStruct.EP_SCALE = 1.0;
+        varStruct.EP_iSlice = 1;
+        
+        idx = getVar(sam.variables, varStruct.name);
+        if idx == 0
+            idx = length(sam.variables) + 1;
+        end
+        sam.variables{idx} = varStruct;
+        
+        % update plot status
+        if isfield(sam, 'EP_variablePlotStatus')
+            if sam.EP_variablePlotStatus(getVar(sam.variables, sam.variables{ii}.name)) == 2
+                sam.EP_variablePlotStatus(idx) = 2;
+            end
+        end
+        
+        clear('varStruct');
+
+        % add LPF data
+        varStruct = struct();
+        varStruct.name = ['LPF_' sam.variables{ii}.name '_demeaned'];
+        varStruct.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sam.variables{ii}.name, 'type')));
+        varStruct.dimensions = idLpfTime;
+        varStruct.data = filterData - meansignal;
         varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
         if isfield(sam.variables{ii}, 'flags')
             varStruct.flags = uint8(newVarFlags);

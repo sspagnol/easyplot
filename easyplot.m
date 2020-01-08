@@ -549,6 +549,9 @@ setappdata(hFig, 'UserData', userData);
         end
         
         userData=getappdata(hFig, 'UserData');
+        if ~isfield(userData, 'sample_data')
+            return;
+        end
         if isempty(userData.sample_data)
             return;
         end

@@ -72,7 +72,7 @@ for ic=1:ncol
         xdt=detrend(x(jgd,ic));
         trnd=x(jgd,ic)-xdt;
         % from NaN toolbox
-        [xdt, trnd] = detrend(x(jgd,ic));
+        %[xdt, trnd] = nandetrend(x(jgd,ic));
         
         y=[cs(jm).*xdt(jm);xdt;cs(j).*xdt(npts+1-j)];
         % filter
