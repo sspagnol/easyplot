@@ -9,10 +9,7 @@ function sam = updateDataEasyplot(sam)
 %   sample_data - same as input, with fields added/modified
 
 %% retrieve good flag values
-qcSet     = str2double(readProperty('toolbox.qc_set'));
-rawFlag   = imosQCFlag('raw', qcSet, 'flag');
-goodFlag  = imosQCFlag('good', qcSet, 'flag');
-goodFlags = [rawFlag, goodFlag];
+goodFlags = getGoodFlags();
 
 %%
 if isfield(sam.meta, 'latitude')

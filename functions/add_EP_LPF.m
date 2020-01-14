@@ -16,11 +16,7 @@ useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
 % retrieve good flag values
-qcSet     = str2double(readProperty('toolbox.qc_set'));
-rawFlag   = imosQCFlag('raw', qcSet, 'flag');
-goodFlag  = imosQCFlag('good', qcSet, 'flag');
-%pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
-goodFlags = uint8([rawFlag, goodFlag]); %, pGoodFlag];
+goodFlags = getGoodFlags();
 
 % only do LPF on PRES, PRES_REL and DEPTH. Search is setup such to avoid bursted
 % names, and aggregated stats variables (eg DEPTH_std)
@@ -136,7 +132,7 @@ if candoLpf
         rawData = theOffset + (theScale .* rawData);
         %if useQCflags & isfield(sam.variables{ii}, 'flags')
         if isfield(sam.variables{ii}, 'flags')
-            varFlags = uint8(sam.variables{ii}.flags);
+            varFlags = int8(sam.variables{ii}.flags);
             iGood = ismember(varFlags, goodFlags);
             rawData(~iGood) = NaN;
         end
@@ -166,7 +162,7 @@ if candoLpf
         varStruct.data = filterData;
         varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
         if isfield(sam.variables{ii}, 'flags')
-            varStruct.flags = uint8(newVarFlags);
+            varStruct.flags = int8(newVarFlags);
         end
         varStruct.EP_OFFSET = 0.0;
         varStruct.EP_SCALE = 1.0;
@@ -195,7 +191,7 @@ if candoLpf
         varStruct.data = filterData - meansignal;
         varStruct.coordinates = 'LPFTIME LATITUDE LONGITUDE NOMINAL_DEPTH';
         if isfield(sam.variables{ii}, 'flags')
-            varStruct.flags = uint8(newVarFlags);
+            varStruct.flags = int8(newVarFlags);
         end
         varStruct.EP_OFFSET = 0.0;
         varStruct.EP_SCALE = 1.0;

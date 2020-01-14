@@ -69,7 +69,7 @@ for i = 1:length(instrument_id)
         if isfield(v,'flags')
             v.flags = v.flags(instrument_index == i);
         else
-            v.flags = ones(size(v.data), 'uint8');
+            v.flags = ones(size(v.data), 'int8');
         end
         variables{end+1} = v;
     end

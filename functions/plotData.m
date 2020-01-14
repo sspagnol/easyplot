@@ -33,11 +33,7 @@ if isempty(userData.sample_data)
 end
 
 % retrieve good flag values
-qcSet     = str2double(readProperty('toolbox.qc_set'));
-rawFlag   = imosQCFlag('raw', qcSet, 'flag');
-goodFlag  = imosQCFlag('good', qcSet, 'flag');
-%pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
-goodFlags = [rawFlag, goodFlag]; %, pGoodFlag];
+goodFlags = getGoodFlags();
 
 figure(hFig); %make figure current
 

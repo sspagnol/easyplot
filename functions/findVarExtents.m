@@ -3,10 +3,7 @@ function dataLimits=findVarExtents(sample_data,varNames)
 %FINDVAREXTENTS Find time and data extents of marked sample_data variables
 
 %% retrieve good flag values
-qcSet     = str2double(readProperty('toolbox.qc_set'));
-rawFlag   = imosQCFlag('raw', qcSet, 'flag');
-goodFlag  = imosQCFlag('good', qcSet, 'flag');
-goodFlags = [rawFlag, goodFlag];
+goodFlags = getGoodFlags();
 
 %%
 if isempty(sample_data)

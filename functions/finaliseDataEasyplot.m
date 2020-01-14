@@ -10,10 +10,7 @@ function [sam, defaultLatitude] = finaliseDataEasyplot(sam, fileName, defaultLat
 %   sample_data - same as input, with fields added/modified
 
 %% retrieve good flag values
-qcSet     = str2double(readProperty('toolbox.qc_set'));
-rawFlag   = imosQCFlag('raw', qcSet, 'flag');
-goodFlag  = imosQCFlag('good', qcSet, 'flag');
-goodFlags = [rawFlag, goodFlag];
+goodFlags = getGoodFlags();
 
 %% perform any extra instrument specific cleanup on sam structure
 if exist([sam.meta.parser 'Cleanup'], 'file')

@@ -1,6 +1,8 @@
 function ydataVar = getYdata(varStruct, useQCflags)
 %GETXDATA get y-data to plot
 
+goodFlags = getGoodFlags();
+
 if isvector(varStruct.data)
     % 1D var
     ydataVar = varStruct.data;
