@@ -124,6 +124,9 @@ else
                 structs = parser( {theFullFile}, 'timeSeries' );
                 defaultLatitude = userData.EP_defaultLatitude;
                 if numel(structs) == 1
+                    if iscell(structs)
+                        structs = structs{1};
+                    end
                     % only one struct generated for one raw data file
                     structs.meta.parser = FILEparsers{ii};
                     %
