@@ -20,9 +20,9 @@ for ii = 1:numel(graphs)
     % make unique strings and get indexing
     [uStrings, IA, IC] = unique(legendStrings, 'stable');
 
-    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA)); %, 'FontSize', 8, 'Interpreter', 'none');
-    hLegend.Interpreter = 'none';
-    hLegend.FontSize = 8;
+    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex');
+    %hLegend.Interpreter = 'none';
+    %hLegend.FontSize = 8;
     set(object_h,'linewidth',2.0);
     
     %iSort=cellfun(@(x) find(strcmp(x, text_str)), {plot_h.Tag}, 'UniformOutput', false);

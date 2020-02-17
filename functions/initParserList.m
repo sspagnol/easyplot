@@ -84,6 +84,12 @@ parserList.message{ii}='Choose Nortek *.vec files:';
 parserList.parser{ii}='vectorParse';
 
 ii=ii+1;
+parserList.name{ii}='Nortek Signature (ad2cp)';
+parserList.wildcard{ii}={'*.ad2cp'};
+parserList.message{ii}='Choose Nortek *.ad2cp files:';
+parserList.parser{ii}='signatureParse';
+
+ii=ii+1;
 parserList.name{ii}='RBR (txt,dat,rsk)';
 parserList.wildcard{ii}={'*.txt', '*.dat', '*.rsk'};
 parserList.message{ii}='Choose RBR files:';
