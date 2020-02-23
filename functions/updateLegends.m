@@ -20,18 +20,26 @@ for ii = 1:numel(graphs)
     % make unique strings and get indexing
     [uStrings, IA, IC] = unique(legendStrings, 'stable');
 
-    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex');
-    %hLegend.Interpreter = 'none';
-    %hLegend.FontSize = 8;
+    % older style legend, but no multicolumn available
+    [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex', 'Location','northeast');
     set(object_h,'linewidth',2.0);
+    Htext = findobj(object_h, 'Type', 'Text');
+    Hline = findobj(object_h, 'Type', 'Line');
+    for jj=1:numel(Htext)
+        p1 = Htext(jj).Position;
+        Htext(jj).Position = [0.25 p1(2) 0];
+        HtextTag = Htext(jj).String;
+        HlineTags = {Hline.Tag};
+        for kk = find(ismember(HlineTags, HtextTag))
+            if numel(Hline(kk).XData) > 1
+                Hline(kk).XData = [0.05 0.2];
+            end
+        end
+    end
     
-    %iSort=cellfun(@(x) find(strcmp(x, text_str)), {plot_h.Tag}, 'UniformOutput', false);
-    %iSort=[iSort{:}];
-    %legend(text_str(iSort));
-    %legend('toggle');
-    
-    % legendflex still has problems
-    %[legend_h,object_h,plot_h,text_str]=legendflex(hAx, legendStr, 'ref', hAx, 'xscale', 0.5, 'FontSize', 8);
+    % newer multicolumn legend but cannot adjust legnd linewidths etc
+    %hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex', 'Location','northwest', 'NumColumns', 4);
+
 end
 
 end

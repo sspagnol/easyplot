@@ -104,7 +104,11 @@ updateTreeDisplay(treePanel, treePanelData)
 
 setappdata(hFig, 'UserData', userData);
 
-plotData(hFig);
+try
+    plotData(hFig);
+catch ME
+    disp(ME.message);
+end
 
 % release rentrancy flag
 hash.remove(treePanel);
