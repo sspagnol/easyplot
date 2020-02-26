@@ -64,6 +64,7 @@ function [RSK, holdpts] = RSKcorrecthold(RSK, varargin)
 % Website: www.rbr-global.com
 % Last revision: 2018-06-06
 
+
 validActions = {'interp', 'nan'};
 checkAction = @(x) any(validatestring(x,validActions));
 
@@ -86,6 +87,8 @@ direction = p.Results.direction;
 action = p.Results.action;
 visualize = p.Results.visualize;
 
+
+checkDataField(RSK)
 
 chanCol = [];
 channels = cellchannelnames(RSK, channel);

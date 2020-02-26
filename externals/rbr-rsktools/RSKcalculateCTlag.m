@@ -1,6 +1,6 @@
 function lag = RSKcalculateCTlag(RSK, varargin)
 
-%RSKcalculateCTlag - Calculate a conductivity lag.
+% RSKcalculateCTlag - Calculate a conductivity lag.
 % 
 % Syntax: [lag] = RSKcalculateCTlag(RSK, [OPTIONS])
 %
@@ -52,12 +52,6 @@ function lag = RSKcalculateCTlag(RSK, varargin)
 % Website: www.rbr-global.com
 % Last revision: 2018-02-01
 
-hasTEOS = ~isempty(which('gsw_SP_from_C'));
-if ~hasTEOS
-    error('Must install TEOS-10 toolbox. Download it from here: http://www.teos-10.org/software.htm');
-end
-
-
 
 validDirections = {'down', 'up', 'both'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -77,12 +71,16 @@ direction = p.Results.direction;
 windowLength = p.Results.windowLength;
 
 
+hasTEOS = ~isempty(which('gsw_SP_from_C'));
+if ~hasTEOS
+    RSKerror('Must install TEOS-10 toolbox. Download it from here: http://www.teos-10.org/software.htm');
+end
+
+checkDataField(RSK)
 
 Ccol = getchannelindex(RSK, 'conductivity');
 Tcol = getchannelindex(RSK, 'temperature');
 [RSKsp, SPcol] = getseapressure(RSK);
-
-
 
 bestlag = [];
 castidx = getdataindex(RSK, profile, direction);

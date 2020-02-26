@@ -1,8 +1,8 @@
 %% RSKtools for Matlab processing RBR data
-% RSKtools v3.2.0;
+% RSKtools v3.4.0;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2019-07-16
+% 2020-02-14
 
 %% Introduction
 % RSKtools includes a series of functions to post-process RBR logger
@@ -87,8 +87,8 @@ rsk = RSKcorrecthold(rsk,'action','interp');
 % after applying the function.  Users specify which profile(s) to
 % visualize.
 
-rsk = RSKsmooth(rsk,{'temperature','conductivity'}, 'windowLength', 5);
-rsk = RSKsmooth(rsk,'chlorophyll', 'windowLength', 9, 'visualize', 10);
+rsk = RSKsmooth(rsk,'channel',{'temperature','conductivity'}, 'windowLength', 5);
+rsk = RSKsmooth(rsk,'channel','chlorophyll', 'windowLength', 9, 'visualize', 10);
 
 
 %% Alignment of conductivity and temperature 
@@ -127,7 +127,7 @@ rsk = RSKsmooth(rsk,'chlorophyll', 'windowLength', 9, 'visualize', 10);
 % +0.2 sec).
 
 lag = RSKcalculateCTlag(rsk);
-rsk = RSKalignchannel(rsk, 'Conductivity', lag);
+rsk = RSKalignchannel(rsk,'channel','conductivity','lag',lag);
 
 
 %% Remove loops
@@ -152,7 +152,7 @@ rsk = RSKderivedepth(rsk);
 rsk = RSKderivevelocity(rsk);
 
 % Apply the algorithm
-rsk = RSKremoveloops(rsk, 'threshold', 0.3, 'visualize', 7);
+rsk = RSKremoveloops(rsk,'threshold',0.3,'visualize',7);
 
 
 %% Derive Practical Salinity
@@ -162,24 +162,6 @@ rsk = RSKremoveloops(rsk, 'threshold', 0.3, 'visualize', 7);
 % <http://www.teos-10.org/software.htm>.  The result is stored in the
 % data table along with other measured and derived channels.
 rsk = RSKderivesalinity(rsk);
-
-
-%% Compute an extra variable and add it to the RSK structure
-% Users may wish to add additional data to the RSK structure.  We
-% illustrate how this is done by computing Absolute Salinity and
-% adding it to the RSK structure
-p = getchannelindex(rsk,'sea pressure');
-sp = getchannelindex(rsk,'salinity');
-
-ncast = length(rsk.data);
-sa = repmat(struct('values',[]),1,ncast);
-for k = 1:ncast,
-  sa(k).values = gsw_SA_from_SP(rsk.data(k).values(:,sp),...
-                                rsk.data(k).values(:,p),-150,49);
-end
-
-rsk = RSKaddchannel(rsk,sa,'Absolute Salinity','g/kg');
-
 
 %% Bin average all channels by sea pressure
 % Bin averaging reduces sensor noise and ensures that each profile is
@@ -200,10 +182,10 @@ set(h(1:2:end),'marker','o','markerfacecolor','c')
 % a few example profiles.  Processed data are represented with thicker
 % lines.
 figure
-channels = {'salinity','temperature','chlorophyll'};
+channel = {'salinity','temperature','chlorophyll'};
 profile  = [3 10 20];
-h1 = RSKplotprofiles(raw,'profile',profile,'channel',channels);
-h2 = RSKplotprofiles(rsk,'profile',profile,'channel',channels);
+h1 = RSKplotprofiles(raw,'profile',profile,'channel',channel);
+h2 = RSKplotprofiles(rsk,'profile',profile,'channel',channel);
 set(h2,'linewidth',3,'marker','o','markerfacecolor','w')
 ax = findobj(gcf,'type','axes');
 set(ax(1),'xlim',[-2 80])
@@ -282,7 +264,7 @@ disp(rsk.data(4))
 % manual> for detailed RSKtools function documentation.
 %
 % * the
-% <http://rbr-global.com/wp-content/uploads/2019/07/Standard.pdf
+% <http://rbr-global.com/wp-content/uploads/2020/02/Standard.pdf
 % RSKtools Getting Started> for an introduction on how to load RBR
 % data into Matlab from RSK files, make plots, and access the data.
 

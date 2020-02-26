@@ -37,10 +37,7 @@ parse(p, RSK)
 RSK = p.Results.RSK;
 
 
-if ~isfield(RSK,'data')
-    disp('RSK structure do not have data field, use RSKreaddata...')
-    return
-end
+checkDataField(RSK)
 
 if ~isfield(RSK,'burstData')
     RSK = RSKreadburstdata(RSK);

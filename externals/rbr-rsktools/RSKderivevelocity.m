@@ -33,19 +33,16 @@ RSK = p.Results.RSK;
 windowLength = p.Results.windowLength;
 
 
+checkDataField(RSK)
 
 try
     Dcol = getchannelindex(RSK, 'Depth');
 catch
-    error('RSKcalculatevelocity requires a depth channel to calculate velocity (m/s). Use RSKderivedepth...');
+    RSKerror('RSKcalculatevelocity requires a depth channel to calculate velocity (m/s). Use RSKderivedepth...');
 end
-
-
 
 RSK = addchannelmetadata(RSK, 'pvel00', 'Velocity', 'm/s');
 Vcol = getchannelindex(RSK, 'Velocity');
-
-
 
 castidx = getdataindex(RSK);
 for ndx = castidx
@@ -57,10 +54,7 @@ for ndx = castidx
     RSK.data(ndx).values(:,Vcol)  = vel;
 end
 
-
-
 logentry = ['Profiling velocity calculated from depth filtered with a windowLength of ' num2str(windowLength) ' samples.'];
 RSK = RSKappendtolog(RSK, logentry);
+
 end
-
-

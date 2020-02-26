@@ -1,8 +1,8 @@
-function [handles, RSK] = RSKimages(RSK, varargin)
+function varargout = RSKimages(RSK, varargin)
 
 % RSKimages - Plot profiles in a 2D plot.
 %
-% Syntax:  handles = RSKimages(RSK, [OPTIONS])
+% Syntax:  [OPTIONS] = RSKimages(RSK, [OPTIONS])
 % 
 % Generates a plot of the profiles over time. The x-axis is time; the
 % y-axis is a reference channel. All data elements must have identical
@@ -43,32 +43,34 @@ function [handles, RSK] = RSKimages(RSK, varargin)
 %                      smaller than the threshold will not show. 
 %
 % Output:
-%     handles - Image handles object created, use to set properties
+%   [Optional] - handles - Image handles object created, use to set 
+%                properties
 %
-%     RSK - Structure, with RSK.im field containing data for 2D
-%     visualization.
+%                axes - Axes object of the plot.
+%
+%                RSK - Structure, with RSK.im field containing data for 2D
+%                visualization.
 %
 % Example: 
 %     handles = RSKimages(rsk,'direction','down'); 
 %     OR
-%     [handles, rsk] = RSKimages(rsk,'channel',{'Temperature','Conductivity'},'direction','down','interp',true,'threshold',600);
+%     [handles, axes, rsk] = RSKimages(rsk,'channel',{'Temperature','Conductivity'},'direction','down','interp',true,'threshold',600);
 %
 % See also: RSKbinaverage, RSKgenerate2D.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-10-17
+% Last revision: 2019-10-01
 
 
-validDirections = {'down', 'up'};
-checkDirection = @(x) any(validatestring(x,validDirections));
+checkDirection = @(x) ischar(x) || isempty(x);
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'channel', 'all');
 addParameter(p, 'profile', [], @isnumeric);
-addParameter(p, 'direction', 'down', checkDirection);
+addParameter(p, 'direction', '', checkDirection);
 addParameter(p, 'reference', 'Sea Pressure', @ischar);
 addParameter(p,'showgap', false, @islogical)
 addParameter(p,'threshold', [], @isnumeric)
@@ -82,6 +84,14 @@ reference = p.Results.reference;
 showgap = p.Results.showgap;
 threshold = p.Results.threshold;
 
+checkDataField(RSK)
+if isempty(direction);
+    if isfield(RSK.data,'direction') && all(ismember({RSK.data.direction},'up'))
+        direction = 'up';
+    elseif isfield(RSK.data,'direction')
+        direction = 'down';
+    end
+end
 
 RSK = RSKgenerate2D(RSK,'channel',channel,'profile',profile,'direction',direction,'reference',reference);
 x = RSK.im.x;
@@ -90,11 +100,12 @@ data = RSK.im.data;
 cref = getchannelindex(RSK,reference);
 
 k = 1;
+clf
 for c = RSK.im.channel
 
     binValues = data(:,:,k);
     
-    subplot(length(RSK.im.channel),1,k)
+    axes(k) = subplot(length(RSK.im.channel),1,k);
     if ~showgap
         handles(k) = pcolor(x, y, binValues);
         shading interp
@@ -139,7 +150,7 @@ for c = RSK.im.channel
     ylabel(cb, RSK.channels(c).units)
     ylabel(sprintf('%s (%s)', RSK.channels(cref).longName, RSK.channels(cref).units));
     set(gca, 'YDir', 'reverse')
-    h = title(RSK.channels(c).longName);
+    h = title(sprintf('%s   %s - %s', RSK.channels(c).longName, datestr(RSK.im.x(1), 'mmm dd HH:MM'), datestr(RSK.im.x(end),'mmm dd HH:MM')));
     set(gcf, 'Renderer', 'painters')
     set(h, 'EdgeColor', 'none');
     datetick('x')
@@ -147,5 +158,14 @@ for c = RSK.im.channel
     
     k = k + 1;
 end
+
+if nargout == 0
+    varargout = {};
+else
+    varargout{1} = handles;
+    varargout{2} = axes;
+    varargout{3} = RSK;
+end
+
 end
 

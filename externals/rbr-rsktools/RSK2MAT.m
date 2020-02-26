@@ -34,10 +34,10 @@ function [RBR] = RSK2MAT(RSK)
 % Last revision: 2017-08-01
 
 if strcmpi(RSK.dbInfo(1).type, 'EasyParse');
-    error('RSK2MAT is not compatible with files from Ruskin Mobile. File should be opened in Ruskin Desktop first.')
+    RSKerror('RSK2MAT is not compatible with files from Ruskin Mobile. File should be opened in Ruskin Desktop first.')
 end
 if size(RSK.data,2) > 1
-    disp('RSK2MAT is not compatible with casts, use RSKreaddata to have one data field.')
+    RSKwarning('RSK2MAT is not compatible with casts, use RSKreaddata to have one data field.')
     return
 end
 

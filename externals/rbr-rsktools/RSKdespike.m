@@ -1,18 +1,17 @@
-function [RSK, spike] = RSKdespike(RSK, channel, varargin)
+function [RSK, spike] = RSKdespike(RSK, varargin)
 
-% RSKdespike - Despike a time series.
+% RSKdespike - Despike a time series on a specified channel.
 %
-% Syntax:  [RSK, spike] = RSKdespike(RSK, channel, [OPTIONS])
+% Syntax:  [RSK, spike] = RSKdespike(RSK,'channel','channelName',[OPTIONS])
 % 
 % Identifies and treats spikes using a median filtering algorithm.  A
 % reference time series is created by filtering the input channel with
-% a median filter of length 'windowLength'.  A residual ("high-pass")
+% a median filter of length 'windowLength'. A residual ("high-pass")
 % series is formed by subtracting the reference series from the
 % original signal.  Data in the reference series lying outside of
 % 'threshold' standard deviations are defined as spikes.  Spikes are
 % then treated by one of three methods (see below).
 %    
-%
 % Inputs:
 %   [Required] - RSK - Structure containing logger data.
 %
@@ -52,17 +51,19 @@ function [RSK, spike] = RSKdespike(RSK, channel, varargin)
 %          profile.   
 %
 % Example: 
-%    [rsk, spike] = RSKdespike(rsk,'Turbidity')
-%     OR
-%    [rsk, spike] = RSKdespike(rsk,'Temperature','profile',3:5,'direction','down',...
-%                   'threshold',4,'windowLength',11,'action','nan','visualize',4); 
+%    [rsk, spike] = RSKdespike(rsk,'channel','Turbidity')
+%     OR 
+%    [rsk, spike] = RSKdespike(rsk,'channel','Temperature','profile',3:5,...
+%                   'direction','down','threshold',4,'windowLength',11,...
+%                   'action','nan','visualize',4); 
 %
 % See also: RSKremoveloops, RSKsmooth.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-04-06
+% Last revision: 2019-12-17
+
 
 validActions = {'replace', 'interp', 'nan'};
 checkAction = @(x) any(validatestring(x,validActions));
@@ -72,14 +73,14 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'channel');
+addParameter(p, 'channel','',@ischar);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'threshold', 2, @isnumeric);
 addParameter(p, 'windowLength', 3, @isnumeric);
 addParameter(p, 'action', 'nan', checkAction);
 addParameter(p, 'visualize', 0, @isnumeric);
-parse(p, RSK, channel, varargin{:})
+parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
 channel = p.Results.channel;
@@ -91,10 +92,20 @@ action = p.Results.action;
 visualize = p.Results.visualize;
 
 
+checkDataField(RSK)
+
+if isempty(channel)
+    RSKwarning('Please specify which channel to despike.')
+    spike = [];
+    return
+end
+
 channelCol = getchannelindex(RSK, channel);
 castidx = getdataindex(RSK, profile, direction);
 
-if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+if visualize ~= 0; 
+    [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
+end
 
 k = 1;
 for ndx = castidx
@@ -114,14 +125,10 @@ for ndx = castidx
     k = k+1;
 end
 
-
-
 logdata = logentrydata(RSK, profile, direction);
 logentry = sprintf(['%s de-spiked using a %1.0f sample window and %1.0f sigma threshold on %s. '...
            'Spikes were treated with %s.'], channel, windowLength, threshold, logdata, action);
 RSK = RSKappendtolog(RSK, logentry);
-
-
 
     %% Nested Functions
     function [y, I] = despike(x, t, threshold, windowLength, action)
@@ -130,7 +137,6 @@ RSK = RSKappendtolog(RSK, logentry);
     % with the median, a NaN or interpolated value using the non-spike
     % values. The output is the x series with spikes fixed and I is the
     % index of the spikes. 
-
         y = x;
         ref = runmed(x, windowLength);
         dx = x - ref;

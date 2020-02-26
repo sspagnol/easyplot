@@ -6,6 +6,7 @@
 .DS_Store
 .#*
 QuickStart/html/
+QuickStart/.DS_Store
 
 # Created by https://www.gitignore.io/api/osx,java,emacs,matlab,windows,eclipse,sublimetext,visualstudiocode
 

@@ -1,9 +1,9 @@
-function [RSK] = RSKderiveBPR(RSK)
+function [RSK] = RSKderiveBPR(RSK, varargin)
 
 % RSKderiveBPR - convert bottom pressure recorder frequencies to
 % temperature and pressure using calibration coefficients.
 %
-% Syntax:  [RSK] = RSKderiveBPR(RSK)
+% Syntax:  [RSK] = RSKderiveBPR(RSK, [OPTION])
 % 
 % Loggers with bottom pressure recorder (BPR) channels are equipped
 % with a Paroscientific, Inc. pressure transducer. The logger records
@@ -15,9 +15,9 @@ function [RSK] = RSKderiveBPR(RSK)
 % transducer frequency channels for 'full' files.
 % 
 % RSKderiveBPR implements the calibration equations developed by
-% Paroscientific, Inc. to derive pressure and temperature.  The
-% function calls RSKreadcalibrations to retrieve the calibration table
-% if has not been read previously.
+% Paroscientific, Inc. to derive pressure and temperature. The function 
+% either uses input coefficients or calls RSKreadcalibrations to retrieve 
+% the calibration table if has not been read previously.
 %
 % Note: When RSK data type is set to 'EPdesktop', Ruskin will import
 % both the original signal and the derived pressure and temperature
@@ -27,7 +27,10 @@ function [RSK] = RSKderiveBPR(RSK)
 % full resolution.
 %
 % Inputs: 
-%    RSK - Structure containing the logger metadata and data
+%    [Required] - RSK - Structure containing the logger metadata and data
+%
+%    [Optional] - coef - coeffcients array of 1x14 which are
+%                 [u0,y1,y2,y3,c1,c2,c3,d1,d2,t1,t2,t3,t4,t5]
 %
 % Outputs:
 %    RSK - Structure containing the derived BPR pressure and temperature.
@@ -37,51 +40,37 @@ function [RSK] = RSKderiveBPR(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-05-29
+% Last revision: 2019-07-16
+
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-parse(p, RSK)
+addParameter(p, 'coef', [], @isnumeric);
+parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
+coef = p.Results.coef;
 
-if ~isfield(RSK,'calibrations') || ~isstruct(RSK.calibrations)
-    RSK = RSKreadcalibrations(RSK);
-end
-    
+
+checkDataField(RSK)
+
 if ~strcmp(RSK.dbInfo(end).type, 'full')
-    error('Only files of type "full" need derivation for BPR pressure and temperature');
+    RSKerror('Only files of type "full" need derivation for BPR pressure and temperature');
 end
 
-% Find pressure and temperature period data column
-TempPeriCol = strcmp({RSK.channels.shortName},'peri01') == 1;
 PresPeriCol = strcmp({RSK.channels.shortName},'peri00') == 1;
+TempPeriCol = strcmp({RSK.channels.shortName},'peri01') == 1;
 
-% Get coefficients
-PresCaliCol = find(strcmp({RSK.calibrations.equation},'deri_bprpres') == 1);
-TempCaliCol = find(strcmp({RSK.calibrations.equation},'deri_bprtemp') == 1);
-
-u0 = RSK.calibrations(TempCaliCol).x0;
-y1 = RSK.calibrations(TempCaliCol).x1;
-y2 = RSK.calibrations(TempCaliCol).x2;
-y3 = RSK.calibrations(TempCaliCol).x3;
-
-c1 = RSK.calibrations(PresCaliCol).x1;
-c2 = RSK.calibrations(PresCaliCol).x2;
-c3 = RSK.calibrations(PresCaliCol).x3;
-d1 = RSK.calibrations(PresCaliCol).x4;
-d2 = RSK.calibrations(PresCaliCol).x5;
-t1 = RSK.calibrations(PresCaliCol).x6;
-t2 = RSK.calibrations(PresCaliCol).x7;
-t3 = RSK.calibrations(PresCaliCol).x8;
-t4 = RSK.calibrations(PresCaliCol).x9;
-t5 = RSK.calibrations(PresCaliCol).x10;
+if isempty(coef)
+    [u0, y1, y2, y3, c1, c2, c3, d1, d2, t1, t2, t3, t4, t5] = getBPRcoef(RSK);
+else
+    coef = num2cell(coef);
+    [u0, y1, y2, y3, c1, c2, c3, d1, d2, t1, t2, t3, t4, t5] = deal(coef{:});
+end
 
 RSK = addchannelmetadata(RSK, 'bpr_08', 'BPR pressure', 'dbar');
-BPRPrescol = getchannelindex(RSK, 'BPR pressure');
-
 RSK = addchannelmetadata(RSK, 'bpr_09', 'BPR temperature', '°C');
-BPRTempcol = getchannelindex(RSK, 'BPR temperature');
+[BPRPrescol,BPRTempcol] = getchannelindex(RSK, {'BPR pressure','BPR temperature'});
 
 castidx = getdataindex(RSK);
 for ndx = castidx
@@ -109,6 +98,31 @@ RSK = RSKappendtolog(RSK, logentry);
     Pres = C .* (1 - ((T0 .* T0) ./ (Tsquare))) .* (1 - D .* (1 - ((T0 .* T0) ./ (Tsquare))));
     pressure = Pres* 0.689475; % convert from PSI to dbar
     
+    end
+
+    function [u0, y1, y2, y3, c1, c2, c3, d1, d2, t1, t2, t3, t4, t5] = getBPRcoef(RSK)
+
+        if ~isfield(RSK,'calibrations') || ~isstruct(RSK.calibrations)
+            RSK = RSKreadcalibrations(RSK);
+        end
+
+        PresCaliCol = find(strcmp({RSK.calibrations.equation},'deri_bprpres') == 1);
+        TempCaliCol = find(strcmp({RSK.calibrations.equation},'deri_bprtemp') == 1);
+
+        u0 = RSK.calibrations(TempCaliCol).x0;
+        y1 = RSK.calibrations(TempCaliCol).x1;
+        y2 = RSK.calibrations(TempCaliCol).x2;
+        y3 = RSK.calibrations(TempCaliCol).x3;
+        c1 = RSK.calibrations(PresCaliCol).x1;
+        c2 = RSK.calibrations(PresCaliCol).x2;
+        c3 = RSK.calibrations(PresCaliCol).x3;
+        d1 = RSK.calibrations(PresCaliCol).x4;
+        d2 = RSK.calibrations(PresCaliCol).x5;
+        t1 = RSK.calibrations(PresCaliCol).x6;
+        t2 = RSK.calibrations(PresCaliCol).x7;
+        t3 = RSK.calibrations(PresCaliCol).x8;
+        t4 = RSK.calibrations(PresCaliCol).x9;
+        t5 = RSK.calibrations(PresCaliCol).x10;
     end
 
 end

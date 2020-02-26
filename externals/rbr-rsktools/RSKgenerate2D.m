@@ -27,7 +27,7 @@ function RSK = RSKgenerate2D(RSK, varargin)
 %                      available profiles.  
 %
 %                direction - 'up' for upcast, 'down' for downcast. Default
-%                      is down.
+%                      is down when both directions are available.
 %
 %                reference - Channel that will be used as y dimension. 
 %                      Default is 'Sea Pressure', can be any other channel.
@@ -44,17 +44,16 @@ function RSK = RSKgenerate2D(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-10-17
+% Last revision: 2020-01-06
 
 
-validDirections = {'down', 'up'};
-checkDirection = @(x) any(validatestring(x,validDirections));
+checkDirection = @(x) ischar(x) || isempty(x);
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'channel', 'all');
 addParameter(p, 'profile', [], @isnumeric);
-addParameter(p, 'direction', 'down', checkDirection);
+addParameter(p, 'direction', '', checkDirection);
 addParameter(p, 'reference', 'Sea Pressure', @ischar);
 parse(p, RSK, varargin{:})
 
@@ -64,6 +63,16 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 reference = p.Results.reference;
 
+
+checkDataField(RSK)
+
+if isempty(direction);
+    if isfield(RSK.data,'direction') && all(ismember({RSK.data.direction},'up'))
+        direction = 'up';
+    elseif isfield(RSK.data,'direction')
+        direction = 'down';
+    end
+end
 
 castidx = getdataindex(RSK, profile, direction);
 chanCol = [];
@@ -79,7 +88,7 @@ for ndx = 1:length(castidx)-1
     if length(RSK.data(castidx(ndx)).values(:,YCol)) == length(RSK.data(castidx(ndx+1)).values(:,YCol));
         binCenter = RSK.data(castidx(ndx)).values(:,YCol);
     else 
-        error('The reference channel data of all the selected profiles must be identical. Use RSKbinaverage.m for selected cast direction.')
+        RSKerror('The reference channel data of all the selected profiles must be identical. Use RSKbinaverage.m for selected cast direction.')
     end
 end
 

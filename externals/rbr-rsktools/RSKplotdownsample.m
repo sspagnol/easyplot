@@ -1,8 +1,8 @@
-function handles = RSKplotdownsample(RSK, varargin)
+function varargout = RSKplotdownsample(RSK, varargin)
 
 % RSKplotdownsample - Plot summaries of logger data downsample.
 %
-% Syntax:  [handles] = RSKplotdownsample(RSK, [OPTIONS])
+% Syntax:  [OPTIONS] = RSKplotdownsample(RSK, [OPTIONS])
 % 
 % Generates a summary plot of the downsample data in the RSK structure.
 % 
@@ -15,14 +15,17 @@ function handles = RSKplotdownsample(RSK, varargin)
 %                           all channels. 
 %
 % Output:
-%    handles - Line object of the plot.
+%    [Optional] - handles - Line object of the plot.
+%
+%                 axes - Axes object of the plot.
 %
 % See also: RSKopen, RSKplotdata, RSKplotburstdata.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-06-18
+% Last revision: 2019-09-13
+
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -33,15 +36,11 @@ RSK = p.Results.RSK;
 channel = p.Results.channel;
 
 
-
 field = 'downsample';
 if ~isfield(RSK,field)
-    disp('Downsample field does not exist when dataset has less than 40960 samples per channel.');
-    handles = NaN;
+    RSKwarning('Downsample field does not exist when dataset has less than 40960 samples per channel.');
     return
 end
-
-
 
 chanCol = [];
 if ~strcmp(channel, 'all')
@@ -51,7 +50,14 @@ if ~strcmp(channel, 'all')
     end
 end
 
-handles = channelsubplots(RSK, field, 'chanCol', chanCol);
 
+[handles,axes] = channelsubplots(RSK, field, 'chanCol', chanCol);
+
+if nargout == 0
+    varargout = {};
+else
+    varargout{1} = handles;
+    varargout{2} = axes;
+end
 
 end

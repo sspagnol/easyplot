@@ -1,8 +1,9 @@
-function RSK = RSKcreate(tstamp, values, channel, unit, varargin) 
+function RSK = RSKcreate(varargin) 
 
 % RSKcreate - Create rsk structure with given time series data.
 %
-% Syntax: RSK = RSKcreate(tstamp, values, channels, units, [OPTIONS])
+% Syntax: RSK = RSKcreate('tstamp',tstamp,'values',values,...
+%               'channel',channel,'unit',unit,[OPTIONS])
 %
 % RSKcreate creates rsk structure with data that could originate from
 % other CTDs or floats, which allows users to apply RSKtools post
@@ -37,27 +38,28 @@ function RSK = RSKcreate(tstamp, values, channel, unit, varargin)
 %    values =  [39.9973,   16.2695,   10.1034;
 %               39.9873,   16.2648,   10.1266;
 %               39.9887,   16.2553,   10.1247];
-%    channels = {'Conductivity','Temperature','Pressure'};
-%    units = {'mS/cm','°C','dbar'};
-%    rsk = RSKcreate(tstamp, values, channels, units);
+%    channel = {'Conductivity','Temperature','Pressure'};
+%    unit = {'mS/cm','°C','dbar'};
+%    rsk = RSKcreate('tstamp',tstamp,'values',values,...
+%                    'channel',channel,'unit',unit);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2019-05-16
+% Last revision: 2019-12-19
 
 
 validateChannelsUnits = @(x) (ischar(x) || iscell(x));
 
 p = inputParser;
-addRequired(p,'tstamp', @isnumeric);
-addRequired(p,'values', @isnumeric);
-addRequired(p,'channel', validateChannelsUnits);
-addRequired(p,'unit', validateChannelsUnits);
+addParameter(p,'tstamp',[], @isnumeric);
+addParameter(p,'values',[], @isnumeric);
+addParameter(p,'channel','', validateChannelsUnits);
+addParameter(p,'unit', '', validateChannelsUnits);
 addParameter(p,'filename','sample.rsk', @ischar);
 addParameter(p,'model','unknown', @ischar);
 addParameter(p,'serialID', 0, @isnumeric);
-parse(p, tstamp, values, channel, unit, varargin{:})
+parse(p, varargin{:})
 
 tstamp = p.Results.tstamp;
 values = p.Results.values;
@@ -68,14 +70,31 @@ model = p.Results.model;
 serialID = p.Results.serialID;
 
 
+RSK = [];
+if isempty(tstamp)
+    RSKwarning('Please specify tstamp.')
+    return
+elseif isempty(values)
+    RSKwarning('Please specify values.')
+    return
+elseif isempty(channel)
+    RSKwarning('Please specify channel names.')
+    return
+elseif isempty(unit)
+    RSKwarning('Please specify channel units.')
+    return
+else
+    % do nothing
+end
+
 % Check consistency among input arguments
 [nsamples,nchannels] = size(values);
 if nsamples ~= length(tstamp)
-    error('The length of time stamp is not equal to number of rows in values.')
+    RSKerror('The length of time stamp is not equal to number of rows in values.')
 end
 
 if nchannels ~= length(channel) || nchannels ~= length(unit)
-    error('The length of channel or unit is not equal to number of columns in values.')
+    RSKerror('The length of channel or unit is not equal to number of columns in values.')
 end
 
 % Create data, channel and other logger metadata fields

@@ -1,9 +1,9 @@
-function RSK = RSKcorrecttau(RSK, channel, varargin)
+function RSK = RSKcorrecttau(RSK, varargin)
 
 % RSKcorrecttau - Apply tau correction and smoothing (optional) algorithm 
 % from Fozdar et al. (1985)
 %
-% Syntax:  RSK = RSKcorrecttau(RSK, channel, tauResponse, [OPTIONS])
+% Syntax:  RSK = RSKcorrecttau(RSK,'channel','channelName','tauResponse',tauRespone,[OPTIONS])
 % 
 % Sensors require a finite time to reach equilibrium with the ambient
 % environment under variable conditions.  The adjustment process
@@ -46,16 +46,16 @@ function RSK = RSKcorrecttau(RSK, channel, varargin)
 %    RSK - Structure with corrected channel in place of measured channel.
 %
 % Example: 
-%    rsk = RSKcorrecttau(rsk,'Dissolved O2',1)
+%    rsk = RSKcorrecttau(rsk,'channel','Dissolved O2','tauResponse',1)
 %    OR
-%    rsk = RSKcorrecttau(rsk,'Temperature',1,'tauSmooth',0.2,'direction','down','profile',1); 
+%    rsk = RSKcorrecttau(rsk,'channel','Temperature','tauResponse',1,'tauSmooth',0.2,'direction','down','profile',1); 
 %
 % See also: RSKremoveloops, RSKsmooth.
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2019-06-13
+% Last revision: 2019-12-18
 
 
 validDirections = {'down', 'up', 'both'};
@@ -63,13 +63,13 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'channel', @ischar);
-addRequired(p, 'tauResponse', @isnumeric);
+addParameter(p, 'channel','',@ischar);
+addParameter(p, 'tauResponse',[], @isnumeric);
 addParameter(p, 'tauSmooth', 0, @isnumeric);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'visualize', 0, @isnumeric);
-parse(p, RSK, channel, varargin{:})
+parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
 channel = p.Results.channel;
@@ -79,6 +79,18 @@ profile = p.Results.profile;
 direction = p.Results.direction;
 visualize = p.Results.visualize;
 
+
+checkDataField(RSK)
+
+if isempty(channel)
+    RSKwarning('Please specify which channel to apply tau correction.')
+    return
+end
+
+if isempty(tauResponse)
+    RSKwarning('Please specify tauResponse for the channel.')
+    return
+end
 
 channelCol = getchannelindex(RSK, channel);
 castidx = getdataindex(RSK, profile, direction);

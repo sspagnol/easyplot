@@ -78,6 +78,7 @@ function RSK2ODV(RSK, varargin)
 % Website: www.rbr-global.com
 % Last revision: 2018-05-11
 
+
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
 addParameter(p, 'channel', 'all');
@@ -95,16 +96,17 @@ outputdir = p.Results.outputdir;
 comment = p.Results.comment;
 
 
-
 if exist(outputdir, 'dir') ~= 7
-    error('Input directory does not exist.')
+    RSKerror('Input directory does not exist.')
 end
+
+checkDataField(RSK)
 
 % Check if the structure comes from RSKreaddata or RSKreadprofiles?
 isProfile = isfield(RSK.data,'direction');
 
 if ~isProfile && (~isempty(profile) || ~isempty(direction))
-    error('RSK structure is not organized into profiles. Use RSKreadprofiles or RSKtimeseries2profiles.');
+    RSKerror('RSK structure is not organized into profiles. Use RSKreadprofiles or RSKtimeseries2profiles.');
 end
 
 if isempty(direction); 
@@ -113,7 +115,7 @@ end;
 
 if ~strcmp('both', direction) && isProfile && ...
     (all(strcmp('up',{RSK.data.direction})) && ~strcmp(direction,'up') || all(strcmp('down',{RSK.data.direction})) && ~strcmp(direction,'down'))
-    error('Requested cast direction or profile does not exist in RSK structure, use RSKreadprofiles.')
+    RSKerror('Requested cast direction or profile does not exist in RSK structure, use RSKreadprofiles.')
 end
 
 % Set up metadata
@@ -248,7 +250,7 @@ for castidx = select_cast(1:directions:end);
         filename = ([inputfilename, '_profile' num2str(RSK.data(castidx).profilenumber, '%04d') '.txt']); 
     end
 
-    fid = fopen([outputdir '/' filename],'w');
+    fid = fopen([outputdir filesep filename],'w');
     
     % Output header information
     fprintf(fid,'%s\n','//<Creator>RBR</Creator>');

@@ -1,8 +1,8 @@
-function handles = RSKplotprofiles(RSK, varargin)
+function varargout = RSKplotprofiles(RSK, varargin)
 
 % RSKplotprofiles - Plot summaries of logger data as profiles.
 %
-% Syntax:  [handles] = RSKplotprofiles(RSK, [OPTIONS])
+% Syntax:  [OPTIONS] = RSKplotprofiles(RSK, [OPTIONS])
 % 
 % Plots profiles from automatically detected casts. The default is to
 % plot all the casts of all channels available (excluding pressure,
@@ -30,7 +30,9 @@ function handles = RSKplotprofiles(RSK, varargin)
 %                        depth or pressure.
 %
 % Output:
-%     handles - Line object of the plot.
+%     [Optional] - handles - Line object of the plot.
+%
+%                  axes - Axes object of the plot.
 %
 % Examples:
 %    rsk = RSKopen('profiles.rsk');
@@ -44,6 +46,7 @@ function handles = RSKplotprofiles(RSK, varargin)
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
 % Last revision: 2019-04-15
+
 
 validDirections = {'down', 'up', 'both'};
 checkDirection = @(x) any(validatestring(x,validDirections));
@@ -65,6 +68,15 @@ channel = p.Results.channel;
 direction = p.Results.direction;
 reference = p.Results.reference;
 
+
+if ~isfield(RSK,'data')
+    RSKerror('The .data structure is missing from your variable. Perhaps you forgot to call RSKreaddata or RSKreadprofiles first?')
+else
+    if ~isfield(RSK.data,'direction')
+        RSKerror('RSK contains no profiles, use RSKreadprofiles first.')
+    end
+end
+
 chanCol = [];
 channels = cellchannelnames(RSK, channel);
 for chan = channels
@@ -75,7 +87,7 @@ end
 numchannels = length(chanCol);
 
 if numchannels == 0;
-    error('There are only pressure, sea pressure or depth channel in the rsk file, use RSKplotdata...')
+    RSKerror('There are only pressure, sea pressure or depth channel in the rsk file, use RSKplotdata...')
 end
 
 castidx = getdataindex(RSK, profile, direction);
@@ -89,19 +101,10 @@ else
     [RSKy, ycol] = getseapressure(RSK);
 end
 
-% In 2014a and earlier, lines plotted after calling 'hold on' are
-% drawn with the first colour in defaultaxescolororder, whereas we
-% prefer to use a different colour for each cast.  Although the
-% default behaviour in 2014b is to step through defaultaxescolororder,
-% we proceed with the following fix anyway because it is compatible
-% with 2014b and later.
-clrs = get(0,'defaultaxescolororder');
-ncast = length(castidx); % up and down are both casts
-clrs = repmat(clrs,ceil(ncast/7),1);
-clrs = clrs(1:ncast,:);
-
+clrs = lines(length(castidx));
 pmax = 0;
 n = 1;
+
 for chan = chanCol
     subplot(1,numchannels,n)
     
@@ -137,7 +140,7 @@ for chan = chanCol
             ii = ii+1; 
         end
     end
-
+    axes(n) = gca;
     ylim([0 pmax])
     title(RSK.channels(chan).longName);
     xlabel(RSK.channels(chan).units);
@@ -147,14 +150,21 @@ for chan = chanCol
 end
 
 if stepsize > 1 && strcmp(RSKy.data(1).direction,'up')
-    legend('upcast','downcast')
+    legend('upcast','downcast','location','best')
 elseif stepsize > 1 && strcmp(RSKy.data(1).direction,'down')
-    legend('downcast','upcast')
+    legend('downcast','upcast','location','best')
 end
 
 ax = findall(gcf,'type','axes');
 set(ax, 'ydir', 'reverse')
 linkaxes(ax,'y')
 shg
+
+if nargout == 0
+    varargout = {};
+else
+    varargout{1} = handles;
+    varargout{2} = axes;
+end
 
 end

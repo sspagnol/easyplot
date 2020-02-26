@@ -1,6 +1,6 @@
 function RSK = RSKappendtolog(RSK, logentry)
 
-%RSKappendtolog - Append the entry and current time to the log field.
+% RSKappendtolog - Append the entry and current time to the log field.
 %
 % Syntax:  [RSK] = RSKappendtolog(RSK, logentry)
 % 

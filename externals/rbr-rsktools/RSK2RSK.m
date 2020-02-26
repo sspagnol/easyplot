@@ -12,8 +12,6 @@ function newfile = RSK2RSK(RSK, varargin)
 % post-processed RBR logger data with others without recourse to CSV, MAT, 
 % or ODV files. 
 %
-% Notes: This function is not thread safe.
-%
 % Inputs:
 %    [Required] - RSK - rsk structure
 %
@@ -49,17 +47,21 @@ RSK = p.Results.RSK;
 outputdir = p.Results.outputdir;
 suffix = p.Results.suffix;
 
+
 newfile = setupOutputFilename(RSK,suffix);
 data = convertProfilesIntoTimeseries(RSK);
 [data, nchannel] = removeRepeatedTimestamp(data);
 
-mksqlite('OPEN',[outputdir '/' newfile]);
-createSchema(nchannel);
-writeData(RSK, data, newfile);
-mksqlite('CLOSE')
+if exist([outputdir filesep newfile],'file') == 2
+    RSKerror([outputdir filesep newfile ' already exists, please revise suffix for a different name.'])
+else
+    mksqlite('OPEN',[outputdir filesep newfile]);
+    createSchema(nchannel);
+    writeData(RSK, data, newfile);
+    mksqlite('CLOSE')
+end
 
 fprintf('Wrote: %s/%s\n', outputdir, newfile);
-
 
 %% Nested functions
 function newfile = setupOutputFilename(RSK,suffix)
@@ -108,10 +110,13 @@ function createTabledata(nchannel)
     mksqlite(['CREATE TABLE IF NOT EXISTS data (tstamp BIGINT PRIMARY KEY ASC' tempstr{:} ')']);
 end
 
-function writeData(RSK,data,newfile)       
-    originalCharacterEncoding = slCharacterEncoding;
-    slCharacterEncoding('UTF-8'); 
+function writeData(RSK,data,newfile)    
     
+    if exist('slCharacterEncoding','file')
+        originalCharacterEncoding = slCharacterEncoding;
+        slCharacterEncoding('UTF-8'); 
+    end
+
     insertDbInfo(RSK)
     insertInstruments(RSK)
     insertDeployments(RSK,data,newfile)
@@ -120,8 +125,11 @@ function writeData(RSK,data,newfile)
     insertChannels(RSK)
     insertData(data)
     insertRegionTables(RSK)  
-    
-    slCharacterEncoding(originalCharacterEncoding)
+        
+    if exist('slCharacterEncoding','file')
+        slCharacterEncoding(originalCharacterEncoding)
+    end
+
 end
 
 function insertDbInfo(RSK)
@@ -137,7 +145,12 @@ function insertDeployments(RSK,data,newfile)
 end
 
 function insertSchedules(RSK)
-    formatAndTransact('INSERT INTO schedules (scheduleID,deploymentID,samplingPeriod,mode,gate) VALUES','(%i,%i,%i,"%s","%s")',{RSK.schedules.scheduleID, RSK.deployments.deploymentID, readsamplingperiod(RSK), RSK.schedules.mode, RSK.schedules.gate});
+    if isstruct(readsamplingperiod(RSK))
+        sp = 1;
+    else
+        sp = 1000*readsamplingperiod(RSK);
+    end
+    formatAndTransact('INSERT INTO schedules (scheduleID,deploymentID,samplingPeriod,mode,gate) VALUES','(%i,%i,%i,"%s","%s")',{RSK.schedules.scheduleID, RSK.deployments.deploymentID, sp, RSK.schedules.mode, RSK.schedules.gate});
 end
 
 function insertEpochs(RSK,data) 

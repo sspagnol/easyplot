@@ -67,14 +67,14 @@ t1 = datenum2rsktime(t1);
 t2 = datenum2rsktime(t2);
 
 if t2 <= t1
-    error('The end time (t2) must be greater (later) than the start time (t1).')
+    RSKerror('The end time (t2) must be greater (later) than the start time (t1).')
 end
 
 
 
 %% Check if file type is skinny
 if strcmp(RSK.dbInfo(end).type, 'skinny')
-    error('File must be opened in Ruskin before RSKtools can read the data.');
+    RSKerror('File must be opened in Ruskin before RSKtools can read the data.');
 end
 
 
@@ -83,7 +83,7 @@ end
 sql = ['select tstamp/1.0 as tstamp,* from data where tstamp between ' num2str(t1) ' and ' num2str(t2) ' order by tstamp'];
 results = doSelect(RSK, sql);
 if isempty(results)
-    disp('No data found in that interval.')
+    RSKwarning('No data found in that interval.')
     return
 end
 
@@ -95,22 +95,21 @@ t=results.tstamp';
 results.tstamp = rsktime2datenum(t);
 
 isCoda = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && strcmpi(RSK.instruments.model,'RBRcoda');
-if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && ~isCoda && isfield(RSK,'instrumentChannels')     
+isBPR = isfield(RSK,'instruments') && isfield(RSK.instruments,'model') && strncmpi(RSK.instruments.model,'RBRquartz',9);
+if ~strcmpi(RSK.dbInfo(end).type, 'EPdesktop') && ~isCoda && ~isBPR && isfield(RSK,'instrumentChannels')     
     instrumentChannels = RSK.instrumentChannels;
     if isfield(instrumentChannels,'channelStatus')
-        ind = [instrumentChannels.channelStatus] == 4  | [instrumentChannels.channelStatus] == 14;
+        ind = logical(bitget([instrumentChannels.channelStatus],3));
         instrumentChannels(ind) = [];
-        if RSK.toolSettings.readHiddenChannels
-            isDerived = logical([instrumentChannels.channelStatus] == 4);
-        else
-            isDerived = logical([instrumentChannels.channelStatus]);
+        isHidden = logical(bitget([instrumentChannels.channelStatus],1));          
+        if ~RSK.toolSettings.readHiddenChannels
+            results.values = results.values(:,~isHidden);
         end
-        results.values = results.values(:,~isDerived);
     end
 end
 
 %% Put data into data field of RSK structure.
-RSK.data=results;
+RSK.data = results;
 
 %% Calculate Salinity  
 % NOTE : We no longer automatically derive salinity when you read data from

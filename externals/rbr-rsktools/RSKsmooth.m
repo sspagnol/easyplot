@@ -1,8 +1,8 @@
-function RSK = RSKsmooth(RSK, channel, varargin)
+function RSK = RSKsmooth(RSK, varargin)
 
-% RSKsmooth - Apply a low pass filter on specified channels.
+% RSKsmooth - Apply a low pass filter on specified channel.
 %
-% Syntax:  [RSK] = RSKsmooth(RSK, channel, [OPTIONS])
+% Syntax:  [RSK] = RSKsmooth(RSK, 'channel', 'channelName', [OPTIONS])
 % 
 % Low-pass filter a specified channel or multiple channels with a
 % running average or median.  The sample being evaluated is always in
@@ -13,8 +13,8 @@ function RSK = RSKsmooth(RSK, channel, varargin)
 %    [Required] - RSK - Structure containing the logger data.
 %
 %                 channel - Longname of channel to filter. Can be a 
-%                       single channel, a cell array for multiple 
-%                       channels, or 'all' for all channels.
+%                       single channel, or a cell array for multiple 
+%                       channels.
 %               
 %    [Optional] - filter - The weighting function, 'boxcar' or 'triangle'.
 %                       Use 'median' to compute the running median. 
@@ -40,12 +40,13 @@ function RSK = RSKsmooth(RSK, channel, varargin)
 % Example: 
 %    rsk = RSKopen('file.rsk');
 %    rsk = RSKreadprofiles(rsk, 'profile', 1:10); 
-%    rsk = RSKsmooth(rsk, {'Temperature', 'Salinity'}, 'windowLength', 17);
+%    rsk = RSKsmooth(rsk, 'channel', {'Temperature', 'Salinity'}, 'windowLength', 17);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-04-06
+% Last revision: 2019-12-03
+
 
 validFilterNames = {'median', 'boxcar', 'triangle'};
 checkFilter = @(x) any(validatestring(x,validFilterNames));
@@ -55,13 +56,13 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'channel');
+addParameter(p, 'channel','');
 addParameter(p, 'filter', 'boxcar', checkFilter);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
 addParameter(p, 'windowLength', 3, @isnumeric);
 addParameter(p, 'visualize', 0, @isnumeric);
-parse(p, RSK, channel, varargin{:})
+parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
 channel = p.Results.channel;
@@ -72,16 +73,22 @@ windowLength = p.Results.windowLength;
 visualize = p.Results.visualize;
 
 
+checkDataField(RSK)
+if isempty(channel)
+    RSKwarning('Please specify which channel(s) to apply the low pass filter.')
+    return
+end
 
 chanCol = [];
 channels = cellchannelnames(RSK, channel);
 for chan = channels
-    chanCol = [chanCol getchannelindex(RSK, chan{1})];
+    chanCol = [chanCol getchannelindex(RSK, chan)];
 end
-
 castidx = getdataindex(RSK, profile, direction);
 
-if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+if visualize ~= 0; 
+    [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
+end
 
 for c = chanCol
     for ndx = castidx

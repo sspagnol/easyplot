@@ -2,7 +2,8 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 
 % RSKtrim - Remove or replace values that fall in a certain range.
 %
-% Syntax:  [RSK, trimidx] = RSKtrim(RSK, reference, range, [OPTIONS])
+% Syntax:  [RSK, trimidx] = RSKtrim(RSK, 'reference', 'referenceChannelName', ...
+%                           'range', [x1 x2], [OPTIONS])
 % 
 % Flags values that fall within the range of the specified reference
 % channel, time, or index.  Flagged samples can be replaced with NaN
@@ -48,12 +49,12 @@ function [RSK, trimidx] = RSKtrim(RSK, varargin)
 % Example:
 %
 % Replace data acquired during a shallow surface soak with NaN:
-%    rsk = RSKtrim(rsk, 'sea pressure', [-1 1]);
+%    rsk = RSKtrim(rsk, 'reference', 'sea pressure', 'range', [-1 1]);
 %
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2019-04-09
+% Last revision: 2019-12-17
 
 
 validAction = {'remove', 'nan','interp'};
@@ -64,8 +65,8 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'reference', @ischar);
-addRequired(p, 'range', @isnumeric);
+addParameter(p, 'reference','', @ischar);
+addParameter(p, 'range',[], @isnumeric);
 addParameter(p, 'channel','all');
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
@@ -83,6 +84,19 @@ action = p.Results.action;
 visualize = p.Results.visualize;
 
 
+checkDataField(RSK)
+if isempty(reference)
+    RSKwarning('Please specify a reference channel to determine the range to be trimmed.')
+    trimidx = [];
+    return
+end
+
+if isempty(range)
+    RSKwarning('Please speficy a range for data to be trimmed.')
+    trimidx = [];
+    return
+end
+
 appliedchanCol = [];
 channels = cellchannelnames(RSK, channel);
 for chan = channels
@@ -90,7 +104,9 @@ for chan = channels
 end
 castidx = getdataindex(RSK, profile, direction);
 
-if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
+if visualize ~= 0; 
+    [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
+end
 
 for ndx =  castidx
     if strcmpi(reference, 'index')

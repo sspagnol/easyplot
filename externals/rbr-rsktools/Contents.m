@@ -1,5 +1,5 @@
 % RSKTOOLS
-% Version 3.2.0 2019-07-16
+% Version 3.4.0 2020-02-14
 %
 % 1.  This toolbox depends on the presence of a functional mksqlite
 % library.  We have included a couple of versions here for Windows (32 bit/
@@ -48,6 +48,7 @@
 %   RSKreadcalibrations     - read the calibrations table of an RSK file
 %   RSKfindprofiles         - detect profile start and end times using pressure and conductivity
 %   RSKtimeseries2profiles  - convert time series data in current rsk structure into profiles
+%   CSV2RSK                 - read CSV file into rsk structure in MATLAB
 %   RSKderivedepth          - derive depth from pressure
 %   RSKderivesalinity       - derive salinity from conductivity, temperature, and sea pressure
 %   RSKderiveseapressure    - derive sea pressure from pressure
@@ -56,6 +57,10 @@
 %   RSKderiveC25            - derive specific conductivity at 25 degree Celsius
 %   RSKderiveO2             - derive O2 saturation or concentration
 %   RSKderivebuoyancy       - derive buoyance frequency and stability
+%   RSKderivesigma          - derive density anomaly
+%   RSKderivetheta          - derive potential temperature
+%   RSKderiveSA             - derive absolute salinity
+%   RSKderivesoundspeed     - derive speed of sound in seawater
 %   RSKcalculateCTlag       - estimate optimal conductivity shift relative to temperature
 %   RSKalignchannel         - align a channel in time using a specified lag
 %   RSKbinaverage           - bin average the profile data by reference channel intervals
@@ -66,13 +71,14 @@
 %   RSKremoveloops          - remove values exceeding a threshold profiling rate and pressure reversals
 %   RSKsmooth               - apply low-pass filter to data
 %   RSKtrim                 - remove or NaN channel data fitting specified criteria
+%   RSKgenerate2D           - grid and organize data into a 2D array (e.g., time x depth)
+%   RSKcentrebursttimestamp - set the burst timestamps to the centre of each burst period instead of the beginning
 %   RSKplotdata             - plot data as a time series
 %   RSKplotprofiles         - plot depth profiles for each channel
 %   RSKimages               - display bin averaged data in a time-depth heat map
 %   RSKplotTS               - plot TS diagram
 %   RSKplotburstdata        - plot burst data for wave file
 %   RSKplotdownsample       - plot time series of downsampled data
-%   RSKgenerate2D           - grid and organize data into a 2D array (e.g., time x depth)
 %   RSK2CSV                 - write channel data and metadata to one or more CSV files
 %   RSK2ODV                 - write channel data and metadata to one or more ODV files
 %   RSK2RSK                 - write rsk file using current rsk structure
@@ -82,7 +88,8 @@
 %   RSKaddstationdata       - add station data to RSK data structure
 %   RSKremovecasts          - remove either downcasts or upcasts in the RSK structure
 %   RSKappendtolog          - append the entry and current time to the log field
-%   RSKcentrebursttimestamp - set the burst timestamps to the centre of each burst period instead of the beginning
+%   RSKsettings             - set up global parameters for RSKtools
+%   RSKpringchannels        - display channel names and units in MATLAB command window
 %
 %
 % Additional useful files

@@ -4,19 +4,24 @@ function [RSK] = RSKderivebuoyancy(RSK,varargin)
 %
 % Syntax:  [RSK] = RSKderivebuoyancy(RSK,[OPTIONS])
 % 
-% Derives buoyancy frequency and stability using the TEOS-10 GSW toolbox
-% (http://www.teos-10.org/software.htm). The result is added to the
-% RSK data structure, and the channel list is updated. 
+% Derives buoyancy frequency and stability using either TEOS-10 GSW toolbox
+% (http://www.teos-10.org/software.htm) or seawater toolbox. The result is 
+% added to the RSK data structure, and the channel list is updated. 
 %
-% Note: This function makes the assumption that the Absolute Salinity anomaly
-%       is zero to simplify the calculation.  In other words, SA = SR.
+% Note: When using TEOS-10 toolbox, the function makes the assumption that 
+%       the Absolute Salinity anomaly is zero to simplify the calculation.  
+%       In other words, SA = SR.
 %
 % Inputs: 
 %   [Required] - RSK - Structure containing the logger metadata and data
 %
 %   [Optional] - latitude - Latitude in decimal degrees north [-90 ... +90]
-%                If latitude is not provided, a default gravitational
-%                acceleration, 9.7963 m/s^2 will be used (see gsw_grav)
+%                When latitude is available from both optional input and 
+%                RSK.data structure, the optional input will override. When
+%                neither source is available, it will use 45 as default.
+%
+%                seawaterLibrary - Specify which library to use, should 
+%                be either 'TEOS-10' or 'seawater', default is TEOS-10
 %
 % Outputs:
 %    RSK - Updated structure containing buoyancy frequency and stability.
@@ -29,25 +34,31 @@ function [RSK] = RSKderivebuoyancy(RSK,varargin)
 % Last revision: 2018-08-31
 
 
+rsksettings = RSKsettings;
+
+validSeawaterLibrary = {'TEOS-10','seawater'};
+checkSeawaterLibrary = @(x) any(validatestring(x,validSeawaterLibrary));
+
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addOptional(p, 'latitude', [], @isnumeric);
+addParameter(p, 'latitude', [], @isnumeric);
+addParameter(p, 'seawaterLibrary', rsksettings.seawaterLibrary, checkSeawaterLibrary);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
 latitude = p.Results.latitude;
- 
+seawaterLibrary = p.Results.seawaterLibrary;
 
-hasTEOS = ~isempty(which('gsw_Nsquared'));
-if ~hasTEOS
-    error('Must install TEOS-10 toolbox. Download it from here: http://www.teos-10.org/software.htm');
-end
 
-[Tcol,Scol,SPcol] = getchannel_T_S_SP_index(RSK);
+checkDataField(RSK)
+checkSeawaterLibraryExistence(seawaterLibrary)
 
-RSK = addchannelmetadata(RSK, 'buoy00', 'Buoyancy Frequency Squared', 's-2');
+Tcol = getchannelindex(RSK, 'Temperature');
+[Scol,SPcol] = getchannel_S_SP_index(RSK);
+
+RSK = addchannelmetadata(RSK, 'buoy00', 'Buoyancy Frequency Squared', '1/s²');
 N2col = getchannelindex(RSK, 'Buoyancy Frequency Squared');
-RSK = addchannelmetadata(RSK, 'stbl00', 'Stability', 'm-1');
+RSK = addchannelmetadata(RSK, 'stbl00', 'Stability', '1/m');
 STcol = getchannelindex(RSK, 'Stability');
 
 castidx = getdataindex(RSK);
@@ -55,40 +66,43 @@ for ndx = castidx
     SP = RSK.data(ndx).values(:,SPcol);
     S = RSK.data(ndx).values(:,Scol);
     T = RSK.data(ndx).values(:,Tcol);
-    SA = gsw_SR_from_SP(S); % Assume SA ~= SR
-    CT = gsw_CT_from_t(SA, T,SP);
-    [N2,ST] = derive_N2_ST(SA,CT,SP,latitude);    
+    
+    if isempty(latitude) 
+        if isfield(RSK.data,'latitude') && ~isempty(RSK.data(ndx).latitude)
+            latitude = RSK.data(ndx).latitude; 
+        else
+            latitude = rsksettings.latitude;
+        end
+    end
+   
+    if strcmpi(seawaterLibrary,'TEOS-10')    
+        [N2,ST] = derive_N2_ST_TEOS10(S,T,SP,latitude);  
+    else
+        [N2,ST] = derive_N2_ST_SW(S,T,SP,latitude); 
+    end
+       
     RSK.data(ndx).values(:,N2col) = N2;
     RSK.data(ndx).values(:,STcol) = ST;
 end
 
-logentry = ('Buoyancy frequency squared and stability derived using TEOS-10 GSW toolbox.');
+logentry = (['Buoyancy frequency squared and stability derived using ' seawaterLibrary 'library.']);
 RSK = RSKappendtolog(RSK, logentry);
 
 
 %% Nested functions
-function [Tcol,Scol,SPcol] = getchannel_T_S_SP_index(RSK)
-    Tcol = getchannelindex(RSK, 'Temperature');
-    try
-        Scol = getchannelindex(RSK, 'Salinity');
-    catch
-        error('RSKderivebuoyancy requires practical salinity. Use RSKderivesalinity...');
-    end
-    try
-        SPcol = getchannelindex(RSK, 'Sea Pressure');
-    catch
-        error('RSKderivebuoyancy requires sea pressure. Use RSKderiveseapressure...');
-    end
+function [N2,ST] = derive_N2_ST_TEOS10(S,T,SP,latitude)
+    SA = gsw_SR_from_SP(S); % Assume SA ~= SR
+    CT = gsw_CT_from_t(SA,T,SP);
+    [N2_mid,p_mid] = gsw_Nsquared(SA,CT,SP,latitude);
+    grav = gsw_grav(latitude,SP);    
+    N2 = interp1(p_mid,N2_mid,SP,'linear','extrap');
+    ST = N2./grav;
 end
 
-function [N2,ST] = derive_N2_ST(SA,CT,SP,latitude)
-    if isempty(latitude)
-        [N2_mid,p_mid] = gsw_Nsquared(SA,CT,SP);
-        grav = gsw_grav(SP);
-    else
-        [N2_mid,p_mid] = gsw_Nsquared(SA,CT,SP,latitude);
-        grav = gsw_grav(latitude,SP);
-    end
+function [N2,ST] = derive_N2_ST_SW(S,T,SP,latitude)    
+    [N2_mid,~,p_mid] = sw_bfrq(S,T,SP,latitude);
+    z = sw_dpth(SP,latitude);
+    grav = sw_g(latitude,z);    
     N2 = interp1(p_mid,N2_mid,SP,'linear','extrap');
     ST = N2./grav;
 end

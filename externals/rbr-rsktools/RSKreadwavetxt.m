@@ -1,6 +1,6 @@
 function [RBR] = RSKreadwavetxt(file)
 
-%RSKreadwavetxt - Reads wave data from a Ruskin txt export.
+% RSKreadwavetxt - Reads wave data from a Ruskin txt export.
 %
 % Syntax:  RSK = RSKreadwavetxt(file)
 % 
@@ -31,10 +31,10 @@ function [RBR] = RSKreadwavetxt(file)
 % Website: www.rbr-global.com
 % Last revision: 2016-05-17
 
-%metadatafile = [file '/' file '_metadata.txt'];
-datafile = [file '/' file '_data.txt'];
-wavefile = [file '/' file '_wave.txt'];
-burstfile = [file '/' file '_burst.txt'];
+%metadatafile = [file filesep file '_metadata.txt'];
+datafile = [file filesep file '_data.txt'];
+wavefile = [file filesep file '_wave.txt'];
+burstfile = [file filesep file '_burst.txt'];
 
 datastruct = table2struct(readtable(datafile), 'ToScalar', true);
 wavedatastruct = table2struct(readtable(wavefile), 'ToScalar', true);

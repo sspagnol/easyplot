@@ -1,8 +1,8 @@
-function handles = RSKplotburstdata(RSK, varargin)
+function varargout = RSKplotburstdata(RSK, varargin)
 
-%RSKplotburstdata - Plot summaries of logger burst data.
+% RSKplotburstdata - Plot summaries of logger burst data.
 %
-% Syntax:  [handles] = RSKplotburstdata(RSK, [OPTIONS])
+% Syntax:  [OPTIONS] = RSKplotburstdata(RSK, [OPTIONS])
 % 
 % Generates a plot for the burstdata.
 % 
@@ -15,7 +15,9 @@ function handles = RSKplotburstdata(RSK, varargin)
 %                       channels. 
 %
 % Output:
-%     handles - Line object of the plot.
+%    [Optional] - handles - Line object of the plot.
+%
+%                 axes - Axes object of the plot.
 %
 % Example: 
 %    rsk = RSKreadburstdata(rsk, 'channel', {'Conductivity', 'Temperature', 'Pressure'});  
@@ -26,7 +28,8 @@ function handles = RSKplotburstdata(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-06-22
+% Last revision: 2019-09-13
+
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -37,15 +40,12 @@ RSK = p.Results.RSK;
 channel = p.Results.channel;
 
 
-
 field = 'burstData';
 if ~isfield(RSK, field)
-    disp('You must read a section of burst data in first!');
-    disp('Use RSKreadburstdata...')
+    RSKwarning('You must read a section of burst data in first!');
+    RSKwarning('Use RSKreadburstdata...')
     return
 end
-
-
 
 chanCol = [];
 if ~strcmp(channel, 'all')
@@ -55,6 +55,14 @@ if ~strcmp(channel, 'all')
     end
 end
 
-handles = channelsubplots(RSK, field, 'chanCol', chanCol);
+
+[handles,axes] = channelsubplots(RSK, field, 'chanCol', chanCol);
+
+if nargout == 0
+    varargout = {};
+else
+    varargout{1} = handles;
+    varargout{2} = axes;
+end
 
 end

@@ -90,13 +90,15 @@ description = checkcell(description);
 
 
 if isempty([latitude longitude station comment description])
-    error('No station data input is found. Please specify at least one station data field.')
+    RSKerror('No station data input is found. Please specify at least one station data field.')
 end
-    
+  
+checkDataField(RSK)
+
 isProfile = length(RSK.data) ~= 1 && isfield(RSK.data,'profilenumber') && isfield(RSK.data,'direction');
 
 if ~isProfile && ~isempty(profile)
-    error('Can not specify profiles when rsk has time series only, use RSKreadprofiles or RSKtimeseries2profiles...');
+    RSKerror('Can not specify profiles when rsk has time series only, use RSKreadprofiles or RSKtimeseries2profiles...');
 end
 
 castidx = getdataindex(RSK, profile);
@@ -203,7 +205,7 @@ end
     elseif isempty(meta)
         % do nothing
     else
-        error('Input vectors must be either single value or the same length with profile.');
+        RSKerror('Input vectors must be either single value or the same length with profile.');
     end
     
     end

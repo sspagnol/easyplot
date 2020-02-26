@@ -1,6 +1,6 @@
 function RSK = RSKreadcalibrations(RSK)
 
-%RSKreadcalibrations - Read the calibrations table of a .rsk file.
+% RSKreadcalibrations - Read the calibrations table of a .rsk file.
 %
 % Syntax:  RSK = RSKreadcalibrations(RSK)
 %
@@ -27,7 +27,7 @@ function RSK = RSKreadcalibrations(RSK)
 tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
 if ~any(strcmpi({tables.name}, 'calibrations'))
-    error('The rsk file does not have calibration table.')
+    RSKerror('The rsk file does not have calibration table.')
 end
 
 % As of RSK v1.13.4 coefficients is it's own table. We add it back into calibration to be consistent with previous versions.

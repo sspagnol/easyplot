@@ -46,10 +46,13 @@ function [RSK,hasProfile] = RSKfindprofiles(RSK, varargin)
 % Website: www.rbr-global.com
 % Last revision: 2019-04-10
 
+
+rsksettings = RSKsettings;
+
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addParameter(p, 'pressureThreshold', 3, @isnumeric);
-addParameter(p, 'conductivityThreshold', 0.05, @isnumeric);
+addParameter(p, 'pressureThreshold', rsksettings.pressureThreshold, @isnumeric);
+addParameter(p, 'conductivityThreshold', rsksettings.conductivityThreshold, @isnumeric);
 parse(p, RSK, varargin{:})
 
 RSK = p.Results.RSK;
@@ -58,6 +61,8 @@ conductivityThreshold = p.Results.conductivityThreshold;
 
 
 %% Set up values
+checkDataField(RSK)
+
 try
     Pcol = getchannelindex(RSK, 'Pressure');
 catch
@@ -81,7 +86,7 @@ end
 [wwevt] = detectprofiles(pressure, timestamp, conductivity, pressureThreshold, conductivityThreshold);
 if length(find((wwevt(:,2) == 1 | wwevt(:,2) == 2))) < 2
     hasProfile = false;
-    disp('No profiles were detected in this dataset with the given parameters.')
+    RSKwarning('No profiles were detected in this dataset with the given parameters.')
     return
 else
     hasProfile = true;
@@ -146,7 +151,7 @@ RSK.profiles.downcast.tend = downend';
 
 %% Remove region.description, regionGeoData and regionComment field if exist
 if (isfield(RSK,'region') && isfield(RSK.region,'description')) || isfield(RSK,'regionGeoData') || isfield(RSK,'regionComment');
-    warning('Annotations from Ruskin is deleted due to potential mismatch between previous and current detected profiles.');
+    RSKwarning('Annotations from Ruskin will be deleted as they might conflict with the new profiles detected');
 end
 
 if isfield(RSK,'regionGeoData');
@@ -189,7 +194,7 @@ for n = 1:min(length(upstart),length(downstart))
     RSK.region(nprofile).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
     RSK.region(nprofile).tstamp2 = round(datenum2rsktime(lastdir.tend(n)));
     RSK.region(nprofile).label = ['Profile ' num2str(n)];
-    RSK.region(nprofile).description = 'RSKtools-generated profile.';
+    RSK.region(nprofile).description = 'RSKtools-generated profile';
     
     RSK.region(nprofile+1).datasetID = 1;
     RSK.region(nprofile+1).regionID = nprofile+1;
@@ -197,7 +202,7 @@ for n = 1:min(length(upstart),length(downstart))
     RSK.region(nprofile+1).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
     RSK.region(nprofile+1).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
     RSK.region(nprofile+1).label = [firstType 'cast ' num2str(n)];
-    RSK.region(nprofile+1).description = 'RSKtools-generated cast.';
+    RSK.region(nprofile+1).description = 'RSKtools-generated cast';
 
     RSK.region(nprofile+2).datasetID = 1;
     RSK.region(nprofile+2).regionID = nprofile+2;    
@@ -205,7 +210,7 @@ for n = 1:min(length(upstart),length(downstart))
     RSK.region(nprofile+2).tstamp1 = round(datenum2rsktime(lastdir.tstart(n)));
     RSK.region(nprofile+2).tstamp2 = round(datenum2rsktime(lastdir.tend(n)));
     RSK.region(nprofile+2).label = [lastType 'cast ' num2str(n)];
-    RSK.region(nprofile+2).description = 'RSKtools-generated cast.';
+    RSK.region(nprofile+2).description = 'RSKtools-generated cast';
 
     nregionCast = n*2-1;
     RSK.regionCast(nregionCast).regionID = nprofile+1;
@@ -229,7 +234,7 @@ if length(upstart) ~= length(downstart)
     RSK.region(nprofile).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
     RSK.region(nprofile).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
     RSK.region(nprofile).label = ['Profile ' num2str(n)];
-    RSK.region(nprofile).description = 'RSKtools-generated profile.';
+    RSK.region(nprofile).description = 'RSKtools-generated profile';
 
     RSK.region(nprofile+1).datasetID = 1;
     RSK.region(nprofile+1).regionID = nprofile+1;
@@ -237,7 +242,7 @@ if length(upstart) ~= length(downstart)
     RSK.region(nprofile+1).tstamp1 = round(datenum2rsktime(firstdir.tstart(n)));
     RSK.region(nprofile+1).tstamp2 = round(datenum2rsktime(firstdir.tend(n)));
     RSK.region(nprofile+1).label = [firstType 'cast ' num2str(n)];
-    RSK.region(nprofile+1).description = 'RSKtools-generated cast.';
+    RSK.region(nprofile+1).description = 'RSKtools-generated cast';
 
     nregionCast = n*2-1;
     RSK.regionCast(nregionCast).regionID = nprofile+1;

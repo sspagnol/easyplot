@@ -41,8 +41,8 @@ else
     % it in its processed files, substracting a constant value
     % 10.1325 dbar for nominal atmospheric pressure
     presRel = sam.variables{presIdx}.data - gsw_P0/10^4;
-    theOffset = sam.variables{presRelIdx}.EP_OFFSET;
-    theScale = sam.variables{presRelIdx}.EP_SCALE;
+    theOffset = sam.variables{presIdx}.EP_OFFSET;
+    theScale = sam.variables{presIdx}.EP_SCALE;
     presRel = theOffset + (theScale .* presRel);
     presName = 'PRES substracting a constant value 10.1325 dbar for nominal atmospheric pressure';
     dimensions = sam.variables{presIdx}.dimensions;

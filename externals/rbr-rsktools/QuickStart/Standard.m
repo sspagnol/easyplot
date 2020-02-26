@@ -1,8 +1,8 @@
 %% RSKtools for Matlab access to RBR data
-% RSKtools v3.2.0;
+% RSKtools v3.4.0;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2019-07-16
+% 2020-02-14
 
 %% Introduction 
 % |RSKtools| is RBR's open source Matlab toolbox for reading,
@@ -22,7 +22,7 @@
 % <http://www.rbr-global.com/support/matlab-tools>.
 % 
 % * Download and unzip the archive (to |~/matlab/RSKtools|, for instance) 
-% * Add the folder and its subdirectories to your path using (|addpath ~/matlab/RSKtools| and |addpath(genpath(~/matlab/RSKtools))|) or launch the path editor gui (|pathtool|). 
+% * Add the folder to your path using (|addpath ~/matlab/RSKtools| or launch the path editor gui (|pathtool|). 
 % * type |help RSKtools| to get an overview and take a look at the examples.
 
   
@@ -64,10 +64,10 @@ disp(rsk.data)
 % datenum format, and |rsk.data.values| contains the sensor data.
 % Each column in |rsk.data.values| contains data from a different
 % sensor, referred to as a channel.  The channel names and units for
-% each column in |data| are:
+% each column in |data| are contained in |rsk.channels|. To have a 
+% view of all channel names and units, run:
 
-disp([{rsk.channels.longName}' {rsk.channels.units}'])
-
+RSKprintchannels(rsk);
 
 %% Working with profiles
 % Most RBR CTDs can detect and record profile upcast and downcast
@@ -150,9 +150,7 @@ set(handles(1,:),'linewidth',3);
 % and dissolved O2 from the upcast of the 1st profile, run:
 
 profind = getdataindex(rsk,'direction','up','profile',1);
-tempcol = getchannelindex(rsk,'temperature');
-o2col   = getchannelindex(rsk,'dissolved o2');
-prescol = getchannelindex(rsk,'sea pressure');
+[tempcol,o2col,prescol] = getchannelindex(rsk,{'temperature','dissolved o2','sea pressure'});
 
 time        = rsk.data(profind).tstamp;
 seapressure = rsk.data(profind).values(:,prescol);
@@ -167,7 +165,7 @@ o2          = rsk.data(profind).values(:,o2col);
 % manual> for detailed RSKtools function documentation.
 %
 % * The
-% <http://rbr-global.com/wp-content/uploads/2019/07/PostProcessing.pdf
+% <http://rbr-global.com/wp-content/uploads/2020/02/PostProcessing.pdf
 % RSKtools post-processing guide> for an introduction on how to
 % process RBR profiles with RSKtools.  The post-processing suite
 % contains, among other things, functions to low-pass filter, align,

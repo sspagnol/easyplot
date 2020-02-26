@@ -3,7 +3,7 @@ function RSK = RSKcorrectTM(RSK, varargin)
 % RSKcorrectTM - Apply a thermal mass correction to conductivity using
 %                the model of Lueck and Picklo (1990).
 %
-% Syntax:  [RSK] = RSKcorrectTM(RSK, alpha, beta, [OPTIONS])
+% Syntax:  [RSK] = RSKcorrectTM(RSK,'alpha',alpha,'beta',beta,[OPTIONS])
 %
 % RSKcorrectTM applies the algorithm developed by Lueck and Picklo
 % (1990) to minimize the effect of conductivity cell thermal mass on
@@ -15,7 +15,6 @@ function RSK = RSKcorrectTM(RSK, varargin)
 % conditions.
 %
 % References:
-%
 %    Lueck, R. G., 1990: Thermal inertia of conductivity cells: Theory.  
 %           J. Atmos. Oceanic Technol., 7, pp. 741 - 755.
 %           https://doi.org/10.1175/1520-0426(1990)007<0741:TIOCCT>2.0.CO;2    
@@ -65,8 +64,8 @@ checkDirection = @(x) any(validatestring(x,validDirections));
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
-addRequired(p, 'alpha', @isnumeric);
-addRequired(p, 'beta', @isnumeric);
+addParameter(p, 'alpha', [], @isnumeric);
+addParameter(p, 'beta', [], @isnumeric);
 addParameter(p, 'gamma', 1, @isnumeric);
 addParameter(p, 'profile', [], @isnumeric);
 addParameter(p, 'direction', [], checkDirection);
@@ -82,12 +81,23 @@ direction = p.Results.direction;
 visualize = p.Results.visualize;
 
 
+checkDataField(RSK)
+
+if isempty(alpha)
+    RSKwarning('Please specify alpha.')
+    return
+end
+
+if isempty(beta)
+    RSKwarning('Please specify beta.')
+    return
+end
+
 fs = round(1/readsamplingperiod(RSK));
 a = 4*fs/2*alpha/beta * 1/(1 + 4*fs/2/beta);
 b = 1 - 2*a/alpha;
 
-Tcol = getchannelindex(RSK,'Temperature');
-Ccol = getchannelindex(RSK,'Conductivity');
+[Tcol,Ccol] = getchannelindex(RSK,{'Temperature','Conductivity'});
 castidx = getdataindex(RSK, profile, direction);
 
 if visualize ~= 0; 
@@ -97,10 +107,8 @@ end
 for ndx = castidx
     T = RSK.data(ndx).values(:,Tcol);
     C = RSK.data(ndx).values(:,Ccol);
-    Ccor = zeros(size(T));
-    for k = 2:length(T);
-        Ccor(k) = -b*Ccor(k-1) + gamma*a*(T(k) - T(k-1));
-    end   
+    intime = RSK.data(ndx).tstamp;
+    Ccor = correctTM(T, intime, a, b, gamma);     
     RSK.data(ndx).values(:,Ccol) = C + Ccor;
 end
 
@@ -114,4 +122,15 @@ end
 logentry = ['Thermal mass correction applied to conductivity with alpha = ' num2str(alpha) ', beta = ' num2str(beta) ' s^-1, and gamma = ' num2str(gamma) '.'];
 RSK = RSKappendtolog(RSK, logentry);
     
+%% Nested Functions
+function Ccor = correctTM(T, intime, a, b, gamma)  
+    ind = isfinite(T);   
+    T_itp = interp1(intime(ind),T(ind),intime,'linear','extrap');        
+    Ccor = zeros(size(T));
+    for k = 2:length(T);
+        Ccor(k) = -b*Ccor(k-1) + gamma*a*(T_itp(k) - T_itp(k-1));
+    end
+    Ccor(~ind) = NaN; 
+end
+
 end
