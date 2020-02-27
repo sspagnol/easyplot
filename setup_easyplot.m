@@ -78,7 +78,7 @@ end
     if atBeginning
         addpath(gp,'-begin');
     else
-        addpath(gp);
+        addpath(gp,'-end');
     end
 catch
     error(['Path ' topDir ' does not exist.']);
