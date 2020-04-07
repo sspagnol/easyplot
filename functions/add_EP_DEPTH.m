@@ -29,8 +29,16 @@ end
 
 if presRelIdx > 0
     presRel = sam.variables{presRelIdx}.data;
-    theOffset = sam.variables{presRelIdx}.EP_OFFSET;
-    theScale = sam.variables{presRelIdx}.EP_SCALE;
+    if isfield(sam.variables{presRelIdx},'EP_OFFSET')
+        theOffset = sam.variables{presRelIdx}.EP_OFFSET;
+    else
+        theOffset = 0.0;
+    end
+    if isfield(sam.variables{presRelIdx},'EP_SCALE')
+        theScale = sam.variables{presRelIdx}.EP_SCALE;
+    else
+        theScale = 1.0;
+    end
     presRel = theOffset + (theScale .* presRel);
     presName = 'PRES_REL';
     dimensions = sam.variables{presRelIdx}.dimensions;
