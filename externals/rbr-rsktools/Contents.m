@@ -1,5 +1,5 @@
 % RSKTOOLS
-% Version 3.4.0 2020-02-14
+% Version 3.4.1 2020-04-09
 %
 % 1.  This toolbox depends on the presence of a functional mksqlite
 % library.  We have included a couple of versions here for Windows (32 bit/
@@ -56,8 +56,8 @@
 %   RSKderiveBPR            - derive temperature and pressure from bottom pressure recorder (BPR) period data
 %   RSKderiveC25            - derive specific conductivity at 25 degree Celsius
 %   RSKderiveO2             - derive O2 saturation or concentration
-%   RSKderivebuoyancy       - derive buoyance frequency and stability
-%   RSKderivesigma          - derive density anomaly
+%   RSKderivebuoyancy       - derive buoyancy frequency and stability
+%   RSKderivesigma          - derive density anomaly relative to P = 0 dbar
 %   RSKderivetheta          - derive potential temperature
 %   RSKderiveSA             - derive absolute salinity
 %   RSKderivesoundspeed     - derive speed of sound in seawater
@@ -89,7 +89,7 @@
 %   RSKremovecasts          - remove either downcasts or upcasts in the RSK structure
 %   RSKappendtolog          - append the entry and current time to the log field
 %   RSKsettings             - set up global parameters for RSKtools
-%   RSKpringchannels        - display channel names and units in MATLAB command window
+%   RSKprintchannels        - display channel names and units in MATLAB command window
 %
 %
 % Additional useful files

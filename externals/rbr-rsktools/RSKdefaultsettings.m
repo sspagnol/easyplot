@@ -11,7 +11,7 @@ function rsksettings = RSKdefaultsettings
 % Website: www.rbr-global.com
 % Last revision: 2020-02-14
 
-rsksettings.RSKtoolsVersion = '3.4.0';
+rsksettings.RSKtoolsVersion = '3.4.1';
 rsksettings.seawaterLibrary = 'TEOS-10'; 
 rsksettings.latitude = 45;
 rsksettings.atmosphericPressure = 10.1325;

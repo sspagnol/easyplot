@@ -30,8 +30,8 @@ function varargout = RSKplotdata(RSK, varargin)
 %                 showcast - Show cast direction when set as true. Default
 %                       is false. It is recommended to show the cast 
 %                       direction patch for time series data only. This
-%                       argument will not work when pressure channel is not
-%                       available.
+%                       argument will not work when pressure and sea
+%                       pressure channels are not available.
 %
 % Output:
 %     [Optional] - handles - Line object of the plot.
@@ -52,7 +52,7 @@ function varargout = RSKplotdata(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2019-06-12
+% Last revision: 2020-04-03
 
 
 validDirections = {'down', 'up'};
@@ -89,15 +89,15 @@ for chan = channels
     chanCol = [chanCol getchannelindex(RSK, chan{1})];
 end
 
-if showcast  
-    try
+if showcast     
+    if any(strcmpi({RSK.channels.longName},'pressure')) && any(strcmpi(channels,'pressure'));
         pCol = getchannelindex(RSK,'Pressure');
-    catch
-        RSKerror('There is no pressure channel, no cast can be shown.')
-    end    
-    if ~ismember(pCol, chanCol) 
-        RSKerror('Please specify pressure in channel input so that showcast could work')
     end
+    
+    if any(strcmpi({RSK.channels.longName},'sea pressure')) && any(strcmpi(channels,'sea pressure'));
+        spCol = getchannelindex(RSK,'Sea Pressure');
+    end    
+    
     if length(RSK.data) ~= 1;
         RSKerror('RSK structure must be time series for showcast, use RSKreaddata.')
     end
@@ -122,8 +122,29 @@ if isfield(RSK.data,'profilenumber') && isfield(RSK.data,'direction');
     legend(['Profile ' num2str(RSK.data(castidx).profilenumber) ' ' RSK.data(castidx).direction 'cast']);
 end
 
-if showcast     
-    pmax = max(RSK.data.values(:,pCol));
+if showcast
+    try
+        subplotShowcast(RSK,pCol,chanCol,axes)
+    catch
+        try
+            subplotShowcast(RSK,spCol,chanCol,axes)
+        catch
+            RSKwarning('No pressure or sea pressure channel is specified or available for showcast')
+        end
+    end
+end
+
+if nargout == 0
+    varargout = {};
+else
+    varargout{1} = handles;
+    varargout{2} = axes;
+end
+
+%% nested function
+function subplotShowcast(RSK,COL,chanCol,axes)
+    
+    pmax = max(RSK.data.values(:,COL));
     
     % Construct vectors of patch vertices from RSK.profiles
     dstart = [RSK.profiles.downcast.tstart]';
@@ -137,21 +158,14 @@ if showcast
 
     % Add the patches
     hold on
-    hPatch(1) = patch([dstart ; dend ; dend ; dstart],[dpmin ; dpmin ; dpmax ; dpmax],0.9*ones(1,3),'parent',axes(pCol == chanCol));
-    hPatch(2) = patch([ustart ; uend ; uend ; ustart],[upmin ; upmin ; upmax ; upmax],0.6*ones(1,3),'parent',axes(pCol == chanCol));
+    hPatch(1) = patch([dstart ; dend ; dend ; dstart],[dpmin ; dpmin ; dpmax ; dpmax],0.9*ones(1,3),'parent',axes(COL == chanCol));
+    hPatch(2) = patch([ustart ; uend ; uend ; ustart],[upmin ; upmin ; upmax ; upmax],0.6*ones(1,3),'parent',axes(COL == chanCol));
     alpha(hPatch(1),0.2);
     alpha(hPatch(2),0.2);
     [~, L] = legend(hPatch,'downcast','upcast');
     PatchInLegend = findobj(L, 'type', 'patch');
     set(PatchInLegend, 'facea', 0.2);
-    zoom on
 end
 
-if nargout == 0
-    varargout = {};
-else
-    varargout{1} = handles;
-    varargout{2} = axes;
-end
 
 end

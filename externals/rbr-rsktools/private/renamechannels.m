@@ -47,7 +47,7 @@ if any(idx)
     [RSK.channels(idx).longName] = deal('Optode Temperature');
 end
 
-idx = strncmpi(shortName, 'doxy', 4);
+idx = strncmpi(shortName, 'doxy', 4) | strncmpi(shortName, 'ddox', 4);
 if any(idx)
     [RSK.channels(idx).longName] = deal('Dissolved O2');
 end

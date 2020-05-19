@@ -62,6 +62,12 @@ for chan = chanCol
     title(RSK.channels(chan).longName);
     ylabel(RSK.channels(chan).units);
     axes(n)=gca;
+    
+    % reverse YDir for depth channel
+    if strcmpi(RSK.channels(chan).longName,'Depth')
+        set(axes(n),'YDir','reverse')
+    end
+    
     datetick('x');    
     n = n+1;
 end

@@ -46,7 +46,7 @@ if nargin == 0
 else    
     p = inputParser;
     p.StructExpand = true;
-    addParameter(p,'RSKtoolsVersion','3.4.0',@ischar);
+    addParameter(p,'RSKtoolsVersion','3.4.1',@ischar);
     addParameter(p,'seawaterLibrary','TEOS-10',checkSeawaterLibrary);
     addParameter(p,'latitude',45,@isnumeric);
     addParameter(p,'atmosphericPressure',10.1325,@isnumeric);
