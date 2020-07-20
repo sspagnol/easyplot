@@ -1,8 +1,8 @@
 %% Getting Started with RSKtools
-% RSKtools v3.4.1;
+% RSKtools v3.5.0;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2020-05-15
+% 2020-06-26
 
 %% Introduction 
 % |RSKtools| is RBR's open source Matlab toolbox for reading,
@@ -190,7 +190,7 @@ o2          = rsk.data(profind).values(:,o2col);
 % manual> for detailed RSKtools function documentation.
 %
 % * The
-% <http://rbr-global.com/wp-content/uploads/2020/05/PostProcessing.pdf
+% <http://rbr-global.com/wp-content/uploads/2020/06/PostProcessing.pdf
 % RSKtools post-processing guide> for an introduction on how to
 % process RBR profiles with RSKtools.  The post-processing suite
 % contains, among other things, functions to low-pass filter, align,
@@ -205,7 +205,7 @@ o2          = rsk.data(profind).values(:,o2col);
 % command:
 %%
 % 
-%   publish('Getting_Started.m');
+%   publish('GettingStarted.m');
 
 %%
 % See |help publish| for more document export options.

@@ -1,6 +1,7 @@
 function RSKprintchannels(RSK)
 
-% RSKprintchannels - Display channel names and units in rsk structure
+% RSKprintchannels - Display instrument information, channel names,
+% and units in the RSK structure
 %
 % Syntax:  RSKprintchannels(RSK)
 %
@@ -13,7 +14,7 @@ function RSKprintchannels(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2020-02-05
+% Last revision: 2020-05-21
 
 
 if isfield(RSK,'instruments') && isfield(RSK.instruments,'serialID') && ...
@@ -31,9 +32,20 @@ if isfield(RSK,'instruments') && isfield(RSK.instruments,'serialID') && ...
 end
 
 channelTable = struct2table(RSK.channels);
-channelTable.Properties.VariableNames = {'index','channel','unit'};
+
+% drop channelID and shortname
+channelTable = channelTable(:,2:end-1);
+
+% add index for RSK.data.values
 channelTable.index = (1:1:height(channelTable))';
 
+% change names
+channelTable.Properties.VariableNames = {'channel','unit','index'};
+
+% re-order
+channelTable = channelTable(:,[3 1 2]);
+
+% print to screen
 disp(channelTable)
 
 

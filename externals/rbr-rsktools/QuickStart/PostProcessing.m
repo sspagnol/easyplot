@@ -1,8 +1,8 @@
 %% Post-processing RBR data with RSKtools
-% RSKtools v3.4.1;
+% RSKtools v3.5.0;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2020-05-15
+% 2020-06-26
 
 %% Introduction
 % |RSKtools| is RBR's open source Matlab toolbox for reading,
@@ -17,7 +17,7 @@
 % feedback from users so that we can make it better.
 %
 % Review 
-% <https://rbr-global.com/wp-content/uploads/2020/05/Getting_Started.pdf
+% <https://rbr-global.com/wp-content/uploads/2020/06/GettingStarted.pdf
 % RSKtools Getting Started> for an introduction on how to load RBR
 % data into Matlab from RSK files, make plots, and access the data.
 %
@@ -315,7 +315,7 @@ caxis(ax_hdl(3),[0 10])
 % manual> for detailed RSKtools function documentation.
 %
 % * the
-% <http://rbr-global.com/wp-content/uploads/2020/05/Getting_Started.pdf
+% <http://rbr-global.com/wp-content/uploads/2020/06/GettingStarted.pdf
 % RSKtools Getting Started> for an introduction on how to load RBR
 % data into Matlab from RSK files, make plots, and access the data.
 

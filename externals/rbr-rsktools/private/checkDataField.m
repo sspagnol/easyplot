@@ -1,7 +1,7 @@
 function checkDataField(RSK)
 
 if ~isfield(RSK,'data')
-    RSKerror('RSK structure do not contain any data, try RSKreaddata or RSKreadprofiles first.')
+    RSKerror('RSK structure does not contain any data, use RSKreaddata or RSKreadprofiles.')
 end
 
 end

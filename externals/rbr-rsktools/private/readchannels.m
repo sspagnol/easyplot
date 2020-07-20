@@ -20,7 +20,7 @@ function RSK = readchannels(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2017-07-10
+% Last revision: 2020-05-21
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -34,12 +34,13 @@ if any(strcmpi({tables.name}, 'instrumentChannels'))
     RSK.instrumentChannels = doSelect(RSK, 'select * from instrumentChannels');
     RSK.channels = doSelect(RSK, ['SELECT c.shortName as shortName,'...
                         'c.longName as longName,'...
-                        'c.units as units '... 
+                        'c.units as units, '...
+                        'c.channelID as channelID '...
                         'FROM instrumentChannels ic '... 
                         'JOIN channels c ON ic.channelID = c.channelID '...
                         'ORDER by ic.channelOrder']);
 else
-    RSK.channels = doSelect(RSK, 'SELECT shortName, longName, units FROM channels ORDER by channels.channelID');
+    RSK.channels = doSelect(RSK, 'SELECT shortName, longName, units, channelID FROM channels ORDER by channels.channelID');
 end
 
 RSK = removenonmarinechannels(RSK);

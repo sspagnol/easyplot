@@ -1,5 +1,5 @@
 % RSKTOOLS
-% Version 3.4.1 2020-04-09
+% Version 3.5.0 2020-06-26
 %
 % 1.  This toolbox depends on the presence of a functional mksqlite
 % library.  We have included a couple of versions here for Windows (32 bit/
@@ -53,7 +53,6 @@
 %   RSKderivesalinity       - derive salinity from conductivity, temperature, and sea pressure
 %   RSKderiveseapressure    - derive sea pressure from pressure
 %   RSKderivevelocity       - derive profiling rate from depth and time
-%   RSKderiveBPR            - derive temperature and pressure from bottom pressure recorder (BPR) period data
 %   RSKderiveC25            - derive specific conductivity at 25 degree Celsius
 %   RSKderiveO2             - derive O2 saturation or concentration
 %   RSKderivebuoyancy       - derive buoyancy frequency and stability
@@ -61,6 +60,8 @@
 %   RSKderivetheta          - derive potential temperature
 %   RSKderiveSA             - derive absolute salinity
 %   RSKderivesoundspeed     - derive speed of sound in seawater
+%   RSKderiveBPR            - derive temperature and pressure from bottom pressure recorder (BPR) period data
+%   RSKderiveA0A            - correct RBRquartz³ BPR|zero pressure data for drift using the A-zero-A method
 %   RSKcalculateCTlag       - estimate optimal conductivity shift relative to temperature
 %   RSKalignchannel         - align a channel in time using a specified lag
 %   RSKbinaverage           - bin average the profile data by reference channel intervals
