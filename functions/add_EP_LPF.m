@@ -30,11 +30,17 @@ instrument_sample_interval=sam.meta.instrument_sample_interval;
 instrument_burst_interval = NaN;
 if isfield(sam.meta, 'instrument_burst_interval')
     instrument_burst_interval=sam.meta.instrument_burst_interval;
+    if isempty(instrument_burst_interval)
+        instrument_burst_interval = NaN;
+    end    
 end
 
 instrument_burst_duration = NaN;
 if isfield(sam.meta, 'instrument_burst_duration')
     instrument_burst_duration=sam.meta.instrument_burst_duration;
+    if isempty(instrument_burst_duration)
+        instrument_burst_duration = NaN;
+    end
 end
 
 if isnan(instrument_burst_interval)
