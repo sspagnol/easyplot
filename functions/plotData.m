@@ -249,7 +249,7 @@ updateLineColour( hFig );
 
 if redoSubplots
     % link all/any subplot axes
-    %dragzoom(graphs);
+    dragzoom(graphs);
     linkaxes(graphs,'x');
     
     % update date labels, only pass one axis and it will update any others

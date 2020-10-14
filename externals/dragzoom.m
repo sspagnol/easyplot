@@ -2325,9 +2325,21 @@ Initialize(varargin{:})
         set(hFig, 'Units', units);
         
         crd = get(hFig, 'CurrentPoint');
-        x = crd(1); 
-        y = crd(2);
+        %x = crd(1); 
+        %y = crd(2);
         
+        % https://www.mathworks.com/matlabcentral/fileexchange/29276-dragzoom-drag-and-zoom-tool
+        % comment on 19-May-2018
+        hAx = gca;
+        if strcmp(hAx.Parent.Type,'figure')
+            containercrd = [0 0];
+        else
+            containerabspos = getpixelposition(hAx.Parent,true);
+            containercrd = containerabspos(1:2);
+        end
+        x = crd(1) - containercrd(1);
+        y = crd(2) - containercrd(2);
+
         set(hFig, 'Units', dfltUnits);
     end
 %--------------------------------------------------------------------------

@@ -12,7 +12,7 @@ userData=getappdata(hFig, 'UserData');
 %pan('off');
 
 axH = gca;
-%dragzoom('off');
+dragzoom('off');
 %select the area to use for comparison
 [x,y,ph1] = select_points(axH);
 
