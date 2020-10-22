@@ -424,6 +424,12 @@ setappdata(hFig, 'UserData', userData);
             % newer file with relative and absolute path filename
             if isfield(ymlData.files{ii}, 'relpath_filename')
                 theFullFile = fullfile(ymlPathName, ymlData.files{ii}.relpath_filename);
+                if ispc
+                    theFullFile = strrep(theFullFile, '/', filesep);
+                else
+                    theFullFile = strrep(theFullFile, '\', filesep);
+                end
+                theFullFile = strrep(theFullFile, [filesep '.' filesep], filesep);
                 if ~exist(theFullFile, 'file')
                     theFullFile = ymlData.files{ii}.abspath_filename;
                 end
@@ -572,6 +578,7 @@ setappdata(hFig, 'UserData', userData);
             tmpStruct = struct;
             % older style only absolute path filename
             abspath_filename = userData.sample_data{ii}.toolbox_input_file;
+            abspath_filename = strrep(abspath_filename, [filesep '.' filesep], filesep);
             tmpStruct.filename = abspath_filename;
             % also add relative (to yml directory) path 
             tmpStruct.relpath_filename = relativepath_alt( abspath_filename, ymlPathName );
