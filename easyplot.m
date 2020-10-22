@@ -419,7 +419,16 @@ setappdata(hFig, 'UserData', userData);
         nFiles = numel(ymlData.files);
         for ii = 1:nFiles
             theParser = ymlData.files{ii}.parser;
+            % older file with only absolute path filename
             theFullFile = ymlData.files{ii}.filename;
+            % newer file with relative and absolute path filename
+            if isfield(ymlData.files{ii}, 'relpath_filename')
+                theFullFile = fullfile(ymlPathName, ymlData.files{ii}.relpath_filename);
+                if ~exist(theFullFile, 'file')
+                    theFullFile = ymlData.files{ii}.abspath_filename;
+                end
+            end
+ 
             [pathStr, fileStr, extStr] = fileparts(theFullFile);
             theFile = [fileStr extStr];
             
@@ -556,10 +565,18 @@ setappdata(hFig, 'UserData', userData);
             return;
         end
 
+        [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
+        
         ymlData = struct;
         for ii=1:numel(userData.sample_data)
             tmpStruct = struct;
-            tmpStruct.filename = userData.sample_data{ii}.toolbox_input_file;
+            % older style only absolute path filename
+            abspath_filename = userData.sample_data{ii}.toolbox_input_file;
+            tmpStruct.filename = abspath_filename;
+            % also add relative (to yml directory) path 
+            tmpStruct.relpath_filename = relativepath_alt( abspath_filename, ymlPathName );
+            tmpStruct.abspath_filename = abspath_filename;
+            
             tmpStruct.parser = userData.sample_data{ii}.meta.parser;
             plotVars = cellfun(@(x) x.name, userData.sample_data{ii}.variables, 'UniformOutput', false);
             plotVars = plotVars(logical(userData.sample_data{ii}.EP_variablePlotStatus));
@@ -570,8 +587,7 @@ setappdata(hFig, 'UserData', userData);
             end
             ymlData.files{ii} = tmpStruct;
         end
-        
-        [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
+ 
         yml.write(fullfile(ymlPathName,ymlFileName),ymlData);
         userData.EP_previousYmlDir = ymlPathName;
         setappdata(hFig, 'UserData', userData);
