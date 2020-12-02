@@ -116,33 +116,37 @@ else
             try
                 set(msgPanelText,'String',strcat({'Loading : '}, theFile));
                 %drawnow;
+                
+                defaultLatitude = userData.EP_defaultLatitude;
+                
                 disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
                 % adopt similar code layout as imos-toolbox importManager
                 % get parser for the filetype
                 parser = str2func(FILEparsers{ii});
                 
                 structs = parser( {theFullFile}, 'timeSeries' );
-                defaultLatitude = userData.EP_defaultLatitude;
-                if numel(structs) == 1
-                    if iscell(structs)
-                        structs = structs{1};
-                    end
-                    % only one struct generated for one raw data file
-                    structs.meta.parser = FILEparsers{ii};
+                
+                % some parsers return struct some a cell or cell array
+                if isstruct(structs) & numel(structs) == 1
+                    structs = {structs};
+                end
+                
+                for k = 1:length(structs)
+                    structs{k}.meta.parser = FILEparsers{ii};
                     %
-                    for kk=1:numel(structs.dimensions)
-                        if ~isfield(structs.dimensions{kk}, 'EP_OFFSET')
-                            structs.dimensions{kk}.EP_OFFSET = 0.0;
-                            structs.dimensions{kk}.EP_SCALE = 1.0;
+                    for kk=1:numel(structs{k}.dimensions)
+                        if ~isfield(structs{k}.dimensions{kk}, 'EP_OFFSET')
+                            structs{k}.dimensions{kk}.EP_OFFSET = 0.0;
+                            structs{k}.dimensions{kk}.EP_SCALE = 1.0;
                         end
                     end
-                    for kk=1:numel(structs.variables)
-                        if ~isfield(structs.variables{kk}, 'EP_OFFSET')
-                            structs.variables{kk}.EP_OFFSET = 0.0;
-                            structs.variables{kk}.EP_SCALE = 1.0;
+                    for kk=1:numel(structs{k}.variables)
+                        if ~isfield(structs{k}.variables{kk}, 'EP_OFFSET')
+                            structs{k}.variables{kk}.EP_OFFSET = 0.0;
+                            structs{k}.variables{kk}.EP_SCALE = 1.0;
                         end
                     end
-                    [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs, theFullFile, defaultLatitude);
+                    [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
                     userData.sample_data{end}.EP_isNew = true;
@@ -151,35 +155,9 @@ else
                     [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
                     userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
                     userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
-                else
-                    % one data set may have generated more than one sample_data struct
-                    % eg AWAC .wpr with waves in .wap etc
-                    for k = 1:length(structs)
-                        structs{k}.meta.parser = FILEparsers{ii};
-                        %
-                        for kk=1:numel(structs{k}.dimensions)
-                            if ~isfield(structs{k}.dimensions{kk}, 'EP_OFFSET')
-                                structs{k}.dimensions{kk}.EP_OFFSET = 0.0;
-                                structs{k}.dimensions{kk}.EP_SCALE = 1.0;
-                            end
-                        end
-                        for kk=1:numel(structs{k}.variables)
-                            if ~isfield(structs{k}.variables{kk}, 'EP_OFFSET')
-                                structs{k}.variables{kk}.EP_OFFSET = 0.0;
-                                structs{k}.variables{kk}.EP_SCALE = 1.0;
-                            end
-                        end
-                        [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
-                        userData.sample_data{end+1} = tmpStruct;
-                        clear('tmpStruct');
-                        userData.sample_data{end}.EP_isNew = true;
-                        
-                        % count up deployments of this instrument
-                        [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
-                        userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
-                        userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
-                    end
                 end
+                    
+                
                 userData.EP_defaultLatitude = defaultLatitude;
                 clear('structs');
                 set(msgPanelText,'String',strcat({'Loaded : '}, theFile));

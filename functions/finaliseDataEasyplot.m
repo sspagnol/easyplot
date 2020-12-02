@@ -58,6 +58,14 @@ end
 
 idTime  = getVar(sam.dimensions, 'TIME');
 
+% add offset/scale for all dimensions
+for kk=1:numel(sam.dimensions)
+    if ~isfield(sam.dimensions{kk}, 'EP_OFFSET')
+        sam.dimensions{kk}.EP_OFFSET = 0.0;
+        sam.dimensions{kk}.EP_SCALE = 1.0;
+    end
+end
+
 if isfield(sam,'toolbox_input_file')
     [PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
     sam.EP_inputFilePath = PATHSTR;
@@ -103,35 +111,10 @@ sam.meta.depth = 0;
 
 sam.history = '';
 
-%%
-for kk=1:numel(sam.dimensions)
-    if ~isfield(sam.dimensions{kk}, 'EP_OFFSET')
-        sam.dimensions{kk}.EP_OFFSET = 0.0;
-        sam.dimensions{kk}.EP_SCALE = 1.0;
-    end
-end
-for kk=1:numel(sam.variables)
-    if ~isfield(sam.variables{kk}, 'EP_OFFSET')
-        sam.variables{kk}.EP_OFFSET = 0.0;
-        sam.variables{kk}.EP_SCALE = 1.0;
-    end
-end
-%
-for kk=1:numel(sam.variables)
-    if ~isfield(sam.variables{kk}, 'EP_iSlice')
-        sam.variables{kk}.EP_iSlice = 1;
-    end
-end
-
 %% add derived diagnositic variables, prefaces with 'EP_'
-sam = add_EP_TIMEDIFF(sam);
-[sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude);
-[sam, defaultLatitude] = add_EP_DEPTH(sam, defaultLatitude);
+[sam, defaultLatitude]  = add_EP_vars(sam, defaultLatitude);
 
-% done after adding other variables
-sam = add_EP_LPF(sam);
-
-% update EP_isPlottableVar, must be done last
+%% update EP_isPlottableVar, must be done last
 sam.EP_isPlottableVar = false(1,numel(sam.variables));
 % plot status, -1=delete, 0=not plotted, 1=plot
 sam.EP_variablePlotStatus = zeros(1,numel(sam.variables));
@@ -147,93 +130,6 @@ sam.EP_variablePlotStatus = sam.EP_variablePlotStatus(:);
 sam.meta.latitude = defaultLatitude;
 
 %%
-% just in case
-for kk=1:numel(sam.dimensions)
-    if ~isfield(sam.dimensions{kk}, 'EP_OFFSET')
-        sam.dimensions{kk}.EP_OFFSET = 0.0;
-        sam.dimensions{kk}.EP_SCALE = 1.0;
-    end
-end
-for kk=1:numel(sam.variables)
-    if ~isfield(sam.variables{kk}, 'EP_OFFSET')
-        sam.variables{kk}.EP_OFFSET = 0.0;
-        sam.variables{kk}.EP_SCALE = 1.0;
-    end
-end
-%
-for kk=1:numel(sam.variables)
-    if ~isfield(sam.variables{kk}, 'EP_iSlice')
-        sam.variables{kk}.EP_iSlice = 1;
-    end
-end
-
-% calculate data limits
-for ii=1:numel(sam.variables)
-    EP_LIMITS = struct;
-    RAW = struct;
-    QC = struct;
-    
-    eps=1e-1;
-    RAW.xMin = NaN;
-    RAW.xMax = NaN;
-    QC.xMin = NaN;
-    QC.xMax = NaN;
-    RAW.yMin = NaN;
-    RAW.yMax = NaN;
-    QC.yMin = NaN;
-    QC.yMax = NaN;
-    % is this an imos nc file
-    isIMOS = isfield(sam, 'Conventions') && ~isempty(strfind(sam.Conventions, 'IMOS')) &&...
-        strcmp(sam.EP_inputFileExt, '.nc');
-    
-    %theVar = sam.variables{ii}.name;
-    idTime  = getVar(sam.dimensions, 'TIME');
-    theOffset = sam.dimensions{idTime}.EP_OFFSET;
-    theScale = sam.dimensions{idTime}.EP_SCALE;
-    RAW.xMin=min(sam.dimensions{idTime}.data(1)+theOffset, RAW.xMin);
-    RAW.xMax=max(sam.dimensions{idTime}.data(end)+theOffset, RAW.xMax);
-    if ~isfinite(RAW.xMin), RAW.xMin=floor(now); end
-    if ~isfinite(RAW.xMax), RAW.xMax=floor(now)+1; end
-    QC.xMin = RAW.xMin;
-    QC.xMax = RAW.xMax;
-    
-    theOffset = sam.variables{ii}.EP_OFFSET;
-    theScale = sam.variables{ii}.EP_SCALE;
-    yData = theOffset + double(sam.variables{ii}.data).*theScale;
-    RAW.yMin=min(min(yData), RAW.yMin);
-    RAW.yMax=max(max(yData), RAW.yMax);
-    
-    if isIMOS
-        if isfield(sam.variables{ii}, 'flags')
-            varFlags = int8(sam.variables{ii}.flags);
-            iGood = ismember(varFlags, goodFlags);
-            yData(~iGood) = NaN;
-        end
-        QC.yMin=min(min(yData), QC.yMin);
-        QC.yMax=max(max(yData), QC.yMax);
-    else
-        QC.yMin = RAW.yMin;
-        QC.yMax = RAW.yMax;
-    end
-    
-    if RAW.yMax - RAW.yMin < eps
-        RAW.yMax = RAW.yMax*1.05;
-        RAW.yMin = RAW.yMin*0.95;
-    end
-    if QC.yMax - QC.yMin < eps
-        QC.yMax = QC.yMax*1.05;
-        QC.yMin = QC.yMin*0.95;
-    end
-    
-    if ~isfinite(RAW.yMin), RAW.yMin=0; end
-    if ~isfinite(RAW.yMax), RAW.yMax=1; end
-    
-    if ~isfinite(QC.yMin), QC.yMin=0; end
-    if ~isfinite(QC.yMax), QC.yMax=1; end
-    
-    EP_LIMITS.QC = QC;
-    EP_LIMITS.RAW = RAW;
-    sam.variables{ii}.EP_LIMITS = EP_LIMITS;
-end
+sam = calc_EP_LIMITS(sam);
 
 end
