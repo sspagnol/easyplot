@@ -453,8 +453,8 @@ setappdata(hFig, 'UserData', userData);
                 end
                 
                 % some parsers return struct some a cell or cell array
-                if isstruct(structs) & numel(structs) == 1
-                    structs = {structs};
+                if isstruct(structs)
+                    structs = num2cell(structs);
                 end
                 
                 % add in offset/scale 
