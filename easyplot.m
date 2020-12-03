@@ -408,7 +408,7 @@ setappdata(hFig, 'UserData', userData);
         end
         
         for kk=1:numel(userData.sample_data)
-            userData.sample_data{kk}.isNew = false;
+            userData.sample_data{kk}.EP_isNew = false;
         end
         
         nFiles = numel(ymlData.files);
@@ -473,7 +473,7 @@ setappdata(hFig, 'UserData', userData);
                     end
                 end
                 
-                isNew = false(size(userData.sample_data));
+                EP_isNew = false(size(userData.sample_data));
 
                 for k = 1:length(structs)
                     structs{k}.meta.parser = theParser;
@@ -499,8 +499,8 @@ setappdata(hFig, 'UserData', userData);
                     tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
                     userData.sample_data{end+1} = tmpStruct;
                     clear('tmpStruct');
-                    userData.sample_data{end}.isNew = true;
-                    isNew(end+1) = true;
+                    userData.sample_data{end}.EP_isNew = true;
+                    EP_isNew(end+1) = true;
                     [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
                     userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
                     userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
@@ -513,7 +513,7 @@ setappdata(hFig, 'UserData', userData);
                     if strcmp(plotVar, 'EP_LPF_PRES_REL')
                         plotVar = 'LPF_PRES_REL';
                     end
-                    userData.sample_data = markPlotVar(userData.sample_data, plotVar, isNew);
+                    userData.sample_data = markPlotVar(userData.sample_data, plotVar, EP_isNew);
                 end
             end
         end
