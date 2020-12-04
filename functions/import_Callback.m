@@ -103,67 +103,44 @@ else
     
     iFailed=0;
     nFiles = length(FILEnames);
+    defaultLatitude = userData.EP_defaultLatitude;
     for ii=1:nFiles
-        theFile = char([FILEnames{ii} FILEexts{ii}]);
+        toolbox_input_file_short = char([FILEnames{ii} FILEexts{ii}]);
         if isempty(FILEpaths{ii})
-            theFullFile = which([FILEnames{ii} FILEexts{ii}]);
+            toolbox_input_file = which([FILEnames{ii} FILEexts{ii}]);
         else
-            theFullFile = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
+            toolbox_input_file = char(fullfile(FILEpaths{ii},[FILEnames{ii} FILEexts{ii}]));
         end
         
-        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, theFile)), userData.sample_data, 'UniformOutput', false))));
+        notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, toolbox_input_file_short)), userData.sample_data, 'UniformOutput', false))));
         if notLoaded
+            % get parser for the filetype
+            parser_name = FILEparsers{ii};
+            parser = str2func(parser_name);
+
             try
-                set(msgPanelText,'String',strcat({'Loading : '}, theFile));
-                %drawnow;
+                set(msgPanelText,'String',strcat({'Loading : '}, toolbox_input_file_short));
+                drawnow;
+                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', toolbox_input_file_short]);
                 
-                defaultLatitude = userData.EP_defaultLatitude;
-                
-                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
-                % adopt similar code layout as imos-toolbox importManager
-                % get parser for the filetype
-                parser = str2func(FILEparsers{ii});
-                
-                structs = parser( {theFullFile}, 'timeSeries' );
+                structs = parser( {toolbox_input_file}, 'timeSeries' );
                 
                 % some parsers return struct some a cell or cell array
                 if isstruct(structs)
                     structs = num2cell(structs);
                 end
                 
-                for k = 1:length(structs)
-                    structs{k}.meta.parser = FILEparsers{ii};
-                    %
-                    for kk=1:numel(structs{k}.dimensions)
-                        if ~isfield(structs{k}.dimensions{kk}, 'EP_OFFSET')
-                            structs{k}.dimensions{kk}.EP_OFFSET = 0.0;
-                            structs{k}.dimensions{kk}.EP_SCALE = 1.0;
-                        end
-                    end
-                    for kk=1:numel(structs{k}.variables)
-                        if ~isfield(structs{k}.variables{kk}, 'EP_OFFSET')
-                            structs{k}.variables{kk}.EP_OFFSET = 0.0;
-                            structs{k}.variables{kk}.EP_SCALE = 1.0;
-                        end
-                    end
-                    [tmpStruct, defaultLatitude] = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
-                    userData.sample_data{end+1} = tmpStruct;
-                    clear('tmpStruct');
-                    userData.sample_data{end}.EP_isNew = true;
-                    
-                    % count up deployments of this instrument
-                    [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
-                    userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
-                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
-                end
-                    
+                structs = add_EPOffset_EPScale(structs);
+                
+                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file);
                 
                 userData.EP_defaultLatitude = defaultLatitude;
                 clear('structs');
-                set(msgPanelText,'String',strcat({'Loaded : '}, theFile));
+                set(msgPanelText,'String',strcat({'Loaded : '}, toolbox_input_file_short));
                 %drawnow;
+                
             catch ME
-                astr=['Importing file ', theFile, ' failed due to an unforseen issue. ' ME.message];
+                astr=['Importing file ', toolbox_input_file_short, ' failed due to an unforseen issue. ' ME.message];
                 disp(astr);
                 set(msgPanelText,'String',astr);
                 %drawnow;
@@ -175,8 +152,8 @@ else
                 end
             end
         else
-            disp(['File ' theFile ' already loaded.']);
-            set(msgPanelText,'String',strcat({'Already loaded : '}, theFile));
+            disp(['File ' toolbox_input_file_short ' already loaded.']);
+            set(msgPanelText,'String',strcat({'Already loaded : '}, toolbox_input_file_short));
             %drawnow;
         end
     end

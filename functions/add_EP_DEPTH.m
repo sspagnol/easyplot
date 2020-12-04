@@ -1,7 +1,10 @@
-%%
-function [sam, latitude] = add_EP_DEPTH(sam, defaultLatitude)
+function [sam, defaultLatitude] = add_EP_DEPTH(sam, defaultLatitude)
+%ADD_EP_DEPTH add EP_DEPTH variable
 
-latitude = defaultLatitude;
+if isfield(sam.meta, 'latitude')
+    defaultLatitude = sam.meta.latitude;    
+end
+
 % exit if we already have depth
 %depthIdx       = getVar(sam.variables, 'DEPTH');
 if (getVar(sam.variables, 'DEPTH') ~= 0) || (getVar(sam.variables, 'EP_DEPTH') ~= 0)
@@ -77,4 +80,7 @@ if isfield(sam, 'EP_variablePlotStatus')
         sam.EP_variablePlotStatus(getVar(sam.variables, 'EP_DEPTH')) = 2;
     end
 end
+
+defaultLatitude = latitude;
+
 end

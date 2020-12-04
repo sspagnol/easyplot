@@ -1,7 +1,5 @@
-
-%%
-function [sam, defaultLatitude] = finaliseDataEasyplot(sam, fileName, defaultLatitude)
-%FINALISEDATA Adds new EP_TIMEDIFF var
+function [sam, defaultLatitude] = finaliseDataEasyplot(sam, defaultLatitude, fileName)
+%FINALISEDATAEASYPLOT Finalize sample data structure
 %
 % Inputs:
 %   sam             - a struct containing sample data.

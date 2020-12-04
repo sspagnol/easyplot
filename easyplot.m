@@ -417,38 +417,41 @@ setappdata(hFig, 'UserData', userData);
             return;
         end 
         nFiles = numel(ymlData.files);
+        defaultLatitude = userData.EP_defaultLatitude;
         for ii = 1:nFiles
-            theParser = ymlData.files{ii}.parser;
+            parser_name = ymlData.files{ii}.parser;
             % older file with only absolute path filename
-            theFullFile = ymlData.files{ii}.filename;
+            toolbox_input_file = ymlData.files{ii}.filename;
             % newer file with relative and absolute path filename
             if isfield(ymlData.files{ii}, 'relpath_filename')
-                theFullFile = fullfile(ymlPathName, ymlData.files{ii}.relpath_filename);
+                toolbox_input_file = fullfile(ymlPathName, ymlData.files{ii}.relpath_filename);
                 if ispc
-                    theFullFile = strrep(theFullFile, '/', filesep);
+                    toolbox_input_file = strrep(toolbox_input_file, '/', filesep);
                 else
-                    theFullFile = strrep(theFullFile, '\', filesep);
+                    toolbox_input_file = strrep(toolbox_input_file, '\', filesep);
                 end
-                theFullFile = strrep(theFullFile, [filesep '.' filesep], filesep);
-                if ~exist(theFullFile, 'file')
-                    theFullFile = ymlData.files{ii}.abspath_filename;
+                toolbox_input_file = strrep(toolbox_input_file, [filesep '.' filesep], filesep);
+                if ~exist(toolbox_input_file, 'file')
+                    toolbox_input_file = ymlData.files{ii}.abspath_filename;
                 end
             end
             
-            [pathStr, fileStr, extStr] = fileparts(theFullFile);
-            theFile = [fileStr extStr];
+            [pathStr, fileStr, extStr] = fileparts(toolbox_input_file);
+            toolbox_input_file_short = [fileStr extStr];
             
-            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, theFullFile)), userData.sample_data, 'UniformOutput', false))));
-            defaultLatitude = userData.EP_defaultLatitude;
+            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, toolbox_input_file)), userData.sample_data, 'UniformOutput', false))));
+            
+            parser = str2func(parser_name);
+            
             if notLoaded
-                set(msgPanelText,'String',strcat({'Loading : '}, theFile));
+                set(msgPanelText,'String',strcat({'Loading : '}, toolbox_input_file_short));
                 drawnow;
-                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', theFile]);
-                parser = str2func(theParser);
+                disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', toolbox_input_file_short]);
+
                 try
-                    structs = parser( {theFullFile}, 'timeSeries' );
+                    structs = parser( {toolbox_input_file}, 'timeSeries' );
                 catch
-                    warning(['Unable to load file : ' theFullFile]);
+                    warning(['Unable to load file : ' toolbox_input_file]);
                     continue;
                 end
                 
@@ -458,53 +461,14 @@ setappdata(hFig, 'UserData', userData);
                 end
                 
                 % add in offset/scale 
-                for jj = 1:length(structs)
-                    for kk=1:numel(structs{jj}.dimensions)
-                        if ~isfield(structs{jj}.dimensions{kk}, 'EP_OFFSET')
-                            structs{jj}.dimensions{kk}.EP_OFFSET = 0.0;
-                            structs{jj}.dimensions{kk}.EP_SCALE = 1.0;
-                        end
-                    end
-                    for kk=1:numel(structs{jj}.variables)
-                        if ~isfield(structs{jj}.variables{kk}, 'EP_OFFSET')
-                            structs{jj}.variables{kk}.EP_OFFSET = 0.0;
-                            structs{jj}.variables{kk}.EP_SCALE = 1.0;
-                        end
-                    end
-                end
-                
-                EP_isNew = false(size(userData.sample_data));
+                structs = add_EPOffset_EPScale(structs);
 
-                for k = 1:length(structs)
-                    structs{k}.meta.parser = theParser;
-                    if isfield(ymlData.files{ii}, 'latitude') & ~isempty(ymlData.files{ii}.latitude)
-                        structs{k}.meta.latitude = ymlData.files{ii}.latitude;
-                    end
-                    if isfield(ymlData.files{ii}, 'offsets') && ~isempty(ymlData.files{ii}.offsets)
-                        offsets = ymlData.files{ii}.offsets;
-                        for ll = 1:numel(fieldnames(offsets))
-                            theVar = offsets{ll};
-                            if strcmp(theVar, 'TIME')
-                                varId = getVar(structs.dimensions, theVar);
-                                structs{k}.dimensions(varId).EP_OFFSET = offsets.(theVar)/24;
-                                structs{k}.dimensions(varId).EP_SCALE = 1.0;
-                            else
-                                varId = getVar(structs{k}.variables, theVar);
-                                theOffset = offsets.(theVar);
-                                structs{k}.variables(varId).EP_OFFSET = theOffset(1);
-                                structs{k}.variables(varId).EP_SCALE = theOffset(2);
-                            end
-                        end
-                    end
-                    tmpStruct = finaliseDataEasyplot(structs{k}, theFullFile, defaultLatitude);
-                    userData.sample_data{end+1} = tmpStruct;
-                    clear('tmpStruct');
-                    userData.sample_data{end}.EP_isNew = true;
-                    EP_isNew(end+1) = true;
-                    [depNum, depLabel] = setDeploymentNumber(userData.sample_data);
-                    userData.sample_data{end}.meta.EP_instrument_deployment = depNum;
-                    userData.sample_data{end}.meta.EP_instrument_serial_no_deployment = depLabel;
-                end
+                % add latitude etc info from yml file
+                structs = add_yml_info(structs, parser_name, ymlData.files{ii});
+                
+                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file);
+
+                EP_isNew=cellfun(@(x) x.EP_isNew, userData.sample_data);
                 
                 if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
                     plotVar = strtrim(strsplit(ymlData.files{ii}.variables, ','));
@@ -540,6 +504,31 @@ setappdata(hFig, 'UserData', userData);
 
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
+        
+        function structs = add_yml_info(structs, parser_name, yml_data_info)
+            for k = 1:length(structs)
+                structs{k}.meta.parser = parser_name;
+                if isfield(yml_data_info, 'latitude') & ~isempty(yml_data_info.latitude)
+                    structs{k}.meta.latitude = yml_data_info.latitude;
+                end
+                if isfield(yml_data_info, 'offsets') && ~isempty(yml_data_info.offsets)
+                    offsets = yml_data_info.offsets;
+                    for ll = 1:numel(fieldnames(offsets))
+                        theVar = offsets{ll};
+                        if strcmp(theVar, 'TIME')
+                            varId = getVar(structs{k}.dimensions, theVar);
+                            structs{k}.dimensions(varId).EP_OFFSET = offsets.(theVar)/24;
+                            structs{k}.dimensions(varId).EP_SCALE = 1.0;
+                        else
+                            varId = getVar(structs{k}.variables, theVar);
+                            theOffset = offsets.(theVar);
+                            structs{k}.variables(varId).EP_OFFSET = theOffset(1);
+                            structs{k}.variables(varId).EP_SCALE = theOffset(2);
+                        end
+                    end
+                end
+            end
+        end
     end
 
 %%

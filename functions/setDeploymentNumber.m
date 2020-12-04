@@ -1,4 +1,5 @@
 function [depNum, depLabel] = setDeploymentNumber(sample_data)
+%SETDEPLOYMENTNUMBER Discriminate multiple deployments of an instrument
 
 instrument_serial_no = sample_data{end}.meta.instrument_serial_no;
 other_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, sample_data(1:end-1), 'UniformOutput', false);

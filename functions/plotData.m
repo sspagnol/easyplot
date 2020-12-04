@@ -1,4 +1,3 @@
-%%
 function plotData(hObject)
 %PLOTDATA plot marked variables in sample_data
 %

@@ -1,5 +1,5 @@
 function [sam, defaultLatitude] = add_EP_vars(sam, defaultLatitude)
-% add derived diagnositic variables, prefaces with 'EP_'
+%ADD_EP_VARS add derived diagnositic variables, prefaces with 'EP_'
 
 sam = add_EP_TIMEDIFF(sam);
 [sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude);

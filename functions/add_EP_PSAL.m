@@ -1,7 +1,9 @@
-function [sam, latitude] = add_EP_PSAL(sam, defaultLatitude)
-%add_EP_PSAL Calculate simplified PSAL value
+function [sam, defaultLatitude] = add_EP_PSAL(sam, defaultLatitude)
+%ADD_EP_PSAL Calculate simplified PSAL value
 
-latitude = defaultLatitude;
+if isfield(sam.meta, 'latitude')
+    defaultLatitude = sam.meta.latitude;
+end
 
 % data set may already contains salinity, but calculate EP_PSAL always
 %if getVar(sam.variables, 'PSAL'), return; end
@@ -82,9 +84,10 @@ else
         num_lines = 1;
         defaultans = {num2str(defaultLatitude)};
         latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
-        sam.meta.latitude = latitude;   
+        sam.meta.latitude = latitude;
     end
     presRel = gsw_p_from_z(depth, latitude);
+    defaultLatitude = latitude;
 end
 % calculate C(S,T,P)/C(35,15,0) ratio
 % conductivity is in S/m and gsw_C3515 in mS/cm
@@ -112,4 +115,3 @@ sam = EP_addVar(...
     coordinates);
 
 end
-
