@@ -104,6 +104,7 @@ else
     iFailed=0;
     nFiles = length(FILEnames);
     defaultLatitude = userData.EP_defaultLatitude;
+    plotVar = '';
     for ii=1:nFiles
         toolbox_input_file_short = char([FILEnames{ii} FILEexts{ii}]);
         if isempty(FILEpaths{ii})
@@ -132,7 +133,7 @@ else
                 
                 structs = add_EPOffset_EPScale(structs);
                 
-                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file);
+                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file, plotVar);
                 
                 userData.EP_defaultLatitude = defaultLatitude;
                 clear('structs');
@@ -158,10 +159,9 @@ else
         end
     end
     
-    %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+    userData.sample_data = updateDeploymentNumber(userData.sample_data);
     userData.sample_data = timeOffsetPP(userData.sample_data, 'raw', false);
     set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);
-    %setappdata(hFig, 'UserData', userData);
     set(msgPanelText,'String','Finished importing.');
     setappdata(hFig, 'UserData', userData);
     %drawnow;
@@ -169,7 +169,9 @@ else
     if numel(FILEnames)~=iFailed
         plotVar=chooseVar(userData.sample_data);
         EP_isNew=cellfun(@(x) x.EP_isNew, userData.sample_data);
+        
         userData.sample_data = markPlotVar(userData.sample_data, plotVar, EP_isNew);
+        
         userData.plotVarNames = sort(unique({userData.plotVarNames{:} plotVar}));
         treePanelData = generateTreeData(userData.sample_data);
         

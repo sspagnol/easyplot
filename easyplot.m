@@ -439,7 +439,17 @@ setappdata(hFig, 'UserData', userData);
             [pathStr, fileStr, extStr] = fileparts(toolbox_input_file);
             toolbox_input_file_short = [fileStr extStr];
             
-            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, toolbox_input_file)), userData.sample_data, 'UniformOutput', false))));
+            plotVar = '';
+            if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
+                plotVar = strtrim(strsplit(ymlData.files{ii}.variables, ','));
+                % var rename handle, all LPF variable are new just
+                % LPF_theVariableName
+                if strcmp(plotVar, 'EP_LPF_PRES_REL')
+                    plotVar = 'LPF_PRES_REL';
+                end
+            end
+            
+            notLoaded = ~any(cell2mat((cellfun(@(x) ~isempty(strfind(x.toolbox_input_file, toolbox_input_file)), userData.sample_data, 'UniformOutput', false))));
             
             parser = str2func(parser_name);
             
@@ -465,22 +475,15 @@ setappdata(hFig, 'UserData', userData);
 
                 % add latitude etc info from yml file
                 structs = add_yml_info(structs, parser_name, ymlData.files{ii});
-                
-                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file);
 
-                EP_isNew=cellfun(@(x) x.EP_isNew, userData.sample_data);
+                [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file, plotVar);
                 
-                if isfield(ymlData.files{ii}, 'variables') & ~isempty(ymlData.files{ii}.variables)
-                    plotVar = strtrim(strsplit(ymlData.files{ii}.variables, ','));
-                    % var rename handle, all LPF variable are new just
-                    % LPF_theVariableName
-                    if strcmp(plotVar, 'EP_LPF_PRES_REL')
-                        plotVar = 'LPF_PRES_REL';
-                    end
-                    userData.sample_data = markPlotVar(userData.sample_data, plotVar, EP_isNew);
-                end
+                clear('structs');
             end
         end
+        
+        % enumerate labels of instruments by number of times deployed
+        userData.sample_data = updateDeploymentNumber(userData.sample_data);
         
         % data limits for those variables
         varNames = {};
@@ -506,11 +509,33 @@ setappdata(hFig, 'UserData', userData);
         plotData(hFig);
         
         function structs = add_yml_info(structs, parser_name, yml_data_info)
+            
+            yml_data_info.latitude = false;
+            if isfield(yml_data_info, 'latitude') && ~isempty(yml_data_info.latitude)
+                latitude = yml_data_info.latitude;
+                hasLatitude = true;
+            end
+            
+            if isfield(yml_data_info, 'variables') && ~isempty(yml_data_info.variables)
+                plotVar = strtrim(strsplit(yml_data_info.variables, ','));
+                % var rename handle, all LPF variable are new just
+                % LPF_theVariableName
+                if strcmp(plotVar, 'EP_LPF_PRES_REL')
+                    plotVar = 'LPF_PRES_REL';
+                end
+            end
+            
             for k = 1:length(structs)
                 structs{k}.meta.parser = parser_name;
-                if isfield(yml_data_info, 'latitude') & ~isempty(yml_data_info.latitude)
-                    structs{k}.meta.latitude = yml_data_info.latitude;
+                structs{k}.EP_isNew = true;
+                
+                if yml_data_info.latitude
+                    structs{k}.meta.latitude = latitude;
                 end
+                
+                %EP_isNew=cellfun(@(x) x.EP_isNew, structs{k});
+                %tructs{k} = markPlotVar(structs{k}, plotVar, EP_isNew);
+                
                 if isfield(yml_data_info, 'offsets') && ~isempty(yml_data_info.offsets)
                     offsets = yml_data_info.offsets;
                     for ll = 1:numel(fieldnames(offsets))

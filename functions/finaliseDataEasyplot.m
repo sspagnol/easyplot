@@ -2,10 +2,10 @@ function [sam, defaultLatitude] = finaliseDataEasyplot(sam, defaultLatitude, fil
 %FINALISEDATAEASYPLOT Finalize sample data structure
 %
 % Inputs:
-%   sam             - a struct containing sample data.
+%   sam - a struct containing sample data.
 %
 % Outputs:
-%   sample_data - same as input, with fields added/modified
+%   sam - same as input, with fields added/modified
 
 %% retrieve good flag values
 goodFlags = getGoodFlags();
@@ -111,23 +111,15 @@ sam.history = '';
 
 %% add derived diagnositic variables, prefaces with 'EP_'
 [sam, defaultLatitude]  = add_EP_vars(sam, defaultLatitude);
-
-%% update EP_isPlottableVar, must be done last
-sam.EP_isPlottableVar = false(1,numel(sam.variables));
-% plot status, -1=delete, 0=not plotted, 1=plot
-sam.EP_variablePlotStatus = zeros(1,numel(sam.variables));
-for kk=1:numel(sam.variables)
-    isEmptyDim = isempty(sam.variables{kk}.dimensions);
-    isData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data(:)));
-    if ~isEmptyDim && isData
-        sam.EP_isPlottableVar(kk) = true;
-        sam.EP_variablePlotStatus(kk) = 0;
-    end
-end
-sam.EP_variablePlotStatus = sam.EP_variablePlotStatus(:);
 sam.meta.latitude = defaultLatitude;
 
-%%
+%% update EP_isPlottableVar, must be done after all variables have been added
+sam = update_EP_isPlottableVar(sam);
+sam = update_EP_slicing(sam);
+sam.EP_variablePlotStatus = zeros([numel(sam.variables), 1]);
+sam.EP_isNew = true;
+
+%% calculate data limits per variable, used in plotting routines
 sam = calc_EP_LIMITS(sam);
 
 end

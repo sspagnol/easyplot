@@ -43,6 +43,7 @@ if isfield(userData, 'sample_data')
     userData.plotLimits.TIME.RAW.xMax = NaN;
     userData.plotLimits.MULTI.RAW.yMin = NaN;
     userData.plotLimits.MULTI.RAW.yMax = NaN;
+    userData.plotVarNames = {};
     
     setappdata(hFig, 'UserData', userData);
 end
