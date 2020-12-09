@@ -233,6 +233,8 @@ for ii = 1:numel(userData.sample_data)
             end
             
             hLine.UserData.legendString = legendString;
+            [~, fNAME, fEXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
+            hLine.UserData.fileName = [strtrim(fNAME), strtrim(fEXT)];
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
         catch

@@ -21,7 +21,7 @@ end
 try
     p=get(eventdata,'Target');
     datacursorText{end+1} = ['DisplayName: ',get(p,'DisplayName')];
-    datacursorText{end+1} = ['FileName: ',get(p,'Tag')];
+    datacursorText{end+1} = ['FileName: ', strrep(p.UserData.fileName, '_', '\_')];
 end
 
 end
