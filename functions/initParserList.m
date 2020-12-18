@@ -168,8 +168,8 @@ parserList.message{ii}='Choose WQM files:';
 parserList.parser{ii}='WQMParse';
 
 ii=ii+1;
-parserList.name{ii}='InsituMarineOptics sensors (log)';
-parserList.wildcard{ii}={'*.log'};
+parserList.name{ii}='InsituMarineOptics sensors (log, txt)';
+parserList.wildcard{ii}={'*.log', '*.txt'};
 parserList.message{ii}='Choose IMO files:';
 parserList.parser{ii}='IMOParse';
 
