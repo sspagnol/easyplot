@@ -62,7 +62,14 @@ if sampleInterval<eps
     sampleInterval=mode(diff(xdataVar))*86400;
 end
 
-nt=round(((xdataVar(end) - xdataVar(1)))/(sampleInterval/24/3600) +1);
+% sub 10sec sample interval (especially 1 sec from bursting instruments)
+% cause slow down in the low pass filtering steps
+lpf_sampleInterval = 10;
+if sampleInterval > lpf_sampleInterval
+    lpf_sampleInterval = sampleInterval;
+end
+
+nt=round(((xdataVar(end) - xdataVar(1)))/(lpf_sampleInterval/24/3600) +1);
 if nt > 1e10
     warning('Too many data points for lowpass filtering.');
     return;
@@ -70,7 +77,7 @@ end
 %if length(dataset.XDATA.data)~=nt
 if length(xdataVar)~=nt
     avec=0:nt-1;
-    filterTime=xdataVar(1) + avec.*(sampleInterval/24/3600);
+    filterTime=xdataVar(1) + avec.*(lpf_sampleInterval/24/3600);
 else
     filterTime=xdataVar;
 end
@@ -110,7 +117,7 @@ filterTime=filterTime(:);
 
 
 candoLpf = false;
-if (numel(filterTime)*sampleInterval/3600) > 40 %&& sum(~isnan(dataset.YDATA.data)) > 10
+if (numel(filterTime)*lpf_sampleInterval/3600) > 40 %&& sum(~isnan(dataset.YDATA.data)) > 10
     candoLpf = true;
 end
 
@@ -151,7 +158,7 @@ if candoLpf
             newVarFlags = interp1(qdata, single(varFlags(qindex)), filterTime, 'nearest', 0);
         end
 
-        dT=sampleInterval;
+        dT=lpf_sampleInterval;
         filterData=pl66tn(newRawData,dT/3600,33);
         filterData = filterData + meansignal;
         
