@@ -1,6 +1,10 @@
 function sample_data = updateDeploymentNumber(sample_data)
 %UPDATEDEPLOYMENTNUMBER enumerate labels of instruments by number of times deployed
 
+if ~iscell(sample_data)
+    sample_data = {sample_data};
+end
+
 all_instrument_serial_no = cellfun(@(x) x.meta.instrument_serial_no, sample_data, 'UniformOutput', false);
 
 % count up number of deployments per instrument serial number
