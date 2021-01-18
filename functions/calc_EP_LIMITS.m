@@ -7,6 +7,9 @@ else
     EP_isPlottableVar = true(size(sam.variables));
 end
 
+% retrieve good flag values
+goodFlags = getGoodFlags();
+
 for ii=1:numel(sam.variables)
     if EP_isPlottableVar(ii)
         EP_LIMITS = struct;
