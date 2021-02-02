@@ -149,7 +149,14 @@ if candoLpf
             iGood = ismember(varFlags, goodFlags);
             rawData(~iGood) = NaN;
         end
-        meansignal=nanmean(rawData);
+        % since easyplot doesn't know about info about in/out water time,
+        % demean inner 80% of data which hopefully ignores in/out
+        % water data and give user expected mean about zero
+        buffer = 0.10; % percent to ignore at ends
+        n = numel(rawData);
+        i1 = floor(n * buffer);
+        i2 = n - i1;
+        meansignal=nanmean(rawData(i1:i2));
         % interpolate onto clean time data
         newRawData=interp1(qdata,rawData(qindex)-meansignal,filterTime,'linear',0.0);
         newRawData(isnan(newRawData)) = 0.0; % this should never be the case but...
