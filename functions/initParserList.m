@@ -36,6 +36,13 @@ parserList.message{ii}='Choose HOBO U22 txt files:';
 parserList.parser{ii}='hoboU22Parse';
 
 ii=ii+1;
+parserList.name{ii}='InterOcean S4 (s4a,s4b)';
+parserList.wildcard{ii}={'*.s4a', '*.s4b'};
+parserList.message{ii}='Choose InterOcean S4 s4a/s4b files:';
+parserList.parser{ii}='InterOceanS4Parse';
+
+
+ii=ii+1;
 parserList.name{ii}='Netcdf IMOS toolbox (nc)';
 parserList.wildcard{ii}={'*.nc'};
 parserList.message{ii}='Choose Netcdf *.nc files:';
