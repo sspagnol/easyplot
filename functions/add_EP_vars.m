@@ -27,6 +27,8 @@ sam = add_EP_TILT(sam);
 %     end
 % end
 
+sam = add_EP_X_demeaned(sam);
+
 % done after adding other variables
 sam = add_EP_LPF(sam);
 
