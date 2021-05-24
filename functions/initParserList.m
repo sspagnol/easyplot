@@ -24,6 +24,12 @@ parserList.message{ii}='Choose file list:';
 parserList.parser{ii}='fileListParse';
 
 ii=ii+1;
+parserList.name{ii}='AquaTec (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose AquaTec csv files:';
+parserList.parser{ii}='aquatecParse';
+
+ii=ii+1;
 parserList.name{ii}='Citadel CTD (csv)';
 parserList.wildcard{ii}={'*.csv'};
 parserList.message{ii}='Choose Citadel CTD csv files:';
