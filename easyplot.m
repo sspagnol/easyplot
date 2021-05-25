@@ -356,8 +356,12 @@ setappdata(hFig, 'UserData', userData);
         userData=getappdata(hFig, 'UserData');
         %treePanel = userData.treePanel;
         treePanel = findobj(hFig, 'Tag','treePanel');
-        tUserData = getappdata(treePanel, 'UserData');
-        delete(tUserData.jtable);
+        if ~isempty(treePanel)
+            tUserData = getappdata(treePanel, 'UserData');
+            if ~isempty(tUserData)
+                delete(tUserData.jtable);
+            end
+        end
         
         try
             % save path

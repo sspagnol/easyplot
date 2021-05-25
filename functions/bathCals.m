@@ -159,6 +159,7 @@ plotcals;
             hh2 = NaN(size(data));
         end
         
+        disp('Instrument | Date Range | Mean(Inst - Cal Inst)');
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
@@ -194,15 +195,15 @@ plotcals;
                 %plot only the regions of comparison
                 figure(f1);
                 if ii == 1
-                    h1(ii) = plot(tbase,caldat,'kx-', 'linewidth',2);
+                    h1(ii) = plot(datetime(tbase, 'ConvertFrom', 'datenum'), caldat,'kx-', 'linewidth',2);
                 end
-                h1(ii) = plot(tbase,insdat,'x-','color',cc(ii,:));
+                h1(ii) = plot(datetime(tbase, 'ConvertFrom', 'datenum'), insdat,'x-','color',cc(ii,:));
                 
                 if isfield(userData,'calx2')
                     if ii == 1
-                        h2(ii) = plot(tbase2,caldat2,'kx-','linewidth',2);
+                        h2(ii) = plot(datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth',2);
                     end
-                    h2(ii) = plot(tbase2,insdat2,'x-','color',cc(ii,:));
+                    h2(ii) = plot(datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:));
                 end
                 
                 %plot differences by instrument type
@@ -212,27 +213,39 @@ plotcals;
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
+                istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
                 text(double(XData(iend)),double(YData(iend)),...
                     data{ii}.meta.instrument_serial_no); %iu{ik}); %
+                diffdat = insdat-caldat;
+                STATS = statistic(diffdat);
+                inststr = [data{ii}.meta.instrument_make '-' data{ii}.meta.instrument_model '-' data{ii}.meta.instrument_serial_no];
+                str = [inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN)];
+                disp(str);
                 if isfield(userData,'calx2')
                     hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', iu{ik});
                     XData = get(hh2(ii), 'XData');
                     YData = get(hh2(ii), 'YData');
                     iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
+                    istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
                     text(double(XData(iend)),double(YData(iend)),...
                         data{ii}.meta.instrument_serial_no); %iu{ik}); %
+                    diffdat = insdat2-caldat2;
+                    STATS = statistic(diffdat);
+                    str = [inststr ' | ' datestr(tbase2(istart)) ' -- ' datestr(tbase2(iend)) ' | ' num2str(STATS.MEAN)];
+                    disp(str);
                 end
             else
                 rmins = [rmins; ii];
             end
         end
+        disp(' ');
         
         % remove handles of plots that weren't created (indicated by NaN)
         h1(rmins) = [];
         h2(rmins) = [];
         hh1(rmins) = [];
         hh2(rmins) = [];
-        iu(rmins) = [];
+        %iu(rmins) = [];
         
         if exist('h1','var')
             figure(f1);
@@ -241,7 +254,7 @@ plotcals;
             grid('on');
             xlabel('Time');
             ylabel('Temperature \circC');
-            datetick;
+            %datetick;
             legend(h1,legText);
             title('Bath Calibrations');
             

@@ -15,12 +15,13 @@ if isfield(userData, 'sample_data')
     plotVar = {'TEMP'};
     userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
     userData.treePanelData = generateTreeData(userData.sample_data);
-    userData.jtable = createTreeTable(treePanel);
+    %userData.jtable = createTreeTable(treePanel);
+    updateTreeDisplay(treePanel, userData.treePanelData);
     userData.plotVarNames = {'TEMP'};
     setappdata(hFig, 'UserData', userData);
     plotData(hFig);
-    zoomYextent_Callback(hObject);
-    zoomXextent_Callback(hObject);
+    %zoomYextent_Callback(hObject);
+    %zoomXextent_Callback(hObject);
 end
 
 % Create the UICONTEXTMENU
