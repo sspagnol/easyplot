@@ -12,6 +12,7 @@ if isempty(hash)
     hash = java.util.Hashtable;
 end
 if ~isempty(hash.get(hObject))
+    pause(0.1);
     return;
 end
 hash.put(hObject,1);
@@ -27,6 +28,7 @@ if isempty(userData.sample_data)
     plotPanel = findobj(hFig, 'Tag','plotPanel');
     hLegend = findobj(plotPanel.Children,'Tag','legend');
     delete(hLegend);
+    pause(0.1);
     hash.remove(hObject);
     return; 
 end
@@ -277,6 +279,7 @@ set(msgPanelText,'String','Done');
 userData.EP_redoPlots = false;
 setappdata(hFig, 'UserData', userData);
 % is this needed?
+pause(0.1);
 drawnow;
 
 % release rentrancy flag
