@@ -81,8 +81,8 @@ for vv = 1:numel(iXVars)
     % water data and give user expected mean about zero
     buffer = 0.10; % percent to ignore at ends
     n = numel(rawData);
-    i1 = floor(n * buffer);
-    i2 = n - i1;
+    i1 = max(2, floor(n * buffer));
+    i2 = n - i1 + 1;
     meansignal=nanmean(rawData(i1:i2));
     
     % add LPF data
