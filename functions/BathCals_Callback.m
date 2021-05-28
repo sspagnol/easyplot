@@ -13,21 +13,34 @@ treePanel = findobj(hFig, 'Tag','treePanel');
 
 if isfield(userData, 'sample_data')
     plotVar = {'TEMP'};
+    
+    varList = {'TEMP', 'CNDC'};
+
+    title = 'Variable to plot?';
+    prompt = 'Variable List';
+    defaultanswer = 1;
+    plotVar = optionDialog( title, prompt, varList, defaultanswer );
+
+    pause(0.1);
+    if isempty(plotVar), return; end
+    
     userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
     userData.treePanelData = generateTreeData(userData.sample_data);
     %userData.jtable = createTreeTable(treePanel);
     updateTreeDisplay(treePanel, userData.treePanelData);
-    userData.plotVarNames = {'TEMP'};
+    userData.plotVarNames = {plotVar};
     setappdata(hFig, 'UserData', userData);
     plotData(hFig);
     %zoomYextent_Callback(hObject);
     %zoomXextent_Callback(hObject);
+else
+    return;
 end
 
 % Create the UICONTEXTMENU
 uic = uicontextmenu(hFig);
 % Create the parent menu
-bathcalmenu = uimenu(uic,'label','Bath Calibrations');
+bathcalmenu = uimenu(uic,'label',[plotVar ' Bath Calibrations']);
 % Create the submenus
 m1 = uimenu(bathcalmenu,'label','Select Points',...
     'Callback',@selectPoints_Callback);

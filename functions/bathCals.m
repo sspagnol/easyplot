@@ -15,13 +15,13 @@ function bathCals(userData)
 hg2flag = ~verLessThan('matlab', '8.4.0');
 
 %
-%dat = userData.treePanelData;
+plotVar = char(userData.plotVarNames);
 
 %Get the instrument list: use sample_data structures
 instSerials = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data, 'UniformOutput', false)'; 
 instModels = cellfun(@(x) x.meta.instrument_model, userData.sample_data, 'UniformOutput', false)'; 
 %iSet = true(size(instModels));
-iSet = cellfun(@(x) getVar(x.variables, 'TEMP') ~= 0, userData.sample_data, 'UniformOutput', false)';
+iSet = cellfun(@(x) getVar(x.variables, plotVar) ~= 0, userData.sample_data, 'UniformOutput', false)';
 iSet=[iSet{:}]';
 %instList = cellfun(@(x) strcat(x.meta.instrument_model, ' #', x.meta.instrument_serial_no), userData.sample_data, 'UniformOutput', false)';
 instList = strcat(instModels, '# ', instSerials);
@@ -253,7 +253,7 @@ plotcals;
             legText(rmins) = [];
             grid('on');
             xlabel('Time');
-            ylabel('Temperature \circC');
+            ylabel(plotVar);
             %datetick;
             legend(h1,legText);
             title('Bath Calibrations');
@@ -263,9 +263,9 @@ plotcals;
             legText(rmins) = [];
             [legText,IA,IC] = unique(legText);
             legend(hh1(IA));
-            title('Calibration bath temperature offsets from reference instrument');
-            xlabel('Bath temperature \circC');
-            ylabel('Temperature offset \circC');
+            title(['Calibration bath ' plotVar ' offsets from reference instrument']);
+            xlabel(['Bath ' plotVar]);
+            ylabel([plotVar ' offset']);
             grid('on');
         end
     end

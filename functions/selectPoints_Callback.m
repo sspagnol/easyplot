@@ -19,8 +19,8 @@ dragzoom('off');
 userData.calx = x;
 userData.caly = y;
 
-% is there a second temperature range?
-temp2 = questdlg('If there a second temperature range to select, click ',...
+% is there a second range?
+temp2 = questdlg(['If there a second ' char(userData.plotVarNames) ' range to select, click '],...
     'Bath Calibrations','No');
 
 switch temp2

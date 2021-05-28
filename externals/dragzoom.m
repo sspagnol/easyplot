@@ -2307,11 +2307,12 @@ Initialize(varargin{:})
 %==========================================================================
     function [x, y, z] = GetCursorCoordOnAxes()
         %GetCursorCoordOnAxImg
-        
+        if exist(hAx)
         crd = get(hAx, 'CurrentPoint');
         x = crd(2,1);
         y = crd(2,2);
         z = crd(2,3);
+        end
     end
 %--------------------------------------------------------------------------
 
