@@ -110,7 +110,6 @@ plotcals;
         %return the handle to the figure, h
         % now put them onto the same timebase to compare the temp offsets:
         %use the cal bath interval:
-        iu = unique(instModels);
         
         ref = userData.sample_data{refinst};
         refTemp = ref.variables{ref.EP_variablePlotStatus>0}.data;
@@ -126,9 +125,13 @@ plotcals;
         end
         
         data = userData.sample_data;
-        data(refinst) = [];
-        data = data(iSet);
-        %instModels = instModels(iSet);
+        data(refinst) = []; % remove reference instrument
+        data = data(iSet); % keep only user selected instruments
+
+        dinstList = instList(iSet);
+        dinstModels = instModels(iSet);
+        udinstModels = unique(dinstModels, 'stable');
+        
         %plot calibration data for all temperature ranges by time:
         f1 = figure;
         clf;
@@ -140,7 +143,7 @@ plotcals;
         hold('on');
         
         cc = parula(numel(data));
-        cb = parula(size(iu,1));
+        cb = parula(size(udinstModels,1));
         clear('h');
         clear('h2');
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
@@ -159,15 +162,16 @@ plotcals;
             hh2 = NaN(size(data));
         end
         
+
         disp('Instrument | Date Range | Mean(Inst - Cal Inst)');
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
             if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
             instTemp = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
-            igIns1 = instTime >= tmin1 & instTime <= tmax1;
-            if isfield(userData,'calx2')
-                igIns2 = instTime >= tmin2 & instTime <= tmax2;
+            igIns1 = (instTime >= tmin1) & (instTime <= tmax1);
+            if isfield(userData, 'calx2')
+                igIns2 = (instTime >= tmin2) & (instTime <= tmax2);
             end
             if sum(igIns1) > 5
                 %need the largest time diff between ref and each ins as timebase:
@@ -176,7 +180,7 @@ plotcals;
                     tbase = refTime(igRef1);
                     caldat = refTemp(igRef1);
                     insdat = match_timebase(tbase,instTime(igIns1),instTemp(igIns1));
-                    if isfield(userData,'calx2')
+                    if isfield(userData, 'calx2')
                         tbase2 = refTime(igRef2);
                         caldat2 = refTemp(igRef2);
                         insdat2 = match_timebase(tbase2,instTime(igIns2),instTemp(igIns2));
@@ -208,8 +212,8 @@ plotcals;
                 
                 %plot differences by instrument type
                 figure(f2);
-                ik = strcmp(strtrim(instModels{ii}), iu); %find the instrument group
-                hh1(ii) = plot(caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', iu{ik});
+                ik = find(strcmp(dinstModels{ii}, udinstModels));
+                hh1(ii) = plot(caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
@@ -222,7 +226,7 @@ plotcals;
                 str = [inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN)];
                 disp(str);
                 if isfield(userData,'calx2')
-                    hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', iu{ik});
+                    hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                     XData = get(hh2(ii), 'XData');
                     YData = get(hh2(ii), 'YData');
                     iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
@@ -245,11 +249,12 @@ plotcals;
         h2(rmins) = [];
         hh1(rmins) = [];
         hh2(rmins) = [];
-        %iu(rmins) = [];
+        dinstList(rmins) = [];
+        dinstModels(rmins) = [];
         
         if exist('h1','var')
             figure(f1);
-            legText = instList(iSet);
+            legText = dinstList;
             legText(rmins) = [];
             grid('on');
             xlabel('Time');
@@ -259,9 +264,9 @@ plotcals;
             title('Bath Calibrations');
             
             figure(f2);
-            legText = instModels(iSet);
+            legText = dinstModels;
             legText(rmins) = [];
-            [legText,IA,IC] = unique(legText);
+            [legText, IA, IC] = unique(legText);
             legend(hh1(IA));
             title(['Calibration bath ' plotVar ' offsets from reference instrument']);
             xlabel(['Bath ' plotVar]);
