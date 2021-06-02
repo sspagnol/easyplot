@@ -12,7 +12,8 @@ dataIndex = get(eventdata,'DataIndex');
 pos = get(eventdata,'Position');
 
 datacursorText = {['Time: ', datestr(pos(1),'yyyy-mm-dd HH:MM:SS.FFF')],...
-    ['Y: ',num2str(pos(2), '%10.4f')]};
+    ['Y: ',num2str(pos(2), '%10.4f')],...
+    ['Sample: ' num2str(dataIndex)]};
 % If there is a Z-coordinate in the position, display it as well
 if length(pos) > 2
     datacursorText{end+1} = ['Z: ',num2str(pos(3),6)];
