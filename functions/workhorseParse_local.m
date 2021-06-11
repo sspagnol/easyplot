@@ -161,7 +161,8 @@ narginchk(1, 2);
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
-  voltage     = variable.adcChannel1;
+  current     = variable.adcChannel0; % counts
+  voltage     = variable.adcChannel1; % counts
   clear variable;
   
   %
@@ -217,7 +218,9 @@ narginchk(1, 2);
   end
 
   speed = sqrt(vnrth.^2 + veast.^2);
-  direction = getDirectionFromUV(veast, vnrth);
+  direction = atan2(vnrth, veast) * 180/pi; % atan2 goes positive anti-clockwise with 0 on the right side
+  direction = -direction + 90; % we want to go positive clockwise with 0 on the top side
+  direction = direction + 360*(direction < 0); % we shift +360 for whatever is left negative
   
   serial = fixed.instSerialNumber(1); % we assume the first value is correct for the rest of the dataset
   if isnan(serial)
@@ -233,38 +236,46 @@ narginchk(1, 2);
       case 0
           adcpFreq = 75;
           model = 'Long Ranger';
-          xmitVoltScaleFactors = 2092719 / 10; % Long Ranger output is 10x larger, not sure why.
-          
+          %xmitVoltScaleFactors = 2092719 / 10; % Long Ranger output is 10x larger, not sure why.
+		  xmitVoltScaleFactors = 2092719;
+		  xmitCurrentScaleFactors = 43838;
+
       case 1
           adcpFreq = 150;
           model = 'Quartermaster';
           xmitVoltScaleFactors = 592157;
-		  
+		  xmitCurrentScaleFactors = 11451;
+
       case 10
           adcpFreq = 300;
           model = 'Sentinel or Monitor';
           xmitVoltScaleFactors = 592157;
+          xmitCurrentScaleFactors = 11451;
 		  
       case 11
           adcpFreq = 600;
           model = 'Sentinel or Monitor';
           xmitVoltScaleFactors = 380667;
+		  xmitCurrentScaleFactors = 11451;
 		  
       case 100
           adcpFreq = 1200;
           model = 'Sentinel or Monitor';
           xmitVoltScaleFactors = 253765;
+		  xmitCurrentScaleFactors = 11451;
 		  
       otherwise
           adcpFreq = 2400;
           model = 'DVS';
           xmitVoltScaleFactors = 253765;
+		  xmitCurrentScaleFactors = 11451;
   end
-  xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
   
   % xmit voltage conversion for diagnostics
   % converting xmit voltage counts to volts , these are rough values
-  voltage = voltage * xmitVoltScaleFactors;
+  %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  voltage = (voltage * xmitVoltScaleFactors) / 1000000; % Volts
+  current = (current * xmitCurrentScaleFactors) / 1000000; % Amps
   
   % set all NaN to the next available value after it (conservative approach)
   iNaNVoltage = isnan(voltage);
@@ -277,6 +288,18 @@ narginchk(1, 2);
       iNextValue = [false; iNaNVoltage(1:end-1)];
       voltage(iNaNVoltage) = voltage(iNextValue);
       iNaNVoltage = isnan(voltage);
+  end
+  
+  iNaNCurrent = isnan(current);
+  if iNaNCurrent(end) % we need to deal separately with the last value in case it's NaN
+      iLastGoodValue = find(~iNaNCurrent, 1, 'last');  % in this case we have no choice but to look for the previous available value before it
+      current(end) = current(iLastGoodValue);
+      iNaNCurrent(end) = false;
+  end
+  while any(iNaNCurrent)
+      iNextValue = [false; iNaNCurrent(1:end-1)];
+      current(iNaNCurrent) = current(iNextValue);
+      iNaNCurrent = isnan(current);
   end
   
   % fill in the sample_data struct
@@ -374,14 +397,15 @@ narginchk(1, 2);
       'PITCH',              1,      pitch; ...
       'ROLL',               1,      roll; ...
       ['HEADING' magExt],   1,      heading; ...
-      'VOLT',				1,		voltage
+      'TX_VOLT',				1,		voltage; ...
+	  'TX_CURRENT',				1,		current
       };
   
   clear vnrth veast wvel evel speed direction backscatter1 ...
       backscatter2 backscatter3 backscatter4 temperature pressure ...
       salinity correlation1 correlation2 correlation3 correlation4 ...
       percentGood1 percentGood2 percentGood3 percentGood4 pitch roll ...
-      heading voltage;
+      heading voltage current;
   
   nVars = size(vars, 1);
   sample_data.variables = cell(nVars, 1);
@@ -563,16 +587,7 @@ end
 
 function direction = getDirectionFromUV(uvel, vvel)
     % direction is in degrees clockwise from north
-    direction = atan(abs(uvel ./ vvel)) .* (180 / pi);
-    
-    % !!! if vvel == 0 we get NaN !!!
-    direction(vvel == 0) = 90;
-    
-    se = vvel <  0 & uvel >= 0;
-    sw = vvel <  0 & uvel <  0;
-    nw = vvel >= 0 & uvel <  0;
-    
-    direction(se) = 180 - direction(se);
-    direction(sw) = 180 + direction(sw);
-    direction(nw) = 360 - direction(nw);
+	direction = atan2(vvel, uvel) * 180/pi; % atan2 goes positive anti-clockwise with 0 on the right side
+    direction = -ddirection + 90; % we want to go positive clockwise with 0 on the top side
+    direction = direction + 360*(direction < 0); % we shift +360 for whatever is left negative
 end
