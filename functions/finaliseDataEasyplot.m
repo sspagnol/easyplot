@@ -64,6 +64,12 @@ for kk=1:numel(sam.dimensions)
     end
 end
 
+for kk=1:numel(sam.variables)
+    if ~isfield(sam.variables{kk}, 'comment')
+        sam.variables{kk}.comment = '';
+    end
+end
+
 if isfield(sam,'toolbox_input_file')
     [PATHSTR,NAME,EXT] = fileparts(sam.toolbox_input_file);
     sam.EP_inputFilePath = PATHSTR;
@@ -87,6 +93,12 @@ end
 if ~isfield(sam, 'geospatial_lat_max')
 sam.geospatial_lat_max = [];
 end
+if ~isfield(sam, 'geospatial_lon_min')
+sam.geospatial_lon_min = 152;
+end
+if ~isfield(sam, 'geospatial_lon_max')
+sam.geospatial_lon_max = 152;
+end
 sam.time_coverage_start = sam.dimensions{idTime}.data(1);
 sam.time_coverage_end = sam.dimensions{idTime}.data(end);
 sam.dimensions{idTime}.comment = '';
@@ -109,9 +121,26 @@ sam.meta.depth = 0;
 
 sam.history = '';
 
+
 %% add derived diagnositic variables, prefaces with 'EP_'
 [sam, defaultLatitude]  = add_EP_vars(sam, defaultLatitude);
 sam.meta.latitude = defaultLatitude;
+sam.geospatial_lat_min = defaultLatitude;
+sam.geospatial_lat_max = defaultLatitude;
+
+idDEPTH =  getVar(sam.variables, 'EP_DEPTH');
+if idDEPTH
+    DEPTH = sam.variables{idDEPTH}.data;
+    ind1 = floor(numel(DEPTH)/3);
+    ind2 = ind1 + ind1;
+    sam.instrument_nominal_depth = nanmean(DEPTH(ind1:ind2));
+else
+    sam.instrument_nominal_depth = 10;
+end
+
+% add CSPD/CDIR (_MAG) if required
+sam = EP_velocityMagDirPP( {sam}, 'EP', true );
+sam  = sam{1};
 
 %% update EP_isPlottableVar, must be done after all variables have been added
 sam = update_EP_isPlottableVar(sam);
