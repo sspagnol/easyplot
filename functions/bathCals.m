@@ -11,6 +11,8 @@ function bathCals(userData)
 %
 % Rebecca Cowley <rebecca.cowley@csiro.au>
 % October, 2015
+%
+% Simon Spagnol <s.spagnol@aims.gov.au>
 
 hg2flag = ~verLessThan('matlab', '8.4.0');
 
@@ -163,7 +165,8 @@ plotcals;
         end
         
 
-        disp('Instrument | Date Range | Mean(Inst - Cal Inst)');
+        disp(['| Instrument | Date Range | ' plotVar ' Mean(Inst - Cal Inst) |']);
+        disp('| --- | --- | --- |');
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
@@ -223,7 +226,7 @@ plotcals;
                 diffdat = insdat-caldat;
                 STATS = statistic(diffdat);
                 inststr = [data{ii}.meta.instrument_make '-' data{ii}.meta.instrument_model '-' data{ii}.meta.instrument_serial_no];
-                str = [inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN)];
+                str = ['| ' inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                 disp(str);
                 if isfield(userData,'calx2')
                     hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
@@ -235,7 +238,7 @@ plotcals;
                         data{ii}.meta.instrument_serial_no); %iu{ik}); %
                     diffdat = insdat2-caldat2;
                     STATS = statistic(diffdat);
-                    str = [inststr ' | ' datestr(tbase2(istart)) ' -- ' datestr(tbase2(iend)) ' | ' num2str(STATS.MEAN)];
+                    str = ['| ' inststr ' | ' datestr(tbase2(istart)) ' -- ' datestr(tbase2(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                     disp(str);
                 end
             else
@@ -258,7 +261,7 @@ plotcals;
             legText(rmins) = [];
             grid('on');
             xlabel('Time');
-            ylabel(plotVar);
+            ylabel(makeTexSafe(plotVar));
             %datetick;
             legend(h1,legText);
             title('Bath Calibrations');
@@ -268,9 +271,9 @@ plotcals;
             legText(rmins) = [];
             [legText, IA, IC] = unique(legText);
             legend(hh1(IA));
-            title(['Calibration bath ' plotVar ' offsets from reference instrument']);
-            xlabel(['Bath ' plotVar]);
-            ylabel([plotVar ' offset']);
+            title(makeTexSafe(['Calibration bath ' plotVar ' offsets from reference instrument']));
+            xlabel(makeTexSafe(['Bath ' plotVar]));
+            ylabel(makeTexSafe([plotVar ' offset']));
             grid('on');
         end
     end

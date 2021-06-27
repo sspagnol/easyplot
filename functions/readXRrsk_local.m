@@ -342,7 +342,7 @@ function [longNames, shortNames, data, comments] = convertRSK(RSK)
 
 % RSK long/short name form of all variables
 longNames = {RSK.channels.longName};
-shortNames = {RSK.channels.shortName};
+shortNames = strtrim({RSK.channels.shortName});
 % index into RSK.data.value per variable
 chanCol = [];
 for chan = longNames
@@ -352,7 +352,7 @@ end
 for k = 1:length(longNames)
     name = '';
     comment = '';
-    switch longNames{k}
+    switch strtrim(longNames{k})
         
         %Conductivity (mS/cm) = 10-1*(S/m)
         case 'Conductivity'
@@ -361,6 +361,7 @@ for k = 1:length(longNames)
             
             %Temperature (Celsius degree)
         case 'Temperature', name = 'TEMP';
+            sname = char(shortNames{k});
             data.(name) = RSK.data.values(:,chanCol(k));
             
             %Pressure (dBar)
