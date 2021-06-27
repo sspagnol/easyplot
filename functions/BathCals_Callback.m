@@ -14,7 +14,7 @@ treePanel = findobj(hFig, 'Tag','treePanel');
 if isfield(userData, 'sample_data')
     plotVar = {'TEMP'};
     
-    varList = {'TEMP', 'CNDC'};
+    varList = {'TEMP', 'CNDC', 'PRES', 'PRES_REL', 'EP_DEPTH', 'LPF_EP_DEPTH'};
 
     title = 'Variable to plot?';
     prompt = 'Variable List';
