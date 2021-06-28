@@ -45,5 +45,7 @@ for ii = 1:numel(graphs)
         hLegend.ItemTokenSize = [15, 36]; % default [30 18]
     end
 end
+drawnow;
+pause(0.01);
 
 end

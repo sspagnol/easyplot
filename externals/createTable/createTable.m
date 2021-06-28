@@ -396,7 +396,7 @@ function processParams(paramsStruct,mtable,jtable)
                 % Cell array of header names
                 for argIdx = 1 : length(paramsStruct.imagecolumns)
                     jtable.getColumn(paramsStruct.imagecolumns{argIdx}).setCellRenderer(ImageCellRenderer(paramsStruct.imagetooltipheight));
-                    drawnow;
+                    %drawnow;
                 end
             else
                 % Try to treat as a numeric index array
@@ -404,10 +404,10 @@ function processParams(paramsStruct,mtable,jtable)
                     colIdx = paramsStruct.imagecolumns(argIdx) - 1;  % assume 1-based indexing
                     %jtable.setEditable(colIdx,0);  % images are editable!!!
                     jtable.getColumnModel.getColumn(colIdx).setCellRenderer(ImageCellRenderer(paramsStruct.imagetooltipheight));
-                    drawnow;
+                    %drawnow;
                 end
             end
-             drawnow;
+             %drawnow;
         elseif ~isempty(paramsStruct.imagecolumns)  % i.e., missing Renderer
             warning('YMA:createTable:missingJavaClass','Cannot set image columns: ImageCellRenderer.class is missing from the Java class path');
         end
@@ -418,7 +418,9 @@ function processParams(paramsStruct,mtable,jtable)
         if ~isempty(cm)
             popupMenu = jtable.getRowHeaderPopupMenu;
             %popupMenu.list;
-            popupMenu.removeAll; drawnow; pause(0.1);
+            popupMenu.removeAll;
+            %drawnow; 
+            pause(0.1);
             cmChildren = get(cm,'child');
             itemNum = 0;
             for cmChildIdx = length(cmChildren) : -1 : 1
@@ -453,7 +455,7 @@ function processParams(paramsStruct,mtable,jtable)
                 popupMenu.addSeparator;
                 popupMenu.getComponent(extraIdx-1).setVisible(0);
             end
-            drawnow;
+            %drawnow;
         end
 
     catch

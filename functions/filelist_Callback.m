@@ -93,10 +93,13 @@ if strcmp(selectionType,'normal')
     end
     
     zoom(gca,'reset');
-    set(gca,'XLim',newXLimits);
+    set(gca,'XLim', datenum_to_datetime(newXLimits));
     setappdata(hFig, 'UserData', userData);
-    drawnow;
+    %drawnow;
 end
+
+drawnow;
+pause(0.01);
 
 end
 

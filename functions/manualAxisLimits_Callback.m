@@ -209,8 +209,8 @@ setappdata(hFig, 'UserData', userData);
 %                     set(axH(ii),'XLim',[xMin dataLimits.TIME.RAW.xMax]);
 %                     updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
 %                 end
-                    set(axH(1),'XLim',[xMin axH(1).XLim(2)]);
-                    updateDateLabel(plotPanel,struct('Axes', axH(1)), true);                
+                    set(axH(1),'XLim',datetime([xMin axH(1).XLim(2)], 'ConvertFrom', 'datenum'));
+                    %updateDateLabel(plotPanel,struct('Axes', axH(1)), true);                
                 %setappdata(theParent, 'UserData', userData);
                 
             else
@@ -235,7 +235,7 @@ setappdata(hFig, 'UserData', userData);
                 %                     updateDateLabel(plotPanel,struct('Axes', axH(ii)), true);
                 %                 end
                 set(axH(1),'XLim',[axH(1).XLim(1) xMax]);
-                updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
+                %updateDateLabel(plotPanel,struct('Axes', axH(1)), true);
                 
                 setappdata(hFig, 'UserData', userData);
                 

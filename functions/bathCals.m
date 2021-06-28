@@ -126,10 +126,18 @@ plotcals;
         refTimeDiff = nanmedian(diff(refTime));
         tmin1 = userData.calx(1);
         tmax1 = userData.calx(2);
-        igRef1 = refTime >= tmin1 & refTime <= tmax1;
+        if isdatetime(tmin1)
+            tmin1 = datenum(tmin1);
+            tmax1 = datenum(tmax1);
+        end        
+		igRef1 = refTime >= tmin1 & refTime <= tmax1;
         if isfield(userData,'calx2')
             tmin2 = userData.calx2(1);
             tmax2 = userData.calx2(2);
+            if isdatetime(tmin2)
+                tmin2 = datenum(tmin2);
+                tmax2 = datenum(tmax2);
+            end
             igRef2 = refTime >= tmin2 & refTime <= tmax2;
         end
         

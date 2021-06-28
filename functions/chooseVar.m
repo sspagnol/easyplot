@@ -33,7 +33,7 @@ prompt = 'Variable List';
 defaultanswer = 1;
 choice = optionDialog( title, prompt, dialogList, defaultanswer );
 
-pause(0.1);
+pause(0.01);
 if isempty(choice), return; end
 
 if strcmp(choice,'ALLVARS') %choosen plot all variables

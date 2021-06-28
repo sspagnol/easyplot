@@ -3,6 +3,8 @@ function updateDateLabel(source, eventData, varargin)
 % UPDATEDATELABEL Update dateticks on zoom/pan.
 %
 % Code from dynamicDateTicks
+disp('Skipping updateDateLabel...');
+return;
 
 keepLimits=false;
 % The following is mess of code but was of a result of trying to use the

@@ -129,7 +129,7 @@ else
 
             try
                 set(msgPanelText,'String',strcat({'Loading : '}, toolbox_input_file_short));
-                drawnow;
+                %drawnow;
                 disp(['importing file ', num2str(ii), ' of ', num2str(nFiles), ' : ', toolbox_input_file_short]);
                 
                 structs = parser( {toolbox_input_file}, 'timeSeries' );
@@ -197,6 +197,8 @@ else
     end
 end
 
+drawnow;
+pause(0.01);
 % release rentrancy flag
 hash.remove(hObject);
 

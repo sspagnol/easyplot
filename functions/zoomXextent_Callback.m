@@ -30,7 +30,7 @@ else
     userData.plotLimits.TIME.xMax = userData.dataLimits.TIME.RAW.xMax;
     
     if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax)
-        set(gca,'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+        set(gca,'XLim',datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax], 'ConvertFrom', 'datenum'));
     end
 end
 

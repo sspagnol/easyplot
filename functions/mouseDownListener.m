@@ -1,5 +1,5 @@
 %%
-function mouseDownListener(hObject,eventdata); %hObject, eventdata
+function mouseDownListener(hObject,eventdata) %hObject, eventdata
 
 % set re-entrancy flag
 persistent hash;

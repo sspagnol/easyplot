@@ -12,13 +12,14 @@ if isempty(hash)
     hash = java.util.Hashtable;
 end
 if ~isempty(hash.get(hObject))
-    pause(0.1);
+    pause(0.01);
     return;
 end
 hash.put(hObject,1);
 
 hFig = ancestor(hObject,'figure');
 if isempty(hFig)
+    pause(0.01);
     hash.remove(hObject);
     return;
 end
@@ -28,7 +29,7 @@ if isempty(userData.sample_data)
     plotPanel = findobj(hFig, 'Tag','plotPanel');
     hLegend = findobj(plotPanel.Children,'Tag','legend');
     delete(hLegend);
-    pause(0.1);
+    pause(0.01);
     hash.remove(hObject);
     return; 
 end
@@ -110,17 +111,22 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
-%% delete old subplots if required
-graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
-if redoSubplots
-    if ~isempty(graphs)
-        xlimits = get(graphs(1), 'XLim');
-        userData.plotLimits.TIME.xMin = xlimits(1);
-        userData.plotLimits.TIME.xMax = xlimits(2);
-        delete(graphs);
+    %% delete old subplots if required
+    graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+    if redoSubplots
+        if ~isempty(graphs)
+            xlimits = get(graphs(1), 'XLim');
+            if all(isdatetime(xlimits))
+                userData.plotLimits.TIME.xMin = datenum(xlimits(1));
+                userData.plotLimits.TIME.xMax = datenum(xlimits(2));
+            else
+                userData.plotLimits.TIME.xMin = xlimits(1);
+                userData.plotLimits.TIME.xMax = xlimits(2);
+            end
+            delete(graphs);
+        end
+        graphs=gobjects(nSubPlots,1);
     end
-    graphs=gobjects(nSubPlots,1);
-end
 
 %%
 % loop over sample_data and plot the marked variables into previously
@@ -137,6 +143,7 @@ for ii = 1:numel(userData.sample_data)
         if redoSubplots
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             graphs(ihAx).UserData.axesInfo = userData.axesInfo;
+            %dragzoom(ihAx, 'on');
         else
             switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
@@ -157,12 +164,14 @@ for ii = 1:numel(userData.sample_data)
             case 'VARS_OVERLAY'
                 graphs(ihAx).Tag = 'MULTI';
                 if userData.EP_plotYearly
+                    rulerChanged = apply_correct_ruler('numeric', graphs(ihAx));
                     set(graphs(ihAx),'XLim',[1 367])
                 else
+                    rulerChanged = apply_correct_ruler('datetime', graphs(ihAx));
                     if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
-                        set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
                     else
-                        set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
                     end
                 end
                 if ~isfield(userData.plotLimits, 'MULTI')
@@ -173,12 +182,14 @@ for ii = 1:numel(userData.sample_data)
             case 'VARS_STACKED'
                 graphs(ihAx).Tag = theVar;
                 if userData.EP_plotYearly
+                    rulerChanged = apply_correct_ruler('numeric', graphs(ihAx));
                     set(graphs(ihAx),'XLim',[1 367])
                 else
+                    rulerChanged = apply_correct_ruler('datetime', graphs(ihAx));
                     if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
-                        set(graphs(ihAx),'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);
+                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
                     else
-                        set(graphs(ihAx),'XLim',[userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]);
+                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
                     end
                 end
                 if ~isfield(userData.plotLimits, theVar)
@@ -225,9 +236,13 @@ for ii = 1:numel(userData.sample_data)
                         'DisplayName', legendString, 'Tag', instStr);
                 end
             else
-                hLine = line('Parent',graphs(ihAx),'XData',xdataVar, ...
-                    'YData',ydataVar, ...
-                    'LineStyle',lineStyle, 'Marker', markerStyle,...
+%                 xdataVar_datetime = datenum_to_datetime(xdataVar);
+%                 hLine = line('Parent',graphs(ihAx),'XData',xdataVar_datetime, ...
+%                     'YData',ydataVar, ...
+%                     'LineStyle',lineStyle, 'Marker', markerStyle, ...
+%                     'DisplayName', legendString, 'Tag', instStr);
+                hLine = plot(graphs(ihAx), datenum_to_datetime(xdataVar), ydataVar, ...
+                    'LineStyle',lineStyle, 'Marker', markerStyle, ...
                     'DisplayName', legendString, 'Tag', instStr);
             end
             
@@ -236,6 +251,9 @@ for ii = 1:numel(userData.sample_data)
             hLine.UserData.fileName = [strtrim(fNAME), strtrim(fEXT)];
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
+            
+            drawnow;
+            pause(0.01);
         catch e
             disp(e.message);
             for ie = 1:numel(e.stack)
@@ -255,14 +273,14 @@ updateLineColour( hFig );
 
 if redoSubplots
     % link all/any subplot axes
-    dragzoom(graphs);
+    %dragzoom(graphs);
     linkaxes(graphs,'x');
     
     % update date labels, only pass one axis and it will update any others
-    updateDateLabel([], struct('Axes', graphs(1)), false);
+    %updateDateLabel([], struct('Axes', graphs(1)), false);
     
     % not the best when have multiline xticklabels, not sure why yet.
-    addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
+    %addlistener(graphs, 'XLim', 'PostSet', @updateDateLabel);
     
     % update ylabels
     for ii=1:length(graphs)
@@ -278,9 +296,10 @@ updateLegends(hFig);
 set(msgPanelText,'String','Done');
 userData.EP_redoPlots = false;
 setappdata(hFig, 'UserData', userData);
+
 % is this needed?
-pause(0.1);
 drawnow;
+pause(0.05);
 
 % release rentrancy flag
 hash.remove(hObject);

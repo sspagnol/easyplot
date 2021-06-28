@@ -9,13 +9,19 @@ hFig=ancestor(hObject,'figure');
 userData=getappdata(hFig, 'UserData');
 
 axH = gca;
+eventdata.Source.CurrentAxes.Position
 
 % is the current pointer within the bounds of the axes?
 if localInBounds(axH)
     
     listData=cell(0,6);
     currentPosition = get(axH, 'CurrentPoint');
+    cpX = currentPosition(1);
     
+    if isa(axH.XAxis,'matlab.graphics.axis.decorator.DatetimeRuler')
+        %currentPosition = hAxes.XAxis.ReferenceDate + hAxes.CurrentPoint(1);
+        cpX = datenum(axH.XAxis.ReferenceDate + cpX);
+    end
     for ii=1:numel(userData.sample_data) % loop over files
         for jj=1:numel(userData.sample_data{ii}.variables)
             if userData.sample_data{ii}.EP_variablePlotStatus(jj) > 0
@@ -24,7 +30,7 @@ if localInBounds(axH)
                 idTime = idTime(1);
                 tData=userData.sample_data{ii}.dimensions{idTime}.data;
                 
-                [index,distance]=near(tData,currentPosition(1),1);
+                [index,distance]=near(tData,cpX,1);
                 theOffset = userData.sample_data{ii}.variables{jj}.EP_OFFSET;
                 theScale = userData.sample_data{ii}.variables{jj}.EP_SCALE;
                 listData(end+1,:)={userData.sample_data{ii}.variables{jj}.name,...

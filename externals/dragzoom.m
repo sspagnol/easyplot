@@ -2536,12 +2536,18 @@ Initialize(varargin{:})
         cp = get(ax, 'CurrentPoint');
         
         XLims = get(ax, 'XLim');
+        if isdatetime(XLims)
+            XLims = datenum(XLims);
+        end
         if ((cp(1,1) - min(XLims)) < -tol || (cp(1,1) - max(XLims)) > tol) && ...
                 ((cp(2,1) - min(XLims)) < -tol || (cp(2,1) - max(XLims)) > tol)
             targetInBounds = false;
         end
         
         YLims = get(ax, 'YLim');
+        if isdatetime(YLims)
+            YLims = datenum(YLims);
+        end
         if ((cp(1,2) - min(YLims)) < -tol || (cp(1,2) - max(YLims)) > tol) && ...
                 ((cp(2,2) - min(YLims)) < -tol || (cp(2,2) - max(YLims)) > tol)
             targetInBounds = false;
