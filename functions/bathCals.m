@@ -20,19 +20,25 @@ hg2flag = ~verLessThan('matlab', '8.4.0');
 plotVar = char(userData.plotVarNames);
 
 %Get the instrument list: use sample_data structures
+instModels = cellfun(@(x) x.meta.instrument_model, userData.sample_data, 'UniformOutput', false)';
+instShortname = cellfun(@(x) x.meta.EP_instrument_model_shortname, userData.sample_data, 'UniformOutput', false)';
 instSerials = cellfun(@(x) x.meta.instrument_serial_no, userData.sample_data, 'UniformOutput', false)'; 
-instModels = cellfun(@(x) x.meta.instrument_model, userData.sample_data, 'UniformOutput', false)'; 
-%iSet = true(size(instModels));
+instFile = cellfun(@(x) x.EP_inputFile, userData.sample_data, 'UniformOutput', false)';
+instFileExt = cellfun(@(x) x.EP_inputFileExt, userData.sample_data, 'UniformOutput', false)';
+
 iSet = cellfun(@(x) getVar(x.variables, plotVar) ~= 0, userData.sample_data, 'UniformOutput', false)';
 iSet=[iSet{:}]';
-%instList = cellfun(@(x) strcat(x.meta.instrument_model, ' #', x.meta.instrument_serial_no), userData.sample_data, 'UniformOutput', false)';
-instList = strcat(instModels, '# ', instSerials);
+
+instShortnameSerial = strcat(instShortname, '# ', instSerials);
+instShortnameSerialFilename = strcat(instShortname, '#', instSerials, ' (', instFile, instFileExt, ')');
 
 %create the dialog box, get index into  sample_data of reference
 %instrument
 [refinst,ok] = listdlg('PromptString','Choose the reference instrument',...
-    'SelectionMode','single','ListString',instList,'Name',...
-    'Reference instrument');
+    'SelectionMode','single',...
+    'ListSize', [400,250],...
+    'ListString',instShortnameSerialFilename,...
+    'Name', 'Reference instrument');
 
 if ok == 0 % no instrument chosen
     return;
@@ -40,7 +46,8 @@ end
 
 userData.refInst = refinst;
 %reset instList so that it doesn't include the reference instrument
-instList(refinst) = [];
+instShortnameSerial(refinst) = [];
+instShortnameSerialFilename(refinst) = [];
 instModels(refinst) = [];
 iSet(refinst) = [];
 
@@ -60,10 +67,10 @@ confirmButton = uicontrol('Style',  'pushbutton', 'String', 'Ok');
 
 setCheckboxes  = [];
 
-for k = 1:numel(instList)
+for k = 1:numel(instShortnameSerialFilename)
     setCheckboxes(k) = uicontrol(...
         'Style',    'checkbox',...
-        'String',   instList{k},...
+        'String',   instShortnameSerialFilename{k},...
         'Value',    iSet(k), ...
         'UserData', k);
 end
@@ -78,8 +85,8 @@ set(f,             'Position', [0.2 0.35 0.6 0.5]);
 set(cancelButton,  'Position', [0.0 0.0  0.5 0.1]);
 set(confirmButton, 'Position', [0.5 0.0  0.5 0.1]);
 
-rowHeight = 0.9 / numel(instList);
-for k = 1:numel(instList)
+rowHeight = 0.9 / numel(instShortnameSerialFilename);
+for k = 1:numel(instShortnameSerialFilename)
     rowStart = 1.0 - k * rowHeight;
     set(setCheckboxes (k), 'Position', [0.0 rowStart 0.6 rowHeight]);
 end
@@ -130,7 +137,8 @@ plotcals;
         data(refinst) = []; % remove reference instrument
         data = data(iSet); % keep only user selected instruments
 
-        dinstList = instList(iSet);
+        dinstShortnameSerial = instShortnameSerial(iSet);
+        dinstShortnameSerialFilename = instShortnameSerialFilename(iSet);
         dinstModels = instModels(iSet);
         udinstModels = unique(dinstModels, 'stable');
         
@@ -252,13 +260,14 @@ plotcals;
         h2(rmins) = [];
         hh1(rmins) = [];
         hh2(rmins) = [];
-        dinstList(rmins) = [];
+        dinstShortnameSerial(rmins) = [];
+        dinstShortnameSerialFilename(rmins) = [];
         dinstModels(rmins) = [];
         
         if exist('h1','var')
             figure(f1);
-            legText = dinstList;
-            legText(rmins) = [];
+            legText = dinstShortnameSerial;
+            %legText(rmins) = [];
             grid('on');
             xlabel('Time');
             ylabel(makeTexSafe(plotVar));
@@ -268,7 +277,7 @@ plotcals;
             
             figure(f2);
             legText = dinstModels;
-            legText(rmins) = [];
+            %legText(rmins) = [];
             [legText, IA, IC] = unique(legText);
             legend(hh1(IA));
             title(makeTexSafe(['Calibration bath ' plotVar ' offsets from reference instrument']));
