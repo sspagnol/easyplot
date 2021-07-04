@@ -108,9 +108,6 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
-% data limits for those variables
-userData.dataLimits=findVarExtents(userData.sample_data, varNames);
-
 %% delete old subplots if required
 graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 if redoSubplots

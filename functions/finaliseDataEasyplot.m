@@ -38,7 +38,7 @@ end
 
 %% for display purposes create a shortened instrument model name
 % if not already done so from cleanup stage
-if ~isfield(sam.meta, 'EP_instrument_model_shortname')
+if ~isfield(sam.meta, 'EP_instrument_model_shortname') || isempty(sam.meta.EP_instrument_model_shortname)
     sam.meta.EP_instrument_model_shortname = sam.meta.instrument_model;
 end
 

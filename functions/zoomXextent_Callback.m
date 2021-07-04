@@ -26,9 +26,8 @@ else
         useQCflags = false;
     end
     
-    dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
-    userData.plotLimits.TIME.xMin = dataLimits.TIME.RAW.xMin;
-    userData.plotLimits.TIME.xMax = dataLimits.TIME.RAW.xMax;
+    userData.plotLimits.TIME.xMin = userData.dataLimits.TIME.RAW.xMin;
+    userData.plotLimits.TIME.xMax = userData.dataLimits.TIME.RAW.xMax;
     
     if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax)
         set(gca,'XLim',[userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]);

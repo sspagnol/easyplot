@@ -99,6 +99,10 @@ for ii=1:numel(userData.sample_data) % loop over files
     end
 end
 
+if ~isfield(userData, 'dataLimits')
+    userData.dataLimits = [];
+end
+userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
 treePanelData = generateTreeData(userData.sample_data);
 updateTreeDisplay(treePanel, treePanelData)
 

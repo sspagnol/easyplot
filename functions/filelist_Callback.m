@@ -40,9 +40,10 @@ if strcmp(selectionType,'open')
                     end
                 end
             end
-            % delete sample_data structs
+            % delete sample_data structs and update dataLimits
             userData.sample_data(iFile)=[];
-            %setappdata(ancestor(hObject,'figure'), 'UserData', userData);
+            userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
+            
             set(filelistPanelListbox,'Value',1); % Matlab workaround, add this line so that the list can be changed
             set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data));
             
@@ -59,23 +60,38 @@ end
 
 if strcmp(selectionType,'normal')
     index_selected = get(filelistPanelListbox,'Value');
-    file_list = get(filelistPanelListbox,'String');
-    % Item selected in list box
-    filename = file_list{index_selected};
-    iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, filename)), userData.sample_data, 'UniformOutput', false))));
-    if length(iFile) == 1
-        idTime  = getVar(userData.sample_data{iFile}.dimensions, 'TIME');
-        newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
+%     file_list = get(filelistPanelListbox,'String');
+%     % Item selected in list box
+%     filename = file_list{index_selected};
+%     iFile = find(cell2mat((cellfun(@(x) ~isempty(strfind(x.EP_inputFullFilename, filename)), userData.sample_data, 'UniformOutput', false))));
+%     if length(iFile) == 1
+%         idTime  = getVar(userData.sample_data{iFile}.dimensions, 'TIME');
+%         newXLimits=[userData.sample_data{iFile}.dimensions{idTime}.data(1) userData.sample_data{iFile}.dimensions{idTime}.data(end)];
+%     else
+%         tstart = +Inf;
+%         tend = -Inf;
+%         for i = 1:length(iFile)
+%             idTime  = getVar(userData.sample_data{iFile(i)}.dimensions, 'TIME');
+%             tstart = min(userData.sample_data{iFile(i)}.dimensions{idTime}.data(1), tstart);
+%             tend   = max(userData.sample_data{iFile(i)}.dimensions{idTime}.data(end), tend);
+%         end
+%         newXLimits=[tstart tend];
+%     end
+    
+    if length(index_selected) == 1
+        idTime  = getVar(userData.sample_data{index_selected}.dimensions, 'TIME');
+        newXLimits=[userData.sample_data{index_selected}.dimensions{idTime}.data(1) userData.sample_data{index_selected}.dimensions{idTime}.data(end)];
     else
         tstart = +Inf;
         tend = -Inf;
-        for i = 1:length(iFile)
-            idTime  = getVar(userData.sample_data{iFile(i)}.dimensions, 'TIME');
-            tstart = min(userData.sample_data{iFile(i)}.dimensions{idTime}.data(1), tstart);
-            tend   = max(userData.sample_data{iFile(i)}.dimensions{idTime}.data(end), tend);
+        for i = 1:length(index_selected)
+            idTime  = getVar(userData.sample_data{index_selected(i)}.dimensions, 'TIME');
+            tstart = min(userData.sample_data{index_selected(i)}.dimensions{idTime}.data(1), tstart);
+            tend   = max(userData.sample_data{index_selected(i)}.dimensions{idTime}.data(end), tend);
         end
         newXLimits=[tstart tend];
     end
+    
     zoom(gca,'reset');
     set(gca,'XLim',newXLimits);
     setappdata(hFig, 'UserData', userData);

@@ -17,6 +17,11 @@ if isfield(userData, 'sample_data')
         userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
         treePanelData = generateTreeData(userData.sample_data);
         updateTreeDisplay(treePanel, treePanelData);
+
+        if ~isfield(userData, 'dataLimits')
+            userData.dataLimits = [];
+        end
+        userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
         
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);

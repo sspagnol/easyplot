@@ -485,8 +485,12 @@ setappdata(hFig, 'UserData', userData);
         end
         varNames=sort(unique(varNames));
         userData.plotVarNames = varNames;
-        userData.dataLimits = findVarExtents(userData.sample_data, varNames);
-
+        %userData.dataLimits = findVarExtents(userData.sample_data, varNames);
+        if ~isfield(userData, 'dataLimits')
+            userData.dataLimits = [];
+        end
+        userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
+        
         set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);
         treePanelData = generateTreeData(userData.sample_data);
         updateTreeDisplay(treePanel, treePanelData);
@@ -598,6 +602,12 @@ setappdata(hFig, 'UserData', userData);
         end
         
         userData.sample_data = timeOffsetPP_local(userData.sample_data, 'raw', false);
+
+        if ~isfield(userData, 'dataLimits')
+            userData.dataLimits = [];
+        end
+        userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
+
         userData.EP_redoPlots = true;
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
@@ -619,6 +629,11 @@ setappdata(hFig, 'UserData', userData);
         for ii = 1:length(userData.sample_data)
             userData.sample_data{ii} = updateDataEasyplot(userData.sample_data{ii});
         end
+        
+        if ~isfield(userData, 'dataLimits')
+            userData.dataLimits = [];
+        end
+        userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
         
         userData.EP_redoPlots = true;
         setappdata(hFig, 'UserData', userData);

@@ -22,7 +22,6 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
-dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
 axH = gca;
 switch upper(userData.EP_plotType)
     case 'VARS_OVERLAY'
@@ -33,7 +32,7 @@ switch upper(userData.EP_plotType)
         % focus
         theVar = axH.Tag;
 end
-theLimits = dataLimits.(theVar).(useFlags);
+theLimits = userData.dataLimits.(theVar).(useFlags);
 userData.plotLimits.(theVar).yMin = theLimits.yMin;
 userData.plotLimits.(theVar).yMax = theLimits.yMax;
 

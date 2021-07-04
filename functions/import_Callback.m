@@ -159,6 +159,11 @@ else
         end
     end
     
+    if ~isfield(userData, 'dataLimits')
+        userData.dataLimits = [];
+    end
+    userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
+    
     userData.sample_data = updateDeploymentNumber(userData.sample_data);
     userData.sample_data = timeOffsetPP(userData.sample_data, 'raw', false);
     set(filelistPanelListbox,'String', getFilelistNames(userData.sample_data),'Value',1);

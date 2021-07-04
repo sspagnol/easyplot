@@ -33,7 +33,8 @@ if useQCflags, useFlags='QC'; end
 
 oldPlotLimits = userData.plotLimits;
 
-dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
+%dataLimits=findVarExtents(userData.sample_data, userData.plotVarNames);
+dataLimits = userData.dataLimits;
 
 nSubPlots = numel(userData.plotVarNames);
 axH = findobj(plotPanel,'Type','axes');
