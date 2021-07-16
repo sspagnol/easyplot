@@ -234,8 +234,14 @@ for ii = 1:numel(userData.sample_data)
             hLine.UserData.fileName = [strtrim(fNAME), strtrim(fEXT)];
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
-        catch
-            error('PLOTDATA: plot failed.');
+        catch e
+            disp(e.message);
+            for ie = 1:numel(e.stack)
+               e.stack(ie)
+            end
+            hash.remove(hObject);
+            warning('PLOTDATA: plot failed.');
+            return
         end
         hold(graphs(ihAx),'on');
         set(msgPanelText,'String',strcat('Plot : ', instStr));
