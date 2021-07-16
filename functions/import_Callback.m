@@ -27,13 +27,17 @@ treePanel = userData.treePanel;
 
 parserList=userData.parserList;
 
-iParse=menu('Choose instrument type',parserList.name);
-if iParse < 1 % no instrument chosen
+title = 'Instrument to load?';
+prompt = 'Instrument List';
+defaultanswer = 1;
+[indParse, popupString] = optionDialog_EP( title, prompt, parserList.name, defaultanswer );
+
+if indParse < 1 % no instrument chosen
     hash.remove(hObject);
     return;
 end
 
-if iParse == 1
+if indParse == 1
     % load csv with
     % column 1 : data file (full qualified or just filename) or a directory
     % column 2 : imos toolbox parser to use
@@ -48,7 +52,11 @@ if iParse == 1
     % FTB10000.000, workhorseParse
     pause(0.1); % need to pause to get uigetfile to operate correctly
     com.mathworks.mwswing.MJFileChooserPerPlatform.setUseSwingDialog(1) % Try to fix Dialog issue
-    [theFile, thePath, FILTERINDEX] = uigetfile('*.csv', parserList.message{iParse}, 'MultiSelect','off');
+    [theFile, thePath, FILTERINDEX] = uigetfile('*.csv', parserList.message{indParse}, 'MultiSelect','off');
+    if isequal(theFile,0)
+        hash.remove(hObject);
+        return;
+    end
     fileID = fopen(fullfile(thePath,theFile));
     C = textscan(fileID, '%s%s', 'Delimiter', ',');
     fclose(fileID);
@@ -76,16 +84,16 @@ if iParse == 1
     end
 else
     % user selected files for one particular instrument type
-    filterSpec=fullfile(userData.EP_previousDataDir,strjoin(parserList.wildcard{iParse},';'));
+    filterSpec=fullfile(userData.EP_previousDataDir,strjoin(parserList.wildcard{indParse},';'));
     pause(0.1); % need to pause to get uigetfile to operate correctly
     com.mathworks.mwswing.MJFileChooserPerPlatform.setUseSwingDialog(1) % Try to fix Dialog issue
-    [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{iParse}, 'MultiSelect','on');
+    [theFiles, thePath, FILTERINDEX] = uigetfile(filterSpec, parserList.message{indParse}, 'MultiSelect','on');
     allFiles = fullfile(thePath, theFiles);
     if ~iscell(allFiles)
         allFiles = { allFiles };
     end
     [FILEpaths, FILEnames, FILEexts] = cellfun(@(x) fileparts(x), allFiles, 'UniformOutput', false);
-    FILEparsers(true(size(FILEnames))) = {parserList.parser{iParse}};
+    FILEparsers(true(size(FILEnames))) = {parserList.parser{indParse}};
 end
 
 %utcOffsets = askUtcOffset(FILENAME);
