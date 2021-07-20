@@ -143,7 +143,6 @@ for ii = 1:numel(userData.sample_data)
         if redoSubplots
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             graphs(ihAx).UserData.axesInfo = userData.axesInfo;
-            %dragzoom(ihAx, 'on');
         else
             switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
@@ -273,7 +272,6 @@ updateLineColour( hFig );
 
 if redoSubplots
     % link all/any subplot axes
-    %dragzoom(graphs);
     linkaxes(graphs,'x');
     
     % update date labels, only pass one axis and it will update any others

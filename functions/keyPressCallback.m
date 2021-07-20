@@ -1,4 +1,4 @@
-function keyPressCallback(source,ev)
+function keyPressCallback(src, evnt)
 %KEYPRESSCALLBACK Called when the WindowKeyPressFcn function is called.
 % Keyboard shortcuts to zoom/pan on current axis and uses
 % zoomPostCallback to update any linked plots.
@@ -10,14 +10,15 @@ function keyPressCallback(source,ev)
 % arrow keys: pan the data (only current selected plot), shift
 % arrow increase panning factor
 % a: axis auto
+% v : print values
 %
 % Idea borrowed from https://github.com/gulley/Ax-Drag
 
 theChar = get(gcbf,'CurrentCharacter');
 %theChar = sprintf('%c',ev.Character);
-isControl = any(cell2mat(regexpi(ev.Modifier, 'control')));
-isShift = any(cell2mat(regexpi(ev.Modifier, 'shift')));
-isAlt = any(cell2mat(regexpi(ev.Modifier, 'alt')));
+isControl = any(cell2mat(regexpi(evnt.Modifier, 'control')));
+isShift = any(cell2mat(regexpi(evnt.Modifier, 'shift')));
+isAlt = any(cell2mat(regexpi(evnt.Modifier, 'alt')));
 
 % Use these variables to change the zoom and pan amounts
 zoomFactor = 0.9;
@@ -70,26 +71,28 @@ switch theChar
         yLimNew = [0 zoomFactor*diff(yLim)] + yLim(1) + (1-zoomFactor)*diff(yLim)/2;
         set(gca,'XLim',xLimNew,'YLim',yLimNew);
         
-    case {'leftarrow', 28} % arrow left
-        xLim=get(gca,'XLim');
-        xLimNew = xLim + panFactor*diff(xLim);
-        set(gca,'XLim',xLimNew);
+%     case {'leftarrow', 28} % arrow left
+%         xLim=get(gca,'XLim');
+%         xLimNew = xLim + panFactor*diff(xLim);
+%         set(gca,'XLim',xLimNew);
+%         
+%     case {'rightarrow', 29} % arrow right
+%         xLim=get(gca,'XLim');
+%         xLimNew = xLim - panFactor*diff(xLim);
+%         set(gca,'XLim',xLimNew);
+%         
+%     case {'uparrow', 30} % arrow up
+%         yLim=get(gca,'YLim');
+%         yLimNew = yLim - panFactor*diff(yLim);
+%         set(gca,'YLim',yLimNew);
+%         
+%     case {'downarrow', 31} % arrow down
+%         yLim=get(gca,'YLim');
+%         yLimNew = yLim + panFactor*diff(yLim);
+%         set(gca,'YLim',yLimNew);
         
-    case {'rightarrow', 29} % arrow right
-        xLim=get(gca,'XLim');
-        xLimNew = xLim - panFactor*diff(xLim);
-        set(gca,'XLim',xLimNew);
-        
-    case {'uparrow', 30} % arrow up
-        yLim=get(gca,'YLim');
-        yLimNew = yLim - panFactor*diff(yLim);
-        set(gca,'YLim',yLimNew);
-        
-    case {'downarrow', 31} % arrow down
-        yLim=get(gca,'YLim');
-        yLimNew = yLim + panFactor*diff(yLim);
-        set(gca,'YLim',yLimNew);
-        
+    case 'v'
+        printInfo(src, evnt);
 end
 
 %updateDateLabel(gca, gca, true);

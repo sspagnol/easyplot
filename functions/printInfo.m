@@ -9,7 +9,7 @@ hFig=ancestor(hObject,'figure');
 userData=getappdata(hFig, 'UserData');
 
 axH = gca;
-eventdata.Source.CurrentAxes.Position
+%eventdata.Source.CurrentAxes.Position
 
 % is the current pointer within the bounds of the axes?
 if localInBounds(axH)
