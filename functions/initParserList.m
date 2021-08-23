@@ -115,6 +115,12 @@ parserList.message{ii}='Choose SensusUltra files:';
 parserList.parser{ii}='sensusUltraParse';
 
 ii=ii+1;
+parserList.name{ii}='RTI (mat)';
+parserList.wildcard{ii}={'*.mat'};
+parserList.message{ii}='Choose RTI files:';
+parserList.parser{ii}='rtiParse';
+
+ii=ii+1;
 parserList.name{ii}='Teledyne RDI (000,PD0)';
 parserList.wildcard{ii}={'*.000', '*.PD0'};
 parserList.message{ii}='Choose RDI 000/PD0 files:';
@@ -151,7 +157,7 @@ parserList.message{ii}='Choose SBE56 cnv files:';
 parserList.parser{ii}='SBE56Parse';
 
 ii=ii+1;
-parserList.name{ii}='SBE CTD (cnv)';
+parserList.name{ii}='SBE 16/19/39plus (cnv)';
 parserList.wildcard{ii}={'*.cnv'};
 parserList.message{ii}='Choose CTD cnv files:';
 parserList.parser{ii}='SBE19Parse';
