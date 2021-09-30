@@ -34,8 +34,7 @@ function newfile = RSK2RSK(RSK, varargin)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2018-09-17
-
+% Last revision: 2020-09-23
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -157,7 +156,7 @@ function insertEpochs(RSK,data)
 end
 
 function insertChannels(RSK)
-    formatAndTransact('INSERT INTO channels VALUES','(%i,"%s","%s","%s",1,0)',[num2cell((1:length(RSK.channels))); struct2cell(RSK.channels)])       
+    formatAndTransact('INSERT INTO channels (channelID,shortName,longName,units ,isMeasured ,isDerived )  VALUES','(%i,"%s","%s","%s",1,0)',{RSK.channels.channelID;RSK.channels.shortName;RSK.channels.longName;RSK.channels.units});       
 end
 
 function insertData(data)

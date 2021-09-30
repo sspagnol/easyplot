@@ -29,7 +29,7 @@ function rsksettings = RSKsettings(rsksettings)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2020-06-23
+% Last revision: 2020-09-22
 
 
 validSeawaterLibrary = {'TEOS-10','seawater'};
@@ -46,7 +46,7 @@ if nargin == 0
 else    
     p = inputParser;
     p.StructExpand = true;
-    addParameter(p,'RSKtoolsVersion','3.5.0',@ischar);
+    addParameter(p,'RSKtoolsVersion','3.5.3',@ischar);
     addParameter(p,'seawaterLibrary','TEOS-10',checkSeawaterLibrary);
     addParameter(p,'latitude',45,@isnumeric);
     addParameter(p,'atmosphericPressure',10.1325,@isnumeric);

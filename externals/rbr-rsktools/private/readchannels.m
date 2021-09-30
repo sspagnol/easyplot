@@ -20,7 +20,7 @@ function RSK = readchannels(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2020-05-21
+% Last revision: 2021-09-22
 
 p = inputParser;
 addRequired(p, 'RSK', @isstruct);
@@ -30,7 +30,7 @@ RSK = p.Results.RSK;
 
 tables = doSelect(RSK, 'SELECT name FROM sqlite_master WHERE type="table"');
 
-if any(strcmpi({tables.name}, 'instrumentChannels'))
+if any(strcmpi({tables.name}, 'instrumentChannels')) 
     RSK.instrumentChannels = doSelect(RSK, 'select * from instrumentChannels');
     RSK.channels = doSelect(RSK, ['SELECT c.shortName as shortName,'...
                         'c.longName as longName,'...
@@ -39,8 +39,19 @@ if any(strcmpi({tables.name}, 'instrumentChannels'))
                         'FROM instrumentChannels ic '... 
                         'JOIN channels c ON ic.channelID = c.channelID '...
                         'ORDER by ic.channelOrder']);
-else
+end
+
+
+if (~isfield(RSK,'channels')||isempty(RSK.channels))
     RSK.channels = doSelect(RSK, 'SELECT shortName, longName, units, channelID FROM channels ORDER by channels.channelID');
+end
+
+% ensure there is no trailing space at the end of the longName
+% workaround Ruskin bug RSK-8255
+for k=1:length(RSK.channels)
+    if (RSK.channels(k).longName(end)==' ')
+        RSK.channels(k).longName=RSK.channels(k).longName(1:end-1);
+    end
 end
 
 RSK = removenonmarinechannels(RSK);

@@ -18,7 +18,7 @@ function RSK = readstandardtables(RSK)
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2019-07-30
+% Last revision: 2019-09-22
 
 
 p = inputParser;
@@ -34,7 +34,17 @@ if ~isfield(RSK.dbInfo,'type')
     RSK.dbInfo.type = 'full';
 end
 
-RSK.instruments = doSelect(RSK, 'select * from instruments');
+% check if instrumentID is present (old versions of RSK did not include
+% instrumentID)
+
+
+instrumentstblcolumns=doSelect(RSK,'PRAGMA table_info(''instruments'')');
+if (isempty(find(strcmp({instrumentstblcolumns.name},'instrumentID')==1, 1)))
+    RSK.instruments = doSelect(RSK, 'select * from instruments');
+else
+    RSK.instruments = doSelect(RSK, 'select * from instruments ORDER by instrumentID limit 1');
+end
+
 RSK = readchannels(RSK);
 
 RSK.epochs = doSelect(RSK, 'select deploymentID,startTime/1.0 as startTime, endTime/1.0 as endTime from epochs');

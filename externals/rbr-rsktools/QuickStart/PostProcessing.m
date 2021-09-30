@@ -1,8 +1,8 @@
 %% Post-processing RBR data with RSKtools
-% RSKtools v3.5.0;
+% RSKtools v3.5.3;
 % RBR Ltd. Ottawa ON, Canada;
 % support@rbr-global.com;
-% 2020-06-26
+% 2021-09-22
 
 %% Introduction
 % |RSKtools| is RBR's open source Matlab toolbox for reading,

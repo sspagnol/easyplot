@@ -9,9 +9,9 @@ function rsksettings = RSKdefaultsettings
 % Author: RBR Ltd. Ottawa ON, Canada
 % email: support@rbr-global.com
 % Website: www.rbr-global.com
-% Last revision: 2020-06-23
+% Last revision: 2021-09-22
 
-rsksettings.RSKtoolsVersion = '3.5.0';
+rsksettings.RSKtoolsVersion = '3.5.3';
 rsksettings.seawaterLibrary = 'TEOS-10'; 
 rsksettings.latitude = 45;
 rsksettings.atmosphericPressure = 10.1325;
