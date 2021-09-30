@@ -36,10 +36,10 @@ parserList.message{ii}='Choose Citadel CTD csv files:';
 parserList.parser{ii}='citadelParse';
 
 ii=ii+1;
-parserList.name{ii}='HOBO U22 Temp (txt)';
-parserList.wildcard{ii}={'*.txt'};
-parserList.message{ii}='Choose HOBO U22 txt files:';
-parserList.parser{ii}='hoboU22Parse';
+parserList.name{ii}='HOBO U20/U22 Pres/Temp (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose HOBO U22 csv files:';
+parserList.parser{ii}='hoboU2xParse';
 
 ii=ii+1;
 parserList.name{ii}='InterOcean S4 (s4a,s4b)';
