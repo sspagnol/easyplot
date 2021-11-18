@@ -47,6 +47,11 @@ parserList.wildcard{ii}={'*.s4a', '*.s4b'};
 parserList.message{ii}='Choose InterOcean S4 s4a/s4b files:';
 parserList.parser{ii}='InterOceanS4Parse';
 
+ii=ii+1;
+parserList.name{ii}='JCU Marotte (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose Marotte csv files:';
+parserList.parser{ii}='MarotteParse';
 
 ii=ii+1;
 parserList.name{ii}='Netcdf IMOS toolbox (nc)';
