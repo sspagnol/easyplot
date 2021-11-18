@@ -16,14 +16,14 @@ for ii = 1:numel(graphs)
     legendStrings = {};
     hLines = findobj(graphs(ii).Children,'Type','Line');
     
-    legendStrings = strrep({hLines.Tag}, '_', '\_');
+    %legendStrings = strrep({hLines.Tag}, '_', '\_');
     % can have multiple lines per instrument when EP_plotYearly = true
     % make unique strings and get indexing
     [uStrings, IA, IC] = unique(legendStrings, 'stable');
     
     if verLessThan('matlab', '9.5')
         % older style legend, but no multicolumn available
-        [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex', 'Location','northeast');
+        [hLegend, object_h,plot_h,text_str] = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','northeast');
         set(object_h,'linewidth',2.0);
         Htext = findobj(object_h, 'Type', 'Text');
         Hline = findobj(object_h, 'Type', 'Line');
@@ -41,7 +41,7 @@ for ii = 1:numel(graphs)
     else
         % newer multicolumn legend but not sure how kosher legend
         % linewidths code is
-        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'tex', 'Location','NorthEast', 'NumColumns', 5);
+        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','NorthEast', 'NumColumns', 5);
         hLegend.ItemTokenSize = [15, 36]; % default [30 18]
     end
 end
