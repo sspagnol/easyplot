@@ -13,7 +13,7 @@ userData=getappdata(hFig, 'UserData');
 
 axH = gca;
 %select the area to use for comparison
-[x,y,ph1] = select_points(axH);
+[x,y,ph1] = select_points_v2(axH);
 
 userData.calx = x;
 userData.caly = y;
@@ -37,12 +37,14 @@ end
 %plots:
 try
     bathCals(userData);
-catch
+catch ME
+    disp(ME.identifier);
+    disp(ME.message);
     warning('had problems executing bathCals');
 end
 
-if exist('ph1'), delete(ph1); end
-if exist('ph2'), delete(ph2); end
+if exist('ph1', 'var'), delete(ph1); end
+if exist('ph2', 'var'), delete(ph2); end
 
 %axH.UIContextMenu.HandleVisibility = 'off';
 %axH.UIContextMenu.Visible = 'off';
@@ -80,7 +82,7 @@ delete(axH.UIContextMenu);
         % to select points in the timeseries chart for flagging.
         % Returns [x,y] - index of rectangle corners in figure units
                 
-        if ~isa(axH.XAxis,'matlab.graphics.axis.decorator.DatetimeRuler') & license('test','Image_Toolbox') 
+        if ~isa(axH.XAxis,'matlab.graphics.axis.decorator.DatetimeRuler') && license('test','Image_Toolbox') 
             ph = drawrectangle(hAx);
             x = [ph.Position(1) ph.Position(1)+ph.Position(3)];
             y = [ph.Position(2) ph.Position(2)+ph.Position(4)];
@@ -99,7 +101,10 @@ delete(axH.UIContextMenu);
             y = [p1(2) p1(2) p1(2)+offset(2) p1(2)+offset(2) p1(2)];
             hold('on');
             axis('manual');
-            ph = plot(x,y);                            % redraw in dataspace units
+            if isa(axH.XAxis,'matlab.graphics.axis.decorator.DatetimeRuler')
+                x = num2ruler(x, hAx.XAxis);
+            end
+            ph = plot(x,y);  % redraw in dataspace units
         end
     end
 
@@ -107,7 +112,7 @@ delete(axH.UIContextMenu);
         %function [x,y] = select_points
         % Uses rbbox to select points in the timeseries chart for flagging.
         % Returns [x,y] - index of rectangle corners in figure units
-        
+        ax = hAx;
         if ~exist('ax')
             ax = gca;
         end
@@ -123,10 +128,15 @@ delete(axH.UIContextMenu);
         set(ax,'Units','pixels');  % Set the axis units to 'pixels'
         
         k = waitforbuttonpress;
-        point1 = get(gca,'CurrentPoint');    % button down detected
+%         point1 = get(gca,'CurrentPoint');    % button down detected
+%         BOUND = rbbox;                   % return figure units
+%         point2 = get(gca,'CurrentPoint');    % button up detected
+
+        point1 = hAx.CurrentPoint;    % button down detected
         BOUND = rbbox;                   % return figure units
-        point2 = get(gca,'CurrentPoint');    % button up detected
-        
+        point2 = hAx.CurrentPoint;    % button up detected
+        disp(point1)
+        disp(point2)
         %set(fg,'Units','pixels'); % Set the figure units to 'pixels'
         %set(ax,'Units','pixels');  % Set the axis units to 'pixels'
         P = get(hAx, 'Position');  % Retrieve the axes position.
@@ -137,8 +147,10 @@ delete(axH.UIContextMenu);
         end
         % Get the coordinates of the lower left corner of the box
         % Its height and width, and the X-Y coordinates of the 4 corners
-        DeltaX = XLimit(2)-XLimit(1);  DeltaY = YLimit(2)-YLimit(1);
-        LeftDist = BOUND(1)-P(1);  UpDist = BOUND(2)-P(2);
+        DeltaX = XLimit(2)-XLimit(1);
+        DeltaY = YLimit(2)-YLimit(1);
+        LeftDist = BOUND(1)-P(1);
+        UpDist = BOUND(2)-P(2);
         
         % Defining some useful quantities which will be used often
         %XLow = XLimit(1)+DeltaX*LeftDist/P(3);
