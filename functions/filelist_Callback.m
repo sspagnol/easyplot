@@ -21,9 +21,11 @@ if strcmp(selectionType,'open')
     index_selected = get(filelistPanelListbox,'Value');
     file_list = get(filelistPanelListbox,'String');
     % Item selected in list box
-    filename = file_list{index_selected};
+    serialfilename = file_list{index_selected};
     
-    buttonName = questdlg(['Remove file : ' filename], 'Remove file?', 'No');
+    buttonName = questdlg(['Remove file : ' serialfilename], 'Remove file?', 'No');
+    tkns = regexp(serialfilename, '\((.*?)\)', 'tokens');
+    filename = tkns{1}{1};
     if strcmp(upper(buttonName),'YES')
         if numel(userData.sample_data) == 1
             % removing last plot
