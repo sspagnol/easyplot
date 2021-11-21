@@ -111,22 +111,22 @@ end
 useFlags = 'RAW';
 if useQCflags, useFlags='QC'; end
 
-    %% delete old subplots if required
-    graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
-    if redoSubplots
-        if ~isempty(graphs)
-            xlimits = get(graphs(1), 'XLim');
-            if all(isdatetime(xlimits))
-                userData.plotLimits.TIME.xMin = datenum(xlimits(1));
-                userData.plotLimits.TIME.xMax = datenum(xlimits(2));
-            else
-                userData.plotLimits.TIME.xMin = xlimits(1);
-                userData.plotLimits.TIME.xMax = xlimits(2);
-            end
-            delete(graphs);
+%% delete old subplots if required
+graphs = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
+if redoSubplots
+    if ~isempty(graphs)
+        xlimits = get(graphs(1), 'XLim');
+        if all(isdatetime(xlimits))
+            userData.plotLimits.TIME.xMin = datenum(xlimits(1));
+            userData.plotLimits.TIME.xMax = datenum(xlimits(2));
+        else
+            userData.plotLimits.TIME.xMin = xlimits(1);
+            userData.plotLimits.TIME.xMax = xlimits(2);
         end
-        graphs=gobjects(nSubPlots,1);
+        delete(graphs);
     end
+    graphs=gobjects(nSubPlots,1);
+end
 
 %%
 % loop over sample_data and plot the marked variables into previously
@@ -140,7 +140,7 @@ for ii = 1:numel(userData.sample_data)
         legendString = {};
         theVar = userData.sample_data{ii}.variables{jj}.name;
         ihAx = userData.sample_data{ii}.axisIndex(jj);
-        if redoSubplots
+        if redoSubplots && isa(graphs(ihAx), 'matlab.graphics.GraphicsPlaceholder')
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             graphs(ihAx).UserData.axesInfo = userData.axesInfo;
         else
@@ -215,7 +215,8 @@ for ii = 1:numel(userData.sample_data)
 
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
-        legendString = strrep(instStr,'_','\_');
+        %legendString = strrep(instStr,'_','\_');
+        legendString = instStr;
         try
             % xdata
             xdataVar = getXdata(userData.sample_data{ii}.dimensions{idTime});
@@ -235,14 +236,14 @@ for ii = 1:numel(userData.sample_data)
                         'DisplayName', legendString, 'Tag', instStr);
                 end
             else
-%                 xdataVar_datetime = datenum_to_datetime(xdataVar);
-%                 hLine = line('Parent',graphs(ihAx),'XData',xdataVar_datetime, ...
-%                     'YData',ydataVar, ...
-%                     'LineStyle',lineStyle, 'Marker', markerStyle, ...
-%                     'DisplayName', legendString, 'Tag', instStr);
-                hLine = plot(graphs(ihAx), datenum_to_datetime(xdataVar), ydataVar, ...
+                xdataVar_datetime = datenum_to_datetime(xdataVar);
+                hLine = line('Parent',graphs(ihAx),'XData', datenum_to_datetime(xdataVar), ...
+                    'YData', ydataVar, ...
                     'LineStyle',lineStyle, 'Marker', markerStyle, ...
                     'DisplayName', legendString, 'Tag', instStr);
+%                 hLine = plot(graphs(ihAx), datenum_to_datetime(xdataVar), ydataVar, ...
+%                     'LineStyle',lineStyle, 'Marker', markerStyle, ...
+%                     'DisplayName', legendString, 'Tag', instStr);
             end
             
             hLine.UserData.legendString = legendString;
