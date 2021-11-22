@@ -17,7 +17,7 @@ yLabel = {strjoin(yLabel(1:nthWordToCut),     ' '), ...
     strjoin(yLabel(nthWordToCut+1:end), ' ')};
 yLabel = yLabel(~cellfun(@isempty, yLabel));
 
-yLabel = {strrep(short_name,'_','\_') yLabel{:}};
+%yLabel = {strrep(short_name,'_','\_') yLabel{:}};
 yLabel{end+1} = strrep(uom, '_', ' ');
 iLength = 15; % arbitrary string cutoff length
 %iLong = strlength(yLabel) > iLength; % only R2016b onwards
