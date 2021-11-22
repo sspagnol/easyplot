@@ -17,6 +17,9 @@ hash.put(hObject,1);
 hFig=ancestor(hObject,'figure');
 
 userData=getappdata(hFig,'UserData');
+if isempty(userData)
+    userData = struct;
+end
 
 msgPanel = findobj(hFig, 'Tag','msgPanel');
 msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
