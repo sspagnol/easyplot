@@ -31,7 +31,7 @@ if isempty(userData.sample_data)
     delete(hLegend);
     pause(0.01);
     hash.remove(hObject);
-    return; 
+    return;
 end
 
 % retrieve good flag values
@@ -55,16 +55,6 @@ isPlotTypeChange = strcmpi(userData.EP_plotType,'VARS_STACKED') && (~isempty(gra
 isNewSubplot = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
     (~isempty(varNames) && ~isempty(varNewNames) && ...
     ~any(strcmp(varNewNames, varNames)));
-
-% % require || result redoSubplots = false
-% isNotP1 = strcmpi(userData.EP_plotType, 'VARS_OVERLAY') && ... % overlay
-%     ~isempty(varNames);                                     % have plotted some variable
-% % stacked and there is some variable to plot 
-% isNotP2 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
-%     all(cellfun(@(x) plotVarCounter.(x) > 0, fieldnames(plotVarCounter)));
-% % stacked and no new vars plotted
-% isNotP3 = strcmpi(userData.EP_plotType,'VARS_STACKED') && ...
-%     ~isempty(varNames) && isempty(varNewNames);
 
 % require || result redoSubplots = true
 redoSubplots = false;
@@ -143,6 +133,18 @@ for ii = 1:numel(userData.sample_data)
         if redoSubplots && isa(graphs(ihAx), 'matlab.graphics.GraphicsPlaceholder')
             graphs(ihAx) = subplot(nSubPlots,1,ihAx,'Parent',plotPanel);
             graphs(ihAx).UserData.axesInfo = userData.axesInfo;
+            
+            %             if ~userData.EP_plotYearly
+            %                 set(graphs(ihAx), 'XRuler', matlab.graphics.axis.decorator.DatetimeRuler);
+            %             end
+            
+            switch upper(userData.EP_plotType)
+                case 'VARS_OVERLAY'
+                    graphs(ihAx).Tag = 'MULTI';
+                case 'VARS_STACKED'
+                    graphs(ihAx).Tag = theVar;
+            end
+            
         else
             switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
@@ -154,48 +156,6 @@ for ii = 1:numel(userData.sample_data)
                     set(hFig,'CurrentAxes', graphs(ihAx));
             end
             %grid(graphs(ihAx), 'on');
-        end
-        
-        %hAx(ihAx) = subplot_tight(nSubPlots,1,ihAx,[0.02 0.02],'Parent',plotPanel);
-        
-        % for each subplot set a tag and xlim/ylim
-        switch upper(userData.EP_plotType)
-            case 'VARS_OVERLAY'
-                graphs(ihAx).Tag = 'MULTI';
-                if userData.EP_plotYearly
-                    rulerChanged = apply_correct_ruler('numeric', graphs(ihAx));
-                    set(graphs(ihAx),'XLim',[1 367])
-                else
-                    rulerChanged = apply_correct_ruler('datetime', graphs(ihAx));
-                    if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
-                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
-                    else
-                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
-                    end
-                end
-                if ~isfield(userData.plotLimits, 'MULTI')
-                    userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
-                    userData.plotLimits.MULTI.yMax = userData.dataLimits.MULTI.(useFlags).yMax;
-                end
-                
-            case 'VARS_STACKED'
-                graphs(ihAx).Tag = theVar;
-                if userData.EP_plotYearly
-                    rulerChanged = apply_correct_ruler('numeric', graphs(ihAx));
-                    set(graphs(ihAx),'XLim',[1 367])
-                else
-                    rulerChanged = apply_correct_ruler('datetime', graphs(ihAx));
-                    if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
-                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
-                    else
-                        set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
-                    end
-                end
-                if ~isfield(userData.plotLimits, theVar)
-                    userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
-                    userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
-                end
-                set(graphs(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
         end
         
         if strcmp(userData.sample_data{ii}.variables{jj}.name,'EP_TIMEDIFF')
@@ -212,38 +172,98 @@ for ii = 1:numel(userData.sample_data)
         else
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
-
+        
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
         %legendString = strrep(instStr,'_','\_');
         legendString = instStr;
+        
+        xdataVar = getXdata(userData.sample_data{ii}.dimensions{idTime});
+        ydataVar = getYdata(userData.sample_data{ii}.variables{jj}, useQCflags);
+        
+        hold(graphs(ihAx),'on');
+ 
+        if userData.EP_plotYearly
+            [rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+        else
+            [rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+        end
+        
         try
-            % xdata
-            xdataVar = getXdata(userData.sample_data{ii}.dimensions{idTime});
-            
-            % ydata
-            ydataVar = getYdata(userData.sample_data{ii}.variables{jj}, useQCflags);
-            
             if userData.EP_plotYearly
                 yyyy = year(xdataVar);
                 yStart = yyyy(1);
                 yEnd = yyyy(end);
                 for yr = yStart:yEnd
                     yGood = yyyy == yr;
-                    hLine = line('Parent',graphs(ihAx),'XData',xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
-                        'YData',ydataVar(yGood), ...
-                        'LineStyle',lineStyle, 'Marker', markerStyle,...
+                    hLine = line('Parent', graphs(ihAx), 'XData', xdataVar(yGood) - datenum(yr,1,1,0,0,0), ...
+                        'YData', ydataVar(yGood), ...
+                        'LineStyle', lineStyle, 'Marker', markerStyle,...
                         'DisplayName', legendString, 'Tag', instStr);
                 end
+                %                 pause(0.01);
+                %                 drawnow;
             else
-                xdataVar_datetime = datenum_to_datetime(xdataVar);
-                hLine = line('Parent',graphs(ihAx),'XData', datenum_to_datetime(xdataVar), ...
-                    'YData', ydataVar, ...
-                    'LineStyle',lineStyle, 'Marker', markerStyle, ...
+                % xdataVar_datetime = datenum_to_datetime(xdataVar);
+                %                 if isa(graphs(ihAx).XAxis,'matlab.graphics.axis.decorator.DatetimeRuler')
+                %                     xdataVar = num2ruler(xdataVar, graphs(ihAx).XAxis);
+                %                 end
+                xdataVar = datetime(xdataVar, 'ConvertFrom', 'datenum');
+                
+                % still some issue when I use line and graph xaxis is 
+                % numeric instead of datetime
+%                  hLine = line('Parent', graphs(ihAx), 'XData', xdataVar, ...
+%                    'YData', ydataVar, ...
+%                    'LineStyle', lineStyle, 'Marker', markerStyle, ...
+%                    'DisplayName', legendString, 'Tag', instStr);
+                
+                hLine = plot(graphs(ihAx), xdataVar, ydataVar, ...
+                    'LineStyle', lineStyle, 'Marker', markerStyle, ...
                     'DisplayName', legendString, 'Tag', instStr);
-%                 hLine = plot(graphs(ihAx), datenum_to_datetime(xdataVar), ydataVar, ...
-%                     'LineStyle',lineStyle, 'Marker', markerStyle, ...
-%                     'DisplayName', legendString, 'Tag', instStr);
+                
+                %pause(0.01);
+                %drawnow;
+            end
+            
+            %graphs(ihAx).Tag = graph_tag;
+            %graphs(ihAx).UserData.axesInfo = userData.axesInfo;
+            
+            % for each subplot set xlim/ylim
+            switch upper(userData.EP_plotType)
+                case 'VARS_OVERLAY'
+                    if userData.EP_plotYearly
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+                        set(graphs(ihAx),'XLim',[1 367])
+                    else
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+                        if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
+                            set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
+                        else
+                            set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
+                        end
+                    end
+                    if ~isfield(userData.plotLimits, 'MULTI')
+                        userData.plotLimits.MULTI.yMin = userData.dataLimits.MULTI.(useFlags).yMin;
+                        userData.plotLimits.MULTI.yMax = userData.dataLimits.MULTI.(useFlags).yMax;
+                    end
+                    
+                case 'VARS_STACKED'
+                    if userData.EP_plotYearly
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+                        set(graphs(ihAx),'XLim',[1 367])
+                    else
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+                        if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
+                            set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
+                        else
+                            set(graphs(ihAx),'XLim',datenum_to_datetime([userData.dataLimits.TIME.RAW.xMin userData.dataLimits.TIME.RAW.xMax]));
+                        end
+                    end
+                    if ~isfield(userData.plotLimits, theVar)
+                        userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
+                        userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
+                    end
+                    set(graphs(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
             end
             
             hLine.UserData.legendString = legendString;
@@ -252,20 +272,23 @@ for ii = 1:numel(userData.sample_data)
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
             
-            drawnow;
-            pause(0.01);
+            %pause(0.01);
+            %drawnow;
+            
         catch e
+            disp(e.identifier);
             disp(e.message);
             for ie = 1:numel(e.stack)
-               e.stack(ie)
+                e.stack(ie)
             end
             hash.remove(hObject);
             warning('PLOTDATA: plot failed.');
             return
         end
-        hold(graphs(ihAx),'on');
+        %hold(graphs(ihAx),'on');
         set(msgPanelText,'String',strcat('Plot : ', instStr));
     end
+    drawnow;
 end
 
 %% update line colours, labels and legends
@@ -297,8 +320,8 @@ userData.EP_redoPlots = false;
 setappdata(hFig, 'UserData', userData);
 
 % is this needed?
-drawnow;
-pause(0.05);
+% drawnow;
+% pause(0.05);
 
 % release rentrancy flag
 hash.remove(hObject);
