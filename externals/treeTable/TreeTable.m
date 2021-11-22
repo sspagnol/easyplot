@@ -322,13 +322,13 @@ classdef TreeTable < handle
                 hParent = obj.Container;
                 try
                     % HG2 sometimes needs double(), sometimes not, so try both of them...
-                    [obj.JScrollPane, obj.hContainer] = javacomponent(scroll, tablePosition, double(hParent));
-                catch
                     [obj.JScrollPane, obj.hContainer] = javacomponent(scroll, tablePosition, hParent);
+                catch
+                    [obj.JScrollPane, obj.hContainer] = javacomponent(scroll, tablePosition, double(hParent));
                 end
                 set(obj.hContainer,'units','normalized','pos',[0,0,1,1]);  % this will resize the table whenever its container is resized
                 pause(0.05);
-            catch
+            catch lasterror
                 err = lasterror;
                 obj.hContainer = [];
             end
