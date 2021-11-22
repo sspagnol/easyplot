@@ -449,8 +449,8 @@ setappdata(hFig, 'UserData', userData);
                 structs = add_EPOffset_EPScale(structs);
 
                 % add latitude etc info from yml file
-                structs = add_yml_info(structs, parser_name, ymlData.files{ii});
-
+                [structs, latitude] = add_yml_info(structs, parser_name, ymlData.files{ii});
+                
                 [userData.sample_data, defaultLatitude] = add_structs_to_sample_data(userData.sample_data, structs, parser_name, defaultLatitude, toolbox_input_file, plotVar);
                 
                 clear('structs');
@@ -487,12 +487,12 @@ setappdata(hFig, 'UserData', userData);
         setappdata(hFig, 'UserData', userData);
         plotData(hFig);
         
-        function structs = add_yml_info(structs, parser_name, yml_data_info)
+        function [structs, latitude] = add_yml_info(structs, parser_name, yml_data_info)
             
-            yml_data_info.latitude = false;
-            if isfield(yml_data_info, 'latitude') && ~isempty(yml_data_info.latitude)
+            hasLatitude = isfield(yml_data_info, 'latitude') && ~isempty(yml_data_info.latitude);
+            latitude = NaN;
+            if hasLatitude   
                 latitude = yml_data_info.latitude;
-                hasLatitude = true;
             end
             
             if isfield(yml_data_info, 'variables') && ~isempty(yml_data_info.variables)
@@ -508,7 +508,7 @@ setappdata(hFig, 'UserData', userData);
                 structs{k}.meta.parser = parser_name;
                 structs{k}.EP_isNew = true;
                 
-                if yml_data_info.latitude
+                if hasLatitude   
                     structs{k}.meta.latitude = latitude;
                 end
                 
