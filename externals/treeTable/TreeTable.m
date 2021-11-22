@@ -289,12 +289,21 @@ classdef TreeTable < handle
               a=1;   % never mind - probably an invalid icon
           end
                 %}
-                try
-                    obj.JTable.setExpandedIcon (javax.swing.ImageIcon(obj.IconFilenames{2}));
-                    obj.JTable.setCollapsedIcon(javax.swing.ImageIcon(obj.IconFilenames{3}));
-                catch
-                    %fprintf(2, 'Invalid group icon: %s (%s)\n', char(iconPath), lasterr);
-                    a=1;   % never mind - probably an invalid icon
+                if ~isempty(obj.IconFilenames{2})
+                    try
+                        obj.JTable.setExpandedIcon (javax.swing.ImageIcon(obj.IconFilenames{2}));
+                    catch
+                        %fprintf(2, 'Invalid group icon: %s (%s)\n', char(iconPath), lasterr);
+                        a = 1;   % never mind - probably an invalid icon
+                    end
+                end
+                if ~isempty(obj.IconFilenames{3})
+                    try
+                        obj.JTable.setCollapsedIcon(javax.swing.ImageIcon(obj.IconFilenames{3}));
+                    catch
+                        %fprintf(2, 'Invalid group icon: %s (%s)\n', char(iconPath), lasterr);
+                        a = 1;   % never mind - probably an invalid icon
+                    end
                 end
                 
                 % Attach a GroupTableHeader so that we can use Outlook-style interactive grouping
@@ -467,12 +476,20 @@ classdef TreeTable < handle
         %% Get the basic JTable data model
         function originalModel = getOriginalModel(JTable)
             originalModel = JTable.getModel;
-            try
-                while(true)
+%             try
+%                 while(true)
+%                     originalModel = originalModel.getActualModel;
+%                 end;
+%             catch
+%                 a=1;  % never mind - bail out...
+%             end
+            
+            while true
+                if ismember('getActualModel', methods(originalModel))
                     originalModel = originalModel.getActualModel;
-                end;
-            catch
-                a=1;  % never mind - bail out...
+                else
+                    break;
+                end
             end
         end  % getOriginalModel
         
