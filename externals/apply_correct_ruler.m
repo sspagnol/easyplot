@@ -1,5 +1,5 @@
 % from https://github.com/CelsoReyes/zmap7
-function rulerChanged = apply_correct_ruler(dataType, ax)
+function [rulerChanged, ax] = apply_correct_ruler(dataType, ax)
     rulerChanged=false;
     switch dataType
         case 'categorical'
