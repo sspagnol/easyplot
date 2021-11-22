@@ -1,6 +1,6 @@
 function updateTreeDisplay(treePanel, treePanelData)
 
-% persistent hash;
+persistent hash;
 if isempty(hash)
     hash = java.util.Hashtable;
 end
@@ -15,6 +15,7 @@ tUserData.treePanelData = treePanelData;
 jtable = tUserData.jtable;
 if isempty(jtable)
    jtable = createTreeTable(treePanel);
+   pause(0.01);
 end
 jtable.setTableData(treePanelData);
 pause(0.01);
@@ -22,10 +23,12 @@ pause(0.01);
 % Make 'Show' column width small as practible
 jtable.JTable.getColumnModel.getColumn(1).setMinWidth(40);
 jtable.JTable.getColumnModel.getColumn(1).setMaxWidth(50);
+pause(0.01);
 
 % Make 'Slice' column width small as practible
 tUserData.jtable.JTable.getColumnModel.getColumn(2).setMinWidth(40);
 tUserData.jtable.JTable.getColumnModel.getColumn(2).setMaxWidth(50);
+pause(0.01);
 
 % set callback
 original_model = getOriginalModel(jtable.JTable);

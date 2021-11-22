@@ -35,6 +35,7 @@ if isfield(userData, 'sample_data')
     tUserData.treePanelData = {};
     tUserData.jtable.JTable.setModel(javax.swing.table.DefaultTableModel({}, tUserData.treePanelHeader));
     tUserData.jtable.JTable.repaint;
+    pause(0.01);
     setappdata(treePanel, 'UserData', tUserData);
 
     userData.sample_data = {};
