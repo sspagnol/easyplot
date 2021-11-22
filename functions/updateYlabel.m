@@ -13,7 +13,7 @@ else
     ylabelStr = makeYlabel( short_name, long_name, uom );
 end
 
-ylabel(hAx, ylabelStr);
+ylabel(hAx, ylabelStr, 'Interpreter', 'none');
 
 end
 
