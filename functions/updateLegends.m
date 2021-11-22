@@ -42,11 +42,16 @@ for ii = 1:numel(graphs)
     else
         % newer multicolumn legend but not sure how kosher legend
         % linewidths code is
-        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','NorthEast', 'NumColumns', 4);
+        default_number_columns = 4;
+        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','NorthEast', 'NumColumns', default_number_columns);
+        if hLegend.Position(3) > 0.75
+            hLegend.NumColumns = default_number_columns -1;
+        end
         hLegend.ItemTokenSize = [15, 36]; % default [30 18]
     end
 end
-drawnow;
+
 pause(0.01);
+drawnow;
 
 end
