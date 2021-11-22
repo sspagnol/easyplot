@@ -5,13 +5,22 @@ function originalModel = getOriginalModel(jtable)
 originalModel = [];
 if ~isempty(jtable)
     originalModel = jtable.getModel;
-    try
-        while(true)
+    %     try
+    %         while(true)
+    %             originalModel = originalModel.getActualModel;
+    %         end
+    %     catch
+    %         % never mind - bail out...
+    %     end
+    
+    while true
+        if ismember('getActualModel', methods(originalModel))
             originalModel = originalModel.getActualModel;
-        end;
-    catch
-        % never mind - bail out...
+        else
+            break;
+        end
     end
+    
 end
 
 end  % getOriginalModel
