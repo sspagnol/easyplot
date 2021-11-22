@@ -111,10 +111,10 @@ uiwait(f);
 %now we know which instruments are in the cal bath ('sets').
 % and we know the time range for checking the offsets (calx,caly)
 % and we know the reference unit ('refinst').
-plotcals;
+plotcals(userData);
 
 %%
-    function plotcals
+    function plotcals(userData)
         %PLOTCALS plot the bath calibration data as a comparison
         %return the handle to the figure, h
         % now put them onto the same timebase to compare the temp offsets:
