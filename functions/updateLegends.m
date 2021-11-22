@@ -17,6 +17,7 @@ for ii = 1:numel(graphs)
     hLines = findobj(graphs(ii).Children,'Type','Line');
     
     %legendStrings = strrep({hLines.Tag}, '_', '\_');
+    legendStrings = {hLines.Tag};
     % can have multiple lines per instrument when EP_plotYearly = true
     % make unique strings and get indexing
     [uStrings, IA, IC] = unique(legendStrings, 'stable');
@@ -41,7 +42,7 @@ for ii = 1:numel(graphs)
     else
         % newer multicolumn legend but not sure how kosher legend
         % linewidths code is
-        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','NorthEast', 'NumColumns', 5);
+        hLegend = legend(graphs(ii).Children(IA), legendStrings(IA), 'FontSize', 8, 'Interpreter', 'none', 'Location','NorthEast', 'NumColumns', 4);
         hLegend.ItemTokenSize = [15, 36]; % default [30 18]
     end
 end
