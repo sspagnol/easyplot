@@ -6,16 +6,7 @@ function sam = add_EP_X_demeaned(sam)
 % filtering need a monotonic time stamp with regular dt and with nan data
 % replaced with mean of time series.
 
-%% determine QC use
-try
-    useQCflags = userData.EP_plotQC;
-catch
-    useQCflags = false;
-end
-useFlags = 'RAW';
-if useQCflags, useFlags='QC'; end
-
-% retrieve good flag values
+%% retrieve good flag values
 goodFlags = getGoodFlags();
 
 % only do LPF on PRES, PRES_REL and DEPTH. Search is setup such to avoid bursted
