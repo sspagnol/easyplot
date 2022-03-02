@@ -108,6 +108,12 @@ parserList.message{ii}='Choose Nortek *.ad2cp files:';
 parserList.parser{ii}='signatureParse';
 
 ii=ii+1;
+parserList.name{ii}='OceanContour (mat, nc)';
+parserList.wildcard{ii}={'*.mat', '*.nc'};
+parserList.message{ii}='Choose OceanContour *.mat/nc files:';
+parserList.parser{ii}='oceanContourParse';
+
+ii=ii+1;
 parserList.name{ii}='RBR (txt,dat,rsk)';
 parserList.wildcard{ii}={'*.txt', '*.dat', '*.rsk'};
 parserList.message{ii}='Choose RBR files:';
