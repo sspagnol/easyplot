@@ -269,6 +269,11 @@ for ii = 1:numel(userData.sample_data)
             hLine.UserData.legendString = legendString;
             [~, fNAME, fEXT] = fileparts(userData.sample_data{ii}.toolbox_input_file);
             hLine.UserData.fileName = [strtrim(fNAME), strtrim(fEXT)];
+            fnames = fieldnames(userData.sample_data{ii});
+            fnames = fnames(contains(fnames, {'time_', 'geospatial_', 'site_', 'platform_', 'instrument_'}));
+            for v = fnames'
+                hLine.UserData.(char(v)) = userData.sample_data{ii}.(char(v));
+            end
             userData.sample_data{ii}.variables{jj}.hLine = hLine;
             userData.sample_data{ii}.EP_variablePlotStatus(jj) = 1;
             
