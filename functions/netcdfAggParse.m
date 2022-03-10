@@ -5,7 +5,8 @@ netcdfData = netcdfParse({filename}, 'timeSeries');
 
 idTIME = getVar(netcdfData.variables, 'TIME');
 
-instrument_index = netcdfData.variables{getVar(netcdfData.variables, 'instrument_index')}.data;
+% instrument_index zero-index in nc file
+instrument_index = netcdfData.variables{getVar(netcdfData.variables, 'instrument_index')}.data + 1;
 source_file = netcdfData.variables{getVar(netcdfData.variables, 'source_file')}.data;
 % older test aggregate files instrument_id was call instrument_type
 idVar = getVar(netcdfData.variables, 'instrument_id');
@@ -13,6 +14,12 @@ if idVar == 0
     idVar = getVar(netcdfData.variables, 'instrument_type');
 end    
 instrument_id = netcdfData.variables{idVar}.data;
+
+nominal_depth = zeros(size(instrument_id));
+idVar = getVar(netcdfData.variables, 'NOMINAL_DEPTH');
+if idVar ~= 0
+    nominal_depth = netcdfData.variables{idVar}.data;
+end    
 
 sample_data = {};
 counter = 0;
@@ -24,10 +31,25 @@ for i = 1:length(instrument_id)
     meta.file_name =  source_file{i};
     meta.instrument_model = char(instrument_id{i});
     strs = strtrim(strsplit(instrument_id{i}, ';'));
-    meta.instrument_make = char(strs{1});
-    instrument_model = char(strs{2});
-    meta.instrument_model = updateIfEmpty(instrument_model, meta.instrument_make, instrument_model);
-    meta.instrument_serial_no = char(strs{3});
+    % have seen instrument_id with only three fields eg 'NRSYON-1605-SRF; WETLABS WQM; 140'
+    % but attribute for instrument_id namely
+    % long_name = "source deployment code, instrument make, model, serial_number"
+    % would indicate it would a seperate entry (split by ; say)
+    if numel(strs) == 3
+        meta.deployment_code = char(strs{1});
+        make_model = regexp(char(strs{2}), ' ', 'split', 'once');
+        meta.instrument_make = make_model{1};
+        instrument_model = make_model{2};
+        meta.instrument_model = updateIfEmpty(instrument_model, meta.instrument_make, instrument_model);
+        meta.instrument_serial_no = char(strs{3});
+    else
+        meta.deployment_code = char(strs{1});
+        meta.instrument_make = char(strs{2});
+        instrument_model = make_model{3};
+        meta.instrument_model = updateIfEmpty(instrument_model, meta.instrument_make, instrument_model);
+        meta.instrument_serial_no = char(strs{4});        
+    end
+    meta.instrument_nominal_depth = nominal_depth(i);
     
     % copy TIME
     v = struct;
