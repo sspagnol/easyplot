@@ -263,7 +263,8 @@ for ii = 1:numel(userData.sample_data)
                         userData.plotLimits.(theVar).yMin = userData.dataLimits.(theVar).(useFlags).yMin;
                         userData.plotLimits.(theVar).yMax = userData.dataLimits.(theVar).(useFlags).yMax;
                     end
-                    set(graphs(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
+                    set(graphs(ihAx), 'YLim', get_valid_plot_limits(userData.plotLimits.(theVar)));
+                    %set(graphs(ihAx),'YLim',[userData.plotLimits.(theVar).yMin userData.plotLimits.(theVar).yMax]);
             end
             
             hLine.UserData.legendString = legendString;
@@ -331,4 +332,24 @@ setappdata(hFig, 'UserData', userData);
 % release rentrancy flag
 hash.remove(hObject);
 
+end
+
+function new_y_limits = get_valid_plot_limits(lstruct)
+ymin = lstruct.yMin;
+ymax = lstruct.yMax;
+
+if isnan(ymin)
+    ymin = -1;
+end
+   
+if isnan(ymax)
+    ymin = +1;
+end
+ 
+if ymax-ymin == 0
+    ymin = -1;
+    ymax = +1;
+end
+
+new_y_limits = [ymin, ymax];
 end
