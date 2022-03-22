@@ -1,4 +1,4 @@
-function xf=pl66tn(x,dt,T)
+function [xf, nwts] = pl66tn(x,dt,T)
 % PL66TN: pl66t for variable dt and T
 % xf=PL66TN(x,dt,T) computes low-passed series xf from x
 % using pl66 filter, with optional sample interval dt (hrs)
@@ -10,6 +10,7 @@ function xf=pl66tn(x,dt,T)
 %         T=filter half-amp period [hrs] (Default T=33)
 %
 % OUTPUT: xf=filtered series
+%         nwts = half filter length
 
 % NOTE: both pl64 and pl66 have the same 33 hr filter
 % half-amplitude period. pl66 includes additional filter weights
@@ -33,10 +34,10 @@ end
 
 cutoff=T/dt;
 fq=1./cutoff;
-nw=2*T./dt;
-nw=round(nw);
-%disp(['number of weights = ',int2str(nw)]);
-nw2=2.*nw;
+nwts=2*T./dt;
+nwts=round(nwts);
+%disp(['number of weights = ',int2str(nwts)]);
+nw2=2.*nwts;
 
 [npts,ncol]=size(x);
 if (npts<ncol)
@@ -46,7 +47,7 @@ end
 xf=x;
 
 % generate filter weights
-j=1:nw;
+j=1:nwts;
 t=pi.*j;
 den=fq.*fq.*t.^3;
 wts=(2.*sin(2.*fq.*t)-sin(fq.*t)-sin(3.*fq.*t))./den;
