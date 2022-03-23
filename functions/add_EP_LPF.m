@@ -157,7 +157,9 @@ if candoLpf
         end
 
         dT=lpf_sampleInterval;
-        filterData=pl66tn(newRawData,dT/3600,33);
+        [filterData, nwts] = pl66tn(newRawData,dT/3600,33);
+		filterData(1:nwts) = NaN;
+		filterData(end-nwts:end) = NaN;
         filterData = filterData + meansignal;
         
         % if not enough lpf data skip
