@@ -52,7 +52,7 @@ t=pi.*j;
 den=fq.*fq.*t.^3;
 wts=(2.*sin(2.*fq.*t)-sin(fq.*t)-sin(3.*fq.*t))./den;
 % make symmetric filter weights
-wts=[wts(nw:-1:1),2.*fq,wts];
+wts=[wts(nwts:-1:1),2.*fq,wts];
 wts=wts./sum(wts);% normalize to exactly one
 % plot(wts);grid;
 % title(['pl64t filter weights for dt = ',num2str(dt),' and T = ',num2str(T)])
@@ -60,7 +60,7 @@ wts=wts./sum(wts);% normalize to exactly one
 
 % fold tapered time series on each end
 cs=cos(t'./nw2);
-jm=[nw:-1:1];
+jm=[nwts:-1:1];
 
 for ic=1:ncol
     % ['column #',num2str(ic)]
