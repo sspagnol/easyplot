@@ -184,9 +184,9 @@ for ii = 1:numel(userData.sample_data)
         hold(graphs(ihAx),'on');
  
         if userData.EP_plotYearly
-            [rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+            [rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('numeric', graphs(ihAx));
         else
-            [rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+            [rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('datetime', graphs(ihAx));
         end
         
         try
@@ -232,10 +232,10 @@ for ii = 1:numel(userData.sample_data)
             switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
                     if userData.EP_plotYearly
-                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('numeric', graphs(ihAx));
                         set(graphs(ihAx),'XLim',[1 367])
                     else
-                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('datetime', graphs(ihAx));
                         if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
                             set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
                         else
@@ -249,10 +249,10 @@ for ii = 1:numel(userData.sample_data)
                     
                 case 'VARS_STACKED'
                     if userData.EP_plotYearly
-                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('numeric', graphs(ihAx));
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('numeric', graphs(ihAx));
                         set(graphs(ihAx),'XLim',[1 367])
                     else
-                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler('datetime', graphs(ihAx));
+                        %[rulerChanged, graphs(ihAx)] = apply_correct_ruler_xaxis('datetime', graphs(ihAx));
                         if isfield(userData.plotLimits, 'TIME') && isfinite(userData.plotLimits.TIME.xMin) && isfinite(userData.plotLimits.TIME.xMax)
                             set(graphs(ihAx),'XLim',datenum_to_datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax]));
                         else
