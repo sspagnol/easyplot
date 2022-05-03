@@ -153,11 +153,13 @@ plotcals(userData);
         %plot calibration data for all temperature ranges by time:
         f1 = figure;
         clf;
+        ax1 = axes(f1);
         hold('on');
         
         %plot difference to reference instrument coloured by instrument type:
         f2 = figure;
         clf;
+        ax2 = axes(f2);
         hold('on');
         
         cc = parula(numel(data));
@@ -216,28 +218,30 @@ plotcals(userData);
                 end
                 
                 %plot only the regions of comparison
-                figure(f1);
+                %figure(f1);
+                axes(ax1);
                 if ii == 1
-                    h1(ii) = plot(datetime(tbase, 'ConvertFrom', 'datenum'), caldat,'kx-', 'linewidth',2);
+                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat,'kx-', 'linewidth',2);
                 end
-                h1(ii) = plot(datetime(tbase, 'ConvertFrom', 'datenum'), insdat,'x-','color',cc(ii,:));
+                h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat,'x-','color',cc(ii,:));
                 
                 if isfield(userData,'calx2')
                     if ii == 1
-                        h2(ii) = plot(datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth',2);
+                        h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth',2);
                     end
-                    h2(ii) = plot(datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:));
+                    h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:));
                 end
                 
                 %plot differences by instrument type
-                figure(f2);
+                %figure(f2);
+                axes(ax2);
                 ik = find(strcmp(dinstModels{ii}, udinstModels));
-                hh1(ii) = plot(caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
+                hh1(ii) = plot(ax2, caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
                 istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
-                text(double(XData(iend)),double(YData(iend)),...
+                text(ax2, double(XData(iend)),double(YData(iend)),...
                     data{ii}.meta.instrument_serial_no); %iu{ik}); %
                 diffdat = insdat-caldat;
                 STATS = statistic(diffdat);
@@ -245,12 +249,12 @@ plotcals(userData);
                 str = ['| ' inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                 disp(str);
                 if isfield(userData,'calx2')
-                    hh2(ii) = plot(caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
+                    hh2(ii) = plot(ax2, caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                     XData = get(hh2(ii), 'XData');
                     YData = get(hh2(ii), 'YData');
                     iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
                     istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
-                    text(double(XData(iend)),double(YData(iend)),...
+                    text(ax2, double(XData(iend)),double(YData(iend)),...
                         data{ii}.meta.instrument_serial_no); %iu{ik}); %
                     diffdat = insdat2-caldat2;
                     STATS = statistic(diffdat);
