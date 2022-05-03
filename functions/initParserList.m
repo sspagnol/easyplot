@@ -108,6 +108,12 @@ parserList.message{ii}='Choose Nortek *.ad2cp files:';
 parserList.parser{ii}='signatureParse';
 
 ii=ii+1;
+parserList.name{ii}='Odyssey Light Logger (csv)';
+parserList.wildcard{ii}={'*.csv'};
+parserList.message{ii}='Choose Odyssey *.csv files:';
+parserList.parser{ii}='odysseyParse';
+
+ii=ii+1;
 parserList.name{ii}='OceanContour (mat, nc)';
 parserList.wildcard{ii}={'*.mat', '*.nc'};
 parserList.message{ii}='Choose OceanContour *.mat/nc files:';
