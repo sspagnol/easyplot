@@ -17,12 +17,12 @@ rawData = rawData(:);
 % keep only good
 ig = find(rawTime >= min(tbase) & rawTime < max(tbase) & ~isnan(rawData));
 
-if length(ig)/length(rawTime) < 0.05,
+if length(ig)/length(rawTime) < 0.05
     disp('match_timebase: Less than 5% of data is in time range!');
     return
 end
 
-if ~isempty(ig),
+if ~isempty(ig)
     % interpolate to timebase:
     newData = interp1(rawTime,rawData,tbase);
     ib = find(tbase < min(rawTime) | tbase > max(rawTime) );
