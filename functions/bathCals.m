@@ -115,13 +115,14 @@ plotcals(userData);
 
 %%
     function plotcals(userData)
-        %PLOTCALS plot the bath calibration data as a comparison
-        %return the handle to the figure, h
+        % PLOTCALS plot instrument data against a reference data set
+        %
         % now put them onto the same timebase to compare the temp offsets:
-        %use the cal bath interval:
+        %
+        % Original code from Rebecca Cowley (O&A, Hobart) <Rebecca.Cowley@csiro.au>
         
         ref = userData.sample_data{refinst};
-        refTemp = ref.variables{ref.EP_variablePlotStatus>0}.data;
+        refData = ref.variables{ref.EP_variablePlotStatus>0}.data;
         refTime = ref.dimensions{1}.data;
         refTimeDiff = nanmedian(diff(refTime));
         tmin1 = userData.calx(1);
@@ -150,16 +151,22 @@ plotcals(userData);
         dinstModels = instModels(iSet);
         udinstModels = unique(dinstModels, 'stable');
         
-        %plot calibration data for all temperature ranges by time:
-        f1 = figure;
+        % plot test tank data by time:
+        f1 = figure('visible', 'off');
         clf;
         ax1 = axes(f1);
         hold('on');
         
-        %plot difference to reference instrument coloured by instrument type:
-        f2 = figure;
+        % plot difference to reference instrument coloured by instrument type
+        f2 = figure('visible', 'off');
         clf;
         ax2 = axes(f2);
+        hold('on');
+        
+        % plot difference to reference instrument by time:
+        f3 = figure('visible', 'off');
+        clf;
+        ax3 = axes(f3);
         hold('on');
         
         cc = parula(numel(data));
@@ -182,14 +189,13 @@ plotcals(userData);
             hh2 = NaN(size(data));
         end
         
-
         disp(['| Instrument | Date Range | ' plotVar ' Mean(Inst - Cal Inst) |']);
         disp('| --- | --- | --- |');
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
             instTime = data{ii}.dimensions{1}.data;
             if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
-            instTemp = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
+            instData = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
             igIns1 = (instTime >= tmin1) & (instTime <= tmax1);
             if isfield(userData, 'calx2')
                 igIns2 = (instTime >= tmin2) & (instTime <= tmax2);
@@ -199,50 +205,59 @@ plotcals(userData);
                 insdif = nanmedian(diff(instTime));
                 if refTimeDiff >= insdif
                     tbase = refTime(igRef1);
-                    caldat = refTemp(igRef1);
-                    insdat = match_timebase(tbase,instTime(igIns1),instTemp(igIns1));
+                    caldat = refData(igRef1);
+                    insdat = match_timebase(tbase, instTime(igIns1), instData(igIns1));
                     if isfield(userData, 'calx2')
                         tbase2 = refTime(igRef2);
-                        caldat2 = refTemp(igRef2);
-                        insdat2 = match_timebase(tbase2,instTime(igIns2),instTemp(igIns2));
+                        caldat2 = refData(igRef2);
+                        insdat2 = match_timebase(tbase2, instTime(igIns2), instData(igIns2));
                     end
                 else
                     tbase = instTime(igIns1);
-                    insdat = instTemp(igIns1);
-                    caldat = match_timebase(tbase,refTime(igRef1),refTemp(igRef1));
+                    insdat = instData(igIns1);
+                    caldat = match_timebase(tbase, refTime(igRef1), refData(igRef1));
                     if isfield(userData,'calx2')
                         tbase2 = instTime(igIns2);
-                        insdat2 = instTemp(igIns2);
-                        caldat2 = match_timebase(tbase2,refTime(igRef2),refTemp(igRef2));
+                        insdat2 = instData(igIns2);
+                        caldat2 = match_timebase(tbase2, refTime(igRef2), refData(igRef2));
                     end
                 end
                 
                 %plot only the regions of comparison
-                %figure(f1);
                 axes(ax1);
+                hold(ax1, 'on');
                 if ii == 1
-                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat,'kx-', 'linewidth',2);
+                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat, 'kx-', 'linewidth', 2);
                 end
-                h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat,'x-','color',cc(ii,:));
+                h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat, 'x-', 'color', cc(ii,:));
                 
                 if isfield(userData,'calx2')
                     if ii == 1
-                        h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth',2);
+                        h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth', 2);
                     end
                     h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:));
                 end
                 
                 %plot differences by instrument type
-                %figure(f2);
                 axes(ax2);
+                hold(ax2, 'on');
                 ik = find(strcmp(dinstModels{ii}, udinstModels));
-                hh1(ii) = plot(ax2, caldat,insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
+                hh1(ii) = plot(ax2, caldat, insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color', cb(ik,:), 'DisplayName', udinstModels{ik});
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
                 istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
                 text(ax2, double(XData(iend)),double(YData(iend)),...
                     data{ii}.meta.instrument_serial_no); %iu{ik}); %
+ 
+                %plot difference to ref inst
+                axes(ax3);
+                hold(ax3, 'on');
+                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-caldat, 'x-', 'color', cc(ii,:));
+                if isfield(userData,'calx2')
+                    plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2-caldat2, 'x-', 'color', cc(ii,:));
+                end
+                
                 diffdat = insdat-caldat;
                 STATS = statistic(diffdat);
                 inststr = [data{ii}.meta.instrument_make '-' data{ii}.meta.instrument_model '-' data{ii}.meta.instrument_serial_no];
@@ -277,25 +292,34 @@ plotcals(userData);
         dinstModels(rmins) = [];
         
         if exist('h1','var')
-            figure(f1);
+            %figure(f1);
+            f1.Visible = 'on';
             legText = dinstShortnameSerial;
-            %legText(rmins) = [];
-            grid('on');
-            xlabel('Time');
-            ylabel(makeTexSafe(plotVar));
-            %datetick;
-            legend(h1,legText);
-            title('Bath Calibrations');
+            grid(ax1, 'on');
+            xlabel(ax1, 'Time');
+            ylabel(ax1, makeTexSafe(plotVar));
+            legend(ax1, legText);
+            title(ax1, makeTexSafe(['Test tank ' plotVar]));
             
-            figure(f2);
+            %figure(f2);
+            f2.Visible = 'on';
             legText = dinstModels;
             %legText(rmins) = [];
             [legText, IA, IC] = unique(legText);
-            legend(hh1(IA));
-            title(makeTexSafe(['Calibration bath ' plotVar ' offsets from reference instrument']));
-            xlabel(makeTexSafe(['Bath ' plotVar]));
-            ylabel(makeTexSafe([plotVar ' offset']));
-            grid('on');
+            legend(ax2, hh1(IA));
+            title(ax2, makeTexSafe(['Test tank ' plotVar ' offsets from reference instrument']));
+            xlabel(ax2, makeTexSafe(['Bath ' plotVar]));
+            ylabel(ax2, makeTexSafe([plotVar ' offset']));
+            grid(ax2, 'on');
+  
+            %figure(f3);
+            f3.Visible = 'on';
+            legText = dinstShortnameSerial;
+            grid(ax3, 'on');
+            xlabel(ax3, 'Time');
+            ylabel(ax3, makeTexSafe([plotVar ' offset']));
+            legend(ax3, legText);
+            title(ax3, makeTexSafe(['Test tank ' plotVar ' offsets from reference instrument']));
         end
     end
 
