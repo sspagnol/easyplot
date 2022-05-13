@@ -39,7 +39,9 @@ end
 %% for display purposes create a shortened instrument model name
 % if not already done so from cleanup stage
 if ~isfield(sam.meta, 'EP_instrument_model_shortname') || isempty(sam.meta.EP_instrument_model_shortname)
-    sam.meta.EP_instrument_model_shortname = sam.meta.instrument_model;
+    str = regexprep(sam.meta.instrument_model, '[^ -~]', '-'); %only printable ascii characters
+    str = regexprep(str, ' ', '');
+    sam.meta.EP_instrument_model_shortname = str;
 end
 
 if isfield(sam, 'featureType')

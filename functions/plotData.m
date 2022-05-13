@@ -175,6 +175,7 @@ for ii = 1:numel(userData.sample_data)
         
         instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
+        instStr = regexprep(instStr, ' ', '');
         %legendString = strrep(instStr,'_','\_');
         legendString = instStr;
         
