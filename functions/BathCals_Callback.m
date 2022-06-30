@@ -45,10 +45,36 @@ bathcalmenu = uimenu(uic,'label',[plotVar ' Bath Calibrations']);
 m1 = uimenu(bathcalmenu,'label','Select Points',...
     'Callback',@selectPoints_Callback);
 
-children = findobj(plotPanel,'Type','axes');
+%children = findobj(plotPanel,'Type','axes');
+children = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');
 for ii=1:numel(children)
     set(children(ii), 'UIContextMenu', uic);
 end
+
+zoom('off');
+pan('off');
+
+
+% for ii=1:numel(children)
+% % https://au.mathworks.com/matlabcentral/answers/463333-how-to-deselect-toolbarstatebutton-without-clicking-on-it
+% % Properly deselects any state button in the toolbar
+% tb = axtoolbar(children(ii), 'default');
+% tb.Visible = 'on';
+% for k = 1:numel(tb.Children)
+%     if isa(tb.Children(k),'matlab.ui.controls.ToolbarStateButton')
+%         if strcmp(tb.Children(k).Value,'on')
+%             e = tb.Children(k);
+%             d = struct;
+%             d.Source = e;
+%             d.Axes = handles.Axes1;
+%             d.EvenName = 'ValueChanged';
+%             d.Value = 'off';
+%             d.PreviousValue = 'on';
+%             feval(tb.Children(k).ValueChangedFcn,e,d);
+%         end
+%     end
+% end
+% end
 
 %uic.HandleVisibility = 'off';
 %theParent.uic.HandleVisibility = 'on';

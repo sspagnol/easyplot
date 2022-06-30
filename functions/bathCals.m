@@ -34,7 +34,7 @@ instShortnameSerialFilename = strcat(instShortname, '#', instSerials, ' (', inst
 
 %create the dialog box, get index into  sample_data of reference
 %instrument
-[refinst,ok] = listdlg('PromptString','Choose the reference instrument',...
+[refinst, ok] = listdlg('PromptString','Choose the reference instrument',...
     'SelectionMode','single',...
     'ListSize', [400,250],...
     'ListString',instShortnameSerialFilename,...
@@ -122,6 +122,8 @@ plotcals(userData);
         % Original code from Rebecca Cowley (O&A, Hobart) <Rebecca.Cowley@csiro.au>
         
         ref = userData.sample_data{refinst};
+        refStrTag = strcat(plotVar, '-', ref.meta.EP_instrument_model_shortname, '-', ref.meta.EP_instrument_serial_no_deployment);
+        refStrTag = regexprep(refStrTag, '[^ -~]', '-');
         refData = ref.variables{ref.EP_variablePlotStatus>0}.data;
         refTime = ref.dimensions{1}.data;
         refTimeDiff = nanmedian(diff(refTime));
@@ -132,6 +134,10 @@ plotcals(userData);
             tmax1 = datenum(tmax1);
         end        
 		igRef1 = refTime >= tmin1 & refTime <= tmax1;
+        if sum(igRef1) == 0
+           warning('No coincident calibration data for selected period.');
+           return
+        end
         if isfield(userData,'calx2')
             tmin2 = userData.calx2(1);
             tmax2 = userData.calx2(2);
@@ -156,19 +162,26 @@ plotcals(userData);
         clf;
         ax1 = axes(f1);
         hold('on');
+        dcm_h = datacursormode(f1);
+        set(dcm_h, 'UpdateFcn', @customDatacursorText)
+
         
         % plot difference to reference instrument coloured by instrument type
         f2 = figure('visible', 'off');
         clf;
         ax2 = axes(f2);
         hold('on');
+        dcm_h = datacursormode(f2);
+        set(dcm_h, 'UpdateFcn', @customDatacursorText)
         
         % plot difference to reference instrument by time:
         f3 = figure('visible', 'off');
         clf;
         ax3 = axes(f3);
         hold('on');
-        
+        dcm_h = datacursormode(f3);
+        set(dcm_h, 'UpdateFcn', @customDatacursorText)
+      
         cc = parula(numel(data));
         cb = parula(size(udinstModels,1));
         clear('h');
@@ -193,6 +206,9 @@ plotcals(userData);
         disp('| --- | --- | --- |');
         for ii = 1:numel(data)
             %disp([data{ii}.meta.instrument_model ' ' data{ii}.meta.instrument_serial_no]);
+            instStrTag = strcat(plotVar, '-', data{ii}.meta.EP_instrument_model_shortname, '-', data{ii}.meta.EP_instrument_serial_no_deployment);
+            instStrTag = regexprep(instStrTag, '[^ -~]', '-'); %only printable ascii characters
+        
             instTime = data{ii}.dimensions{1}.data;
             if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
             instData = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
@@ -207,6 +223,10 @@ plotcals(userData);
                     tbase = refTime(igRef1);
                     caldat = refData(igRef1);
                     insdat = match_timebase(tbase, instTime(igIns1), instData(igIns1));
+                    iNaN = isnan(caldat) & isnan(insdat);
+                    tbase(iNaN) = [];
+                    caldat(iNaN) = [];
+                    insdat(iNaN) = [];
                     if isfield(userData, 'calx2')
                         tbase2 = refTime(igRef2);
                         caldat2 = refData(igRef2);
@@ -216,6 +236,10 @@ plotcals(userData);
                     tbase = instTime(igIns1);
                     insdat = instData(igIns1);
                     caldat = match_timebase(tbase, refTime(igRef1), refData(igRef1));
+                    iNaN = isnan(caldat) & isnan(insdat);
+                    tbase(iNaN) = [];
+                    caldat(iNaN) = [];
+                    insdat(iNaN) = [];
                     if isfield(userData,'calx2')
                         tbase2 = instTime(igIns2);
                         insdat2 = instData(igIns2);
@@ -223,26 +247,32 @@ plotcals(userData);
                     end
                 end
                 
+                if ~any(caldat)
+                   disp(['No coincident calibration data for ' refStrTag]);
+                   disp(['   Selected data range : ' char(datetime(tbase(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(tbase(end), 'ConvertFrom', 'datenum'))]);
+                   disp(['   Ref Inst data range : ' char(datetime(refTime(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(refTime(end), 'ConvertFrom', 'datenum'))]);
+                   %continue;
+                end
                 %plot only the regions of comparison
-                axes(ax1);
+                %axes(ax1);
                 hold(ax1, 'on');
                 if ii == 1
-                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat, 'kx-', 'linewidth', 2);
+                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat, 'kx-', 'linewidth', 2, 'Tag', refStrTag);
                 end
-                h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat, 'x-', 'color', cc(ii,:));
+                h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 
                 if isfield(userData,'calx2')
                     if ii == 1
                         h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), caldat2, 'kx-', 'linewidth', 2);
                     end
-                    h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:));
+                    h2(ii) = plot(ax1, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 end
                 
                 %plot differences by instrument type
-                axes(ax2);
+                %axes(ax2);
                 hold(ax2, 'on');
                 ik = find(strcmp(dinstModels{ii}, udinstModels));
-                hh1(ii) = plot(ax2, caldat, insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color', cb(ik,:), 'DisplayName', udinstModels{ik});
+                hh1(ii) = plot(ax2, caldat, insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color', cb(ik,:), 'DisplayName', udinstModels{ik}, 'Tag', instStrTag);
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
@@ -251,11 +281,11 @@ plotcals(userData);
                     data{ii}.meta.instrument_serial_no); %iu{ik}); %
  
                 %plot difference to ref inst
-                axes(ax3);
+                %axes(ax3);
                 hold(ax3, 'on');
-                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-caldat, 'x-', 'color', cc(ii,:));
+                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-caldat, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 if isfield(userData,'calx2')
-                    plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2-caldat2, 'x-', 'color', cc(ii,:));
+                    plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2-caldat2, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 end
                 
                 diffdat = insdat-caldat;
@@ -355,6 +385,19 @@ plotcals(userData);
         val = get(source, 'Value');
         
         iSet(idx) = logical(val);
+    end
+
+    function datacursorText = customDatacursorText(hObject, eventdata)
+        %dataIndex = get(eventdata,'DataIndex');
+        pos = get(eventdata,'Position');
+        datacursorText = {};
+        if isa(eventdata.Target.Parent.XAxis,'matlab.graphics.axis.decorator.DatetimeRuler')
+            datacursorText{end+1} = ['X: ' char(num2ruler(pos(1),eventdata.Target.Parent.XAxis))];
+        else
+            datacursorText{end+1} = ['X: ' num2str(pos(1), '%10.4f')];
+        end
+        datacursorText{end+1} = ['Y: ', num2str(pos(2), '%10.4f')];
+        datacursorText{end+1} = ['Inst: ', eventdata.Target.Tag];
     end
 
 end
