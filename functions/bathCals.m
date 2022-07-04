@@ -125,7 +125,9 @@ plotcals(userData);
         refStrTag = strcat(plotVar, '-', ref.meta.EP_instrument_model_shortname, '-', ref.meta.EP_instrument_serial_no_deployment);
         refStrTag = regexprep(refStrTag, '[^ -~]', '-');
         refData = ref.variables{ref.EP_variablePlotStatus>0}.data;
-        refTime = ref.dimensions{1}.data;
+        %refTime = ref.dimensions{1}.data;
+        idTime  = getVar(ref.dimensions, 'TIME');
+        refTime = getXdata(ref.dimensions{idTime});
         refTimeDiff = nanmedian(diff(refTime));
         tmin1 = userData.calx(1);
         tmax1 = userData.calx(2);
@@ -209,7 +211,9 @@ plotcals(userData);
             instStrTag = strcat(plotVar, '-', data{ii}.meta.EP_instrument_model_shortname, '-', data{ii}.meta.EP_instrument_serial_no_deployment);
             instStrTag = regexprep(instStrTag, '[^ -~]', '-'); %only printable ascii characters
         
-            instTime = data{ii}.dimensions{1}.data;
+            %instTime = data{ii}.dimensions{1}.data;
+            idTime  = getVar(data{ii}.dimensions, 'TIME');
+            instTime = getXdata(data{ii}.dimensions{idTime});
             if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
             instData = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
             igIns1 = (instTime >= tmin1) & (instTime <= tmax1);
