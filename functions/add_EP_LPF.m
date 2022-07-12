@@ -43,11 +43,8 @@ else
 end
 
 idTime  = getVar(sam.dimensions, 'TIME');
-theOffset = sam.dimensions{idTime}.EP_OFFSET;
-theScale = sam.dimensions{idTime}.EP_SCALE;
-xdataVar = sam.dimensions{idTime}.data;
-xdataVar = theOffset + (theScale .* xdataVar);
-                
+xdataVar = getXdata(sam.dimensions{idTime});
+
 % cannot determine samrate from file
 if sampleInterval<eps
     sampleInterval=mode(diff(xdataVar))*86400;
@@ -123,6 +120,8 @@ if candoLpf
     dimStruct.data          = sam.dimensions{idTime}.typeCastFunc(filterTime);
     dimStruct.EP_OFFSET = 0.0;
     dimStruct.EP_SCALE = 1.0;
+    dimStruct.EP_StartOffset = 0.0;
+    dimStruct.EP_StopOffset = 0.0;
     sam.dimensions{end+1} = dimStruct;
     clear('dimStruct');
     

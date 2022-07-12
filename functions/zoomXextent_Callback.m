@@ -14,12 +14,14 @@ userData=getappdata(hFig, 'UserData');
 if ~isfield(userData,'sample_data'), return; end
 
 plotPanel = findobj(hFig, 'Tag','plotPanel');
-
+ax = gca;
 if userData.EP_plotYearly
+    [rulerChanged, ax] = apply_correct_ruler_xaxis('numeric', ax);
     set(gca,'XLim', [1 367]);
     set(gca, 'XTick', [1 32  60 91 121 152 182 213 244 274 305 335]);
     datetick(gca, 'x', 'dd-mmm', 'keepticks');
 else
+    [rulerChanged, ax] = apply_correct_ruler_xaxis('datetime', ax);
     try
         useQCflags = userData.EP_plotQC;
     catch
@@ -30,7 +32,7 @@ else
     userData.plotLimits.TIME.xMax = userData.dataLimits.TIME.RAW.xMax;
     
     if ~isnan(userData.plotLimits.TIME.xMin) || ~isnan(userData.plotLimits.TIME.xMax)
-        set(gca,'XLim',datetime([userData.plotLimits.TIME.xMin userData.plotLimits.TIME.xMax], 'ConvertFrom', 'datenum'));
+        set(ax,'XLim',datetime([userData.plotLimits.TIME.xMin, userData.plotLimits.TIME.xMax], 'ConvertFrom', 'datenum'));
     end
 end
 

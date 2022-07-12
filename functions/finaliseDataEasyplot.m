@@ -106,10 +106,8 @@ sam.time_coverage_end = sam.dimensions{idTime}.data(end);
 sam.dimensions{idTime}.comment = '';
 sam.meta.site_id = sam.EP_inputFile;
 
-% if ~isfield(sample_data,'utc_offset_hours')
-%     sample_data.utc_offset_hours = 0;
-% end
-
+% initalize timezone, which we actually don't know, so make UTC
+% and the use can adjust for plotting purposes
 if isfield(sam.meta,'timezone')
     if isempty(sam.meta.timezone)
         sam.meta.timezone='UTC';
@@ -117,6 +115,13 @@ if isfield(sam.meta,'timezone')
 else
     sam.meta.timezone='UTC';
 end
+
+% initialize StartOffset/StopOffset
+type = 'dimensions';
+timeIdx = getVar(sam.(type), 'TIME');
+lpftimeIdx = getVar(sam.(type), 'LPFTIME');
+sam.(type){timeIdx}.EP_StartOffset = 0;
+sam.(type){timeIdx}.EP_StopOffset = 0;
 
 % we don't know what the planned depth is in this application
 sam.meta.depth = 0;
