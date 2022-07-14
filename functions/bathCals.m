@@ -328,7 +328,7 @@ plotcals(userData);
         if exist('h1','var')
             %figure(f1);
             f1.Visible = 'on';
-            legText = dinstShortnameSerial;
+            legText = [refStrTag; dinstShortnameSerial];
             grid(ax1, 'on');
             xlabel(ax1, 'Time');
             ylabel(ax1, makeTexSafe(plotVar));
