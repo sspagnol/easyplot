@@ -1,8 +1,8 @@
 % --- Executes on button press in selectPoints.
-function selectPoints_Callback(hObject, eventdata, handles)
+function selectPoints_Callback(hObject, eventdata, fn_call_str)
 % hObject    handle to selectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% fn_call_str : function name (string) to call plot data
 
 %user is ready to choose the area for the bath calibrations:
 
@@ -15,19 +15,19 @@ axH = gca;
 %select the area to use for comparison
 [x,y,ph1] = select_points_v2(axH);
 
-userData.calx = x;
-userData.caly = y;
+userData.calx(1,:) = x;
+userData.caly(1,:) = y;
 
 % is there a second range?
 temp2 = questdlg(['If there a second ' char(userData.plotVarNames) ' range to select, click '],...
-    'Bath Calibrations','No');
+    fn_call_str, 'No');
 
 switch temp2
     case 'Yes'
         zoom('off');
         [x, y, ph2] = select_points(axH);
-        userData.calx2 = x;
-        userData.caly2 = y;
+        userData.calx(end+1,:) = x;
+        userData.caly(end+1,:) = y;
     case 'No'
     case 'Cancel'
         return
@@ -36,11 +36,13 @@ end
 %now call the function to process the bath calibrations and make some
 %plots:
 try
-    bathCals(userData);
+    %bathCals(userData);
+    fn = str2func(fn_call_str);
+    fn(userData);
 catch ME
     disp(ME.identifier);
     disp(ME.message);
-    warning('had problems executing bathCals');
+    warning(['had problems executing : ' fn_call_str]);
 end
 
 if exist('ph1', 'var'), delete(ph1); end

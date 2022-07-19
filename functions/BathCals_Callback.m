@@ -43,7 +43,7 @@ uic = uicontextmenu(hFig);
 bathcalmenu = uimenu(uic,'label',[plotVar ' Bath Calibrations']);
 % Create the submenus
 m1 = uimenu(bathcalmenu,'label','Select Points',...
-    'Callback',@selectPoints_Callback);
+    'Callback',{@selectPoints_Callback, 'bathCals'});
 
 %children = findobj(plotPanel,'Type','axes');
 children = findobj(plotPanel,'Type','axes','-not','tag','legend','-not','tag','Colobar');

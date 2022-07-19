@@ -1,19 +1,34 @@
-function newData = match_timebase(tbase,rawTime,rawData)
-% function match_timebase(tbase,rawtime,rawdat);
+function newData = match_timebase(tbase, rawTime, rawData)
+% MATCH_TIMEBASE interpolate onto new timebase.
+%
+% INPUTS
+%   tbase : new timebase (Xq)
+%   rawTime : time (X)
+%   rawData : data (V)
+%
+% OUTPUTS
+%   newData : data interpolated onto tbase (Vq)
 %
 % Projects raw data onto timebase tbase
 % If raw sampling is faster, will lowpass first
 % otherwise simply use linear interpolation
 % ignores NaNS by linear interpolation
-
+%
 % S Wijffels, CSIRO MAR March 2006
-if ~isreal(rawData)
-    newData = (NaN + NaN*1i)*tbase;
-else
-    newData = NaN*tbase;
-end
+%
+% 2022-07-19 : Simon Spagnol <s.spagnol@aims.gov.au>
+%   - some updated comments and code cleanup.
+
+tbase = tbase(:);
 rawTime = rawTime(:);
 rawData = rawData(:);
+
+if ~isreal(rawData)
+    newData = complex(NaN(size(tbase)));
+else
+    newData = NaN(size(tbase));
+end
+
 % keep only good
 ig = find(rawTime >= min(tbase) & rawTime < max(tbase) & ~isnan(rawData));
 
@@ -24,27 +39,29 @@ end
 
 if ~isempty(ig)
     % interpolate to timebase:
-    newData = interp1(rawTime,rawData,tbase);
-    ib = find(tbase < min(rawTime) | tbase > max(rawTime) );
-    newData(ib) = NaN*ib;
-    if ~isreal(newData),newData(ib) =  NaN*ib*(1+1i);end
+    newData = interp1(rawTime, rawData, tbase);
+    ib = (tbase < min(rawTime)) | (tbase > max(rawTime));
+    if isreal(newData)
+        newData(ib) = NaN;
+    else
+        newData(ib) =  complex(NaN, NaN);
+    end
     
-    %remove interpolated data where NaNs are in original data
-    ib = find(isnan(rawData));
+    % remove interpolated data where NaNs are in original data
+    ib = isnan(rawData);
     if sum(ib)>0
         rawt = rawTime(ib);
-        %match these times to the original times
-        td = abs(diff(tbase(1:2))-diff(rawTime(3:4)));
+        % match these times to the original times
+        td = abs(diff(tbase(1:2)) - diff(rawTime(3:4)));
         for j=1:length(rawt)
-            tb = find(tbase<rawt(j)+td & tbase > (rawt(j)-td));
+            tb = (tbase < (rawt(j)+td)) & (tbase > (rawt(j)-td));
             if isreal(newData)
                 newData(tb) =  NaN;
             else
-                newData(tb) = NaN + NaN*1i;
+                newData(tb) = complex(NaN, NaN);
             end
         end
     end
 end
-
 
 return

@@ -121,33 +121,28 @@ plotcals(userData);
         %
         % Original code from Rebecca Cowley (O&A, Hobart) <Rebecca.Cowley@csiro.au>
         
-        ref = userData.sample_data{refinst};
-        refStrTag = strcat(plotVar, '-', ref.meta.EP_instrument_model_shortname, '-', ref.meta.EP_instrument_serial_no_deployment);
+        refinst_sam = userData.sample_data{refinst};
+        refStrTag = strcat(plotVar, '-', refinst_sam.meta.EP_instrument_model_shortname, '-', refinst_sam.meta.EP_instrument_serial_no_deployment);
         refStrTag = regexprep(refStrTag, '[^ -~]', '-');
-        refData = ref.variables{ref.EP_variablePlotStatus>0}.data;
+        refinst_data = refinst_sam.variables{refinst_sam.EP_variablePlotStatus>0}.data;
         %refTime = ref.dimensions{1}.data;
-        idTime  = getVar(ref.dimensions, 'TIME');
-        refTime = getXdata(ref.dimensions{idTime});
-        refTimeDiff = nanmedian(diff(refTime));
-        tmin1 = userData.calx(1);
-        tmax1 = userData.calx(2);
-        if isdatetime(tmin1)
-            tmin1 = datenum(tmin1);
-            tmax1 = datenum(tmax1);
-        end        
-		igRef1 = refTime >= tmin1 & refTime <= tmax1;
-        if sum(igRef1) == 0
+        idTime  = getVar(refinst_sam.dimensions, 'TIME');
+        refinst_time = getXdata(refinst_sam.dimensions{idTime});
+        refinst_timediff = nanmedian(diff(refinst_time)); %datenum
+        for ii = 1:size(userData.calx, 1)
+            if isdatetime(userData.calx(ii,1))
+                tmin(ii) = datenum(userData.calx(ii,1));
+                tmax(ii) = datenum(userData.calx(ii,2));
+            else
+                tmin(ii) = userData.calx(ii,1);
+                tmax(ii) = userData.calx(ii,2);
+            end
+            igRef{ii} = refinst_time >= tmin(ii) & refinst_time <= tmax(ii);
+        end
+        
+        if sum(igRef{1}) == 0
            warning('No coincident calibration data for selected period.');
            return
-        end
-        if isfield(userData,'calx2')
-            tmin2 = userData.calx2(1);
-            tmax2 = userData.calx2(2);
-            if isdatetime(tmin2)
-                tmin2 = datenum(tmin2);
-                tmax2 = datenum(tmax2);
-            end
-            igRef2 = refTime >= tmin2 & refTime <= tmax2;
         end
         
         data = userData.sample_data;
@@ -183,9 +178,9 @@ plotcals(userData);
         hold('on');
         dcm_h = datacursormode(f3);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
-      
-        cc = parula(numel(data));
-        cb = parula(size(udinstModels,1));
+
+        cc = distinguishable_colors(numel(data), {'w','k'});
+        cb = distinguishable_colors(numel(udinstModels), {'w','k'});
         clear('h');
         clear('h2');
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
@@ -211,57 +206,62 @@ plotcals(userData);
             instStrTag = strcat(plotVar, '-', data{ii}.meta.EP_instrument_model_shortname, '-', data{ii}.meta.EP_instrument_serial_no_deployment);
             instStrTag = regexprep(instStrTag, '[^ -~]', '-'); %only printable ascii characters
         
-            %instTime = data{ii}.dimensions{1}.data;
             idTime  = getVar(data{ii}.dimensions, 'TIME');
-            instTime = getXdata(data{ii}.dimensions{idTime});
+            inst_time = getXdata(data{ii}.dimensions{idTime});
             if ~any(data{ii}.EP_variablePlotStatus>0), continue; end
-            instData = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
-            igIns1 = (instTime >= tmin1) & (instTime <= tmax1);
+            inst_data = data{ii}.variables{data{ii}.EP_variablePlotStatus>0}.data;
+            
+            igIns1 = (inst_time >= tmin(1)) & (inst_time <= tmax(1));
             if isfield(userData, 'calx2')
-                igIns2 = (instTime >= tmin2) & (instTime <= tmax2);
+                igIns2 = (inst_time >= tmin(2)) & (inst_time <= tmax(2));
             end
-            if sum(igIns1) > 5
+            % need at least 5 points for believable stats
+            if sum(igIns1) >= 5
                 %need the largest time diff between ref and each ins as timebase:
-                insdif = nanmedian(diff(instTime));
-                if refTimeDiff >= insdif
-                    tbase = refTime(igRef1);
-                    caldat = refData(igRef1);
-                    insdat = match_timebase(tbase, instTime(igIns1), instData(igIns1));
-                    iNaN = isnan(caldat) & isnan(insdat);
+                inst_timediff = nanmedian(diff(inst_time));
+                if refinst_timediff >= inst_timediff
+                    % inst has faster sampling rate than the reference
+                    % instrument
+                    tbase = refinst_time(igRef{1});
+                    refinst_caldata = refinst_data(igRef{1});
+                    insdat = match_timebase(tbase, inst_time(igIns1), inst_data(igIns1));
+                    iNaN = isnan(refinst_caldata) & isnan(insdat);
                     tbase(iNaN) = [];
-                    caldat(iNaN) = [];
+                    refinst_caldata(iNaN) = [];
                     insdat(iNaN) = [];
                     if isfield(userData, 'calx2')
-                        tbase2 = refTime(igRef2);
-                        caldat2 = refData(igRef2);
-                        insdat2 = match_timebase(tbase2, instTime(igIns2), instData(igIns2));
+                        tbase2 = refinst_time(igRef{2});
+                        caldat2 = refinst_data(igRef{2});
+                        insdat2 = match_timebase(tbase2, inst_time(igIns2), inst_data(igIns2));
                     end
                 else
-                    tbase = instTime(igIns1);
-                    insdat = instData(igIns1);
-                    caldat = match_timebase(tbase, refTime(igRef1), refData(igRef1));
-                    iNaN = isnan(caldat) & isnan(insdat);
+                    % referenst inst has faster sampling rate than
+                    % instrument to compare against
+                    tbase = inst_time(igIns1);
+                    insdat = inst_data(igIns1);
+                    refinst_caldata = match_timebase(tbase, refinst_time(igRef{1}), refinst_data(igRef{1}));
+                    iNaN = isnan(refinst_caldata) & isnan(insdat);
                     tbase(iNaN) = [];
-                    caldat(iNaN) = [];
+                    refinst_caldata(iNaN) = [];
                     insdat(iNaN) = [];
                     if isfield(userData,'calx2')
-                        tbase2 = instTime(igIns2);
-                        insdat2 = instData(igIns2);
-                        caldat2 = match_timebase(tbase2, refTime(igRef2), refData(igRef2));
+                        tbase2 = inst_time(igIns2);
+                        insdat2 = inst_data(igIns2);
+                        caldat2 = match_timebase(tbase2, refinst_time(igRef{2}), refinst_data(igRef{2}));
                     end
                 end
                 
-                if ~any(caldat)
+                if ~any(refinst_caldata)
                    disp(['No coincident calibration data for ' refStrTag]);
                    disp(['   Selected data range : ' char(datetime(tbase(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(tbase(end), 'ConvertFrom', 'datenum'))]);
-                   disp(['   Ref Inst data range : ' char(datetime(refTime(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(refTime(end), 'ConvertFrom', 'datenum'))]);
+                   disp(['   Ref Inst data range : ' char(datetime(refinst_time(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(refinst_time(end), 'ConvertFrom', 'datenum'))]);
                    %continue;
                 end
                 %plot only the regions of comparison
                 %axes(ax1);
                 hold(ax1, 'on');
                 if ii == 1
-                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), caldat, 'kx-', 'linewidth', 2, 'Tag', refStrTag);
+                    h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), refinst_caldata, 'kx-', 'linewidth', 2, 'Tag', refStrTag);
                 end
                 h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), insdat, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 
@@ -276,7 +276,7 @@ plotcals(userData);
                 %axes(ax2);
                 hold(ax2, 'on');
                 ik = find(strcmp(dinstModels{ii}, udinstModels));
-                hh1(ii) = plot(ax2, caldat, insdat-caldat, 'Marker',mrkSymbol{ik}, 'Color', cb(ik,:), 'DisplayName', udinstModels{ik}, 'Tag', instStrTag);
+                hh1(ii) = plot(ax2, refinst_caldata, insdat-refinst_caldata, 'Marker', mrkSymbol{mod(ik,numel(mrkSymbol))}, 'Color', cb(ik,:), 'DisplayName', udinstModels{ik}, 'Tag', instStrTag);
                 XData = get(hh1(ii), 'XData');
                 YData = get(hh1(ii), 'YData');
                 iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
@@ -287,18 +287,18 @@ plotcals(userData);
                 %plot difference to ref inst
                 %axes(ax3);
                 hold(ax3, 'on');
-                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-caldat, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
+                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-refinst_caldata, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 if isfield(userData,'calx2')
                     plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2-caldat2, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 end
                 
-                diffdat = insdat-caldat;
+                diffdat = insdat-refinst_caldata;
                 STATS = statistic(diffdat);
                 inststr = [data{ii}.meta.instrument_make '-' data{ii}.meta.instrument_model '-' data{ii}.meta.instrument_serial_no];
                 str = ['| ' inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                 disp(str);
-                if isfield(userData,'calx2')
-                    hh2(ii) = plot(ax2, caldat2,insdat2-caldat2, 'Marker',mrkSymbol{ik}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
+                if size(userData.calx, 1) > 1
+                    hh2(ii) = plot(ax2, caldat2,insdat2-caldat2, 'Marker', mrkSymbol{mod(ik,numel(mrkSymbol))}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                     XData = get(hh2(ii), 'XData');
                     YData = get(hh2(ii), 'YData');
                     iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
@@ -341,7 +341,7 @@ plotcals(userData);
             %legText(rmins) = [];
             [legText, IA, IC] = unique(legText);
             legend(ax2, hh1(IA));
-            title(ax2, makeTexSafe(['Test tank ' plotVar ' offsets from reference instrument']));
+            title(ax2, makeTexSafe({['Test tank ' plotVar ' offsets from reference instrument'], 'grouped by instrument type'}));
             xlabel(ax2, makeTexSafe(['Bath ' plotVar]));
             ylabel(ax2, makeTexSafe([plotVar ' offset']));
             grid(ax2, 'on');
