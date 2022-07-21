@@ -124,20 +124,31 @@ plot_ctd_comparison(userData, plotVar);
         refinst_time = getXdata(refinst_sam.dimensions{idTime});
 
         % time buffer at start/end to include in matching
-        tbuffer = 15/60/24; 
+        tbuffer = 1/24;
         
-        idDEPTH  = getVar(refinst_sam.variables, 'EP_DEPTH');
-        refinst_depth = refinst_sam.variables{idDEPTH}.data;
+        idEP_DEPTH  = getVar(refinst_sam.variables, 'EP_DEPTH');
+        idDEPTH  = getVar(refinst_sam.variables, 'DEPTH');
+        if idEP_DEPTH ~= 0
+            refinst_depth = refinst_sam.variables{idEP_DEPTH}.data;
+        elseif idDEPTH ~= 0
+            idDEPTH  = getVar(refinst_sam.variables, 'DEPTH');
+            refinst_depth = -refinst_sam.variables{idDEPTH}.data;
+        else
+            warning('CTD does not have recognized pressure variable.');
+            return;
+        end
         
         % workaround any non-monotonic time issues
         [~, ind] = unique(refinst_time);
         refinst_time = refinst_time(ind); % datenum format
         refinst_data = refinst_data(ind);
         refinst_depth = refinst_depth(ind);
+        iNaN = isnan(refinst_data) | isnan(refinst_depth);
+        refinst_time(iNaN) = [];
+        refinst_data(iNaN) = [];
+        refinst_depth(iNaN) = [];
             
         ctd_in_water = refinst_depth < -3;
-        refinst_depth(~ctd_in_water) = NaN;
-        
         refinst_time(~ctd_in_water) = [];
         refinst_data(~ctd_in_water) = [];
         refinst_depth(~ctd_in_water) = [];
@@ -239,23 +250,31 @@ plot_ctd_comparison(userData, plotVar);
             end
             
             igIns1 = (inst_time >= (tmin-tbuffer)) & (inst_time <= (tmax+tbuffer));
-            
             %need the largest time diff between ref and each ins as timebase:
             inst_timediff = nanmedian(diff(inst_time));
-            if refinst_timediff >= inst_timediff
+            %nanmean(diff(inst_time))
+            do_tbase_swap = false;
+            if (refinst_time(end)-refinst_time(1)) < inst_timediff
+               disp('here'); 
+               do_tbase_swap = true;
+            end
+            if (refinst_timediff >= inst_timediff)
                 % inst has faster sampling rate than the reference
                 % instrument
                 % NOTE: not tested fully
                 tbase = refinst_time;
                 refinst_caldata = refinst_data;
-                insdat = match_timebase(tbase, inst_time(igIns1), inst_data(igIns1));
+                refinst_caldep = refinst_depth;
+                if inst_has_depth
+                    insdep = inst_depth;
+                end                
+                insdat = interp1(inst_time, inst_data, tbase); %match_timebase(tbase, inst_time, inst_data, 'linear');
                 iNaN = isnan(refinst_caldata) & isnan(insdat);
                 tbase(iNaN) = [];
                 refinst_caldata(iNaN) = [];
+                refinst_caldep(iNaN) = [];
                 insdat(iNaN) = [];
-                if inst_has_depth
-                    insdep = inst_depth(igIns1);
-                end
+                insdep(iNaN) = [];
             else
                 % referenst inst has faster sampling rate than
                 % instrument to compare against
@@ -272,16 +291,21 @@ plot_ctd_comparison(userData, plotVar);
                     continue;
                 elseif numel(tbase) > 2
                     if inst_has_depth
-                        refinst_caldep = match_timebase(tbase, refinst_time, refinst_depth);
-                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data);
+                        refinst_caldep = match_timebase(tbase, refinst_time, refinst_depth, {'linear'});
+                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data, {'linear'});
                         iNaN = isnan(refinst_caldep) | isnan(refinst_caldata);
+                        if all(iNaN)
+                            refinst_caldep = interp1(refinst_time, refinst_depth, tbase, 'nearest', 'extrap');
+                            refinst_caldata = interp1(refinst_time, refinst_data, tbase, 'nearest', 'extrap');
+                            iNaN = isnan(refinst_caldep) | isnan(refinst_caldata);
+                        end
                         tbase(iNaN) = [];
                         refinst_caldep(iNaN) = [];
                         refinst_caldata(iNaN) = [];
                         insdat(iNaN) = [];
                         insdep(iNaN) = [];
                     else
-                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data);
+                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data, 'linear');
                         iNaN = isnan(refinst_caldata) | isnan(insdat);
                         tbase(iNaN) = [];
                         refinst_caldata(iNaN) = [];
@@ -494,7 +518,7 @@ plot_ctd_comparison(userData, plotVar);
             datacursorText{end+1} = ['X: ' num2str(pos(1), '%10.4f')];
         end
         datacursorText{end+1} = ['Y: ', num2str(pos(2), '%10.4f')];
-        datacursorText{end+1} = ['Inst: ', eventdata.Target.Tag];
+        datacursorText{end+1} = ['Inst: ', makeTexSafe(eventdata.Target.Tag)];
     end
 
 end
