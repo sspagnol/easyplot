@@ -1,4 +1,4 @@
-function newData = match_timebase(tbase, rawTime, rawData)
+function newData = match_timebase(tbase, rawTime, rawData, methods)
 % MATCH_TIMEBASE interpolate onto new timebase.
 %
 % INPUTS
@@ -18,6 +18,10 @@ function newData = match_timebase(tbase, rawTime, rawData)
 %
 % 2022-07-19 : Simon Spagnol <s.spagnol@aims.gov.au>
 %   - some updated comments and code cleanup.
+
+if ~exist('methods', 'var')
+    methods = {'linear'};
+end
 
 tbase = tbase(:);
 rawTime = rawTime(:);
@@ -39,7 +43,7 @@ end
 
 if ~isempty(ig)
     % interpolate to timebase:
-    newData = interp1(rawTime, rawData, tbase);
+    newData = interp1(rawTime, rawData, tbase, methods{:});
     ib = (tbase < min(rawTime)) | (tbase > max(rawTime));
     if isreal(newData)
         newData(ib) = NaN;
