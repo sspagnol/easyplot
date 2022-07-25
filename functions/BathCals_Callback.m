@@ -8,34 +8,30 @@ function BathCals_Callback(hObject, eventdata, handles)
 hFig = ancestor(hObject,'figure');
 userData=getappdata(hFig, 'UserData');
 
+if ~isfield(userData, 'sample_data'), return; end
+
 plotPanel = findobj(hFig, 'Tag','plotPanel');
 treePanel = findobj(hFig, 'Tag','treePanel');
 
-if isfield(userData, 'sample_data')
-    plotVar = {'TEMP'};
-    
-    varList = {'TEMP', 'CNDC', 'PRES', 'PRES_REL', 'EP_DEPTH', 'LPF_EP_DEPTH'};
+plotVar = {'TEMP'};
+varList = {'TEMP', 'CNDC', 'PRES', 'PRES_REL', 'EP_DEPTH', 'LPF_EP_DEPTH'};
+title = 'Variable to plot?';
+prompt = 'Variable List';
+defaultanswer = 1;
+plotVar = optionDialog( title, prompt, varList, defaultanswer );
 
-    title = 'Variable to plot?';
-    prompt = 'Variable List';
-    defaultanswer = 1;
-    plotVar = optionDialog( title, prompt, varList, defaultanswer );
+pause(0.1);
+if isempty(plotVar), return; end
 
-    pause(0.1);
-    if isempty(plotVar), return; end
-    
-    userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
-    userData.treePanelData = generateTreeData(userData.sample_data);
-    %userData.jtable = createTreeTable(treePanel);
-    updateTreeDisplay(treePanel, userData.treePanelData);
-    userData.plotVarNames = {plotVar};
-    setappdata(hFig, 'UserData', userData);
-    plotData(hFig);
-    %zoomYextent_Callback(hObject);
-    %zoomXextent_Callback(hObject);
-else
-    return;
-end
+userData.sample_data = markPlotVar(userData.sample_data, plotVar, true(size(userData.sample_data)));
+userData.treePanelData = generateTreeData(userData.sample_data);
+%userData.jtable = createTreeTable(treePanel);
+updateTreeDisplay(treePanel, userData.treePanelData);
+userData.plotVarNames = {plotVar};
+setappdata(hFig, 'UserData', userData);
+plotData(hFig);
+%zoomYextent_Callback(hObject);
+%zoomXextent_Callback(hObject);
 
 % Create the UICONTEXTMENU
 uic = uicontextmenu(hFig);
@@ -53,7 +49,6 @@ end
 
 zoom('off');
 pan('off');
-
 
 % for ii=1:numel(children)
 % % https://au.mathworks.com/matlabcentral/answers/463333-how-to-deselect-toolbarstatebutton-without-clicking-on-it

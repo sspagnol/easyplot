@@ -9,6 +9,9 @@ userData=getappdata(hFig, 'UserData');
 
 if ~isfield(userData, 'sample_data'), return; end
 
+helpdlg({'Data matching routines are not very smart. Interpretation is required so consider the plots an in-field guideline only.'}, 'ATTENTION');
+uiwait();
+
 plotVar = {'TEMP'};
 varList = {'TEMP', 'CNDC'};
 title = 'Variable to plot?';
