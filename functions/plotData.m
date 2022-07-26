@@ -148,11 +148,20 @@ for ii = 1:numel(userData.sample_data)
         else
             switch upper(userData.EP_plotType)
                 case 'VARS_OVERLAY'
-                    %axes(graphs(1));
                     set(hFig,'CurrentAxes', graphs(1));
                 case 'VARS_STACKED'
-                    ihAx = find(strcmp({graphs.Tag}, theVar));
-                    %axes(graphs(ihAx));
+                    % iterate of graphs array, which could contain just a
+                    % matlab.graphics.Graphics object (i.e. not assigned
+                    % yet)
+                    for kk = 1:numel(graphs)
+                       g = graphs(kk);
+                       if isgraphics(g)
+                          if strcmp(g.Tag, theVar)
+                              ihAx = kk;
+                              break;
+                          end
+                       end
+                    end
                     set(hFig,'CurrentAxes', graphs(ihAx));
             end
             %grid(graphs(ihAx), 'on');
