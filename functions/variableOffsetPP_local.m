@@ -140,12 +140,6 @@ if ~auto
     set(confirmButton, 'Position', [0.5,  0.0,  0.5, 0.1]);
     set(tabPanel,      'Position', [0.0,  0.1,  1.0, 0.9]);
     
-    % reset back to pixels
-    set(f,             'Units', 'pixels');
-    set(cancelButton,  'Units', 'pixels');
-    set(confirmButton, 'Units', 'pixels');
-    set(tabPanel,      'Units', 'pixels');
-    
     % create a panel for each data set
     setPanels = nan(1, nSampleData);
     for k = 1:nSampleData
@@ -238,14 +232,6 @@ diffHeaderLabelStr = 'Not Used';
         set(diffHeaderLabel,   'Position', [0.56, 0.95 - rh, 0.14, rh]);
         set(offsetHeaderLabel, 'Position', [0.70, 0.95 - rh, 0.14, rh]);
         set(scaleHeaderLabel,  'Position', [0.84, 0.95 - rh, 0.14, rh]);
-        
-        set(varHeaderLabel,    'Units', 'pixels');
-        set(minHeaderLabel,    'Units', 'pixels');
-        set(maxHeaderLabel,    'Units', 'pixels');
-        set(meanHeaderLabel,   'Units', 'pixels');
-        set(diffHeaderLabel,   'Units', 'pixels');
-        set(offsetHeaderLabel, 'Units', 'pixels');
-        set(scaleHeaderLabel,  'Units', 'pixels');
         
         % column values (one row for each variable)
         for m = 1:nVars
@@ -361,14 +347,7 @@ diffHeaderLabelStr = 'Not Used';
             set(diffLabel,   'Position', [0.56, 0.95 - (rh*(m+1)), 0.14, rh]);
             set(offsetField, 'Position', [0.70, 0.95 - (rh*(m+1)), 0.14, rh]);
             set(scaleField,  'Position', [0.84, 0.95 - (rh*(m+1)), 0.14, rh]);
-            
-            set(varLabel,    'Units', 'pixels');
-            set(minLabel,    'Units', 'pixels');
-            set(maxLabel,    'Units', 'pixels');
-            set(meanLabel,   'Units', 'pixels');
-            set(diffLabel,   'Units', 'pixels');
-            set(offsetField, 'Units', 'pixels');
-            set(scaleField,  'Units', 'pixels');
+
         end
     end
     
