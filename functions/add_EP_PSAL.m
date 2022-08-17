@@ -58,8 +58,8 @@ if isPresVar
         % 10.1325 dbar for nominal atmospheric pressure
         presRel = sam.variables{presIdx}.data - gsw_P0/10^4;
         presName = 'PRES substracting a constant value 10.1325 dbar for nominal atmospheric pressure';
-        theOffset = sam.variables{presRelIdx}.EP_OFFSET;
-        theScale = sam.variables{presRelIdx}.EP_SCALE;
+        theOffset = sam.variables{presIdx}.EP_OFFSET;
+        theScale = sam.variables{presIdx}.EP_SCALE;
         presRel = theOffset + (theScale .* presRel);
     end
 else
