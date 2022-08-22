@@ -70,6 +70,9 @@ for kk=1:numel(sam.variables)
     if ~isfield(sam.variables{kk}, 'comment')
         sam.variables{kk}.comment = '';
     end
+    if ~isfield(sam.variables{kk}, 'coordinates')
+        sam.variables{kk}.coordinates = '';
+    end
 end
 
 if isfield(sam,'toolbox_input_file')

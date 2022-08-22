@@ -154,9 +154,12 @@ for k = 1:length(dimensions)
     dimensions{k}.flags = qcVars{idx}.data;
 end
 
-% and the same for the variables
 for k = 1:length(variables)
-    
+    variables{k}.name = regexprep(variables{k}.name, '\W', '_');
+end
+
+% add QC flags to variables
+for k = 1:length(variables)
     idx = getVar(qcVars, [variables{k}.name '_quality_control']);
     if idx == 0, continue; end
     variables{k}.flags = qcVars{idx}.data;
