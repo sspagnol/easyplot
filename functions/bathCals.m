@@ -179,8 +179,9 @@ plotcals(userData);
         dcm_h = datacursormode(f3);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-        cc = distinguishable_colors(numel(data), {'w','k'});
-        cb = distinguishable_colors(numel(udinstModels), {'w','k'});
+        cfunc = @(x) colorspace('RGB->Lab',x);
+        cc = distinguishable_colors(numel(data), {'w','k'}, cfunc);
+        cb = distinguishable_colors(numel(udinstModels), {'w','k'}, cfunc);
         clear('h');
         clear('h2');
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};

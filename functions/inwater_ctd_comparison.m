@@ -175,8 +175,9 @@ plot_ctd_comparison(userData, plotVar);
         hold(f2_ax2, 'on');
         f2_ax2_legText = {};
         
-        cc = distinguishable_colors(numel(data), {'w','k'});
-        cb = distinguishable_colors(numel(udinstModels), {'w','k'});
+        cfunc = @(x) colorspace('RGB->Lab',x);
+        cc = distinguishable_colors(numel(data), {'w','k'}, cfunc);
+        cb = distinguishable_colors(numel(udinstModels), {'w','k'}, cfunc);
         clear('h');
         clear('h2');
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
