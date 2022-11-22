@@ -134,7 +134,7 @@ for c = RSK.im.channel
     
     if ~showgap
         handles(k) = pcolor(x, y, binValues);
-        shading interp
+        shading('interp')
         set(handles(k), 'AlphaData', isfinite(binValues)); % plot NaN values in white.
     else
         unit_time = (x(2)-x(1));
@@ -163,8 +163,8 @@ for c = RSK.im.channel
             binValues_itp(:,remove_gap_idx) = [];
             x_itp(remove_gap_idx) = [];
             
-            handles(k) = pcolor(x_itp, y, binValues_itp);
-            shading interp
+            handles(k) = pcolor(hax, x_itp, y, binValues_itp);
+            shading('interp');
         else
             handles(k) = imagesc(x_itp, y, binValues_itp);
         end
@@ -174,7 +174,8 @@ for c = RSK.im.channel
     setcolormap(RSK.channels(c).longName);
     cb = colorbar(hax);
     ylabel(cb, RSK.channels(c).units);
-    ylabel(hax, sprintf('%s (%s)', RSK.channels(cref).longName, RSK.channels(cref).units));
+    %ylabel(hax, sprintf('%s (%s)', RSK.channels(cref).longName, RSK.channels(cref).units));
+    ylabel(hax, {RSK.channels(cref).longName, ['(' RSK.channels(cref).units ')']});
     set(hax, 'YDir', 'reverse')
     h = title(hax, sprintf('%s   %s - %s', RSK.channels(c).longName, datestr(RSK.im.x(1), 'yyyy/mm/dd HH:MM'), datestr(RSK.im.x(end),'yyyy/mm/dd HH:MM')));
     %set(gcf, 'Renderer', 'painters')
