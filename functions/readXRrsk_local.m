@@ -348,8 +348,11 @@ chanCol = [];
 for chan = longNames
     chanCol = [chanCol getchannelindex(RSK, chan{1})];
 end
-
+ndatachannels = size(RSK.data(1).values,2);
 for k = 1:length(longNames)
+    if chanCol(k) > ndatachannels
+        continue;
+    end
     name = '';
     comment = '';
     switch strtrim(longNames{k})
