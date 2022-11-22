@@ -17,8 +17,14 @@ if isfield(userData,'sample_data') && numel(userData.sample_data) > 0
     [FILENAME, PATHNAME, FILTERINDEX] = uiputfile('*.png', 'Filename to save png');
     if isequal(FILENAME,0) || isequal(PATHNAME,0)
         disp('No file selected.');
+
     else
-        export_fig(fullfile(PATHNAME,FILENAME),'-png',plotPanel);
+        % 2022-11-22: workaround to save image from uipanel 'plotPanel'. Copy the uipanel contents onto the new invisible legacy figure
+        hNewFig = figure('Units',hFig.Units, 'Position',hFig.Position, 'MenuBar','none', 'ToolBar','none', 'Visible','off','Color','white');
+        hChildren = allchild(plotPanel);
+        copyobj(hChildren, hNewFig);
+        export_fig(fullfile(PATHNAME,FILENAME), '-png', '-nocrop', hNewFig);
+        clear('hNewFig');
         set(msgPanelText,'String','Exported PNG file.');
     end
     %uiresume(handles.figure1);
