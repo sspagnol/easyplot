@@ -13,7 +13,7 @@ helpdlg({'Data matching routines are not very smart. Interpretation is required 
 uiwait();
 
 plotVar = {'TEMP'};
-varList = {'TEMP', 'CNDC'};
+varList = {'TEMP', 'CNDC', 'EP_PSAL'};
 title = 'Variable to plot?';
 prompt = 'Variable List';
 defaultanswer = 1;
