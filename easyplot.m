@@ -43,8 +43,8 @@ uimenu(m, 'Label', 'Plot Using QC flags', 'Callback', @useQCflags_Callback);
 
 uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback, 'Separator','on');
 uimenu(m, 'Label', 'Do Variable Offset', 'Callback', @variableOffsets_Callback);
-uimenu(m, 'Label', 'Do Bath Calibrations', 'Callback', @BathCals_Callback);
-uimenu(m, 'Label', 'Do CTD comparison', 'Callback', @inwater_ctd_comparison_Callback);
+uimenu(m, 'Label', 'Do CTD test tank comparison', 'Callback', @BathCals_Callback);
+uimenu(m, 'Label', 'Do CTD cast comparison', 'Callback', @inwater_ctd_comparison_Callback);
 
 uimenu(m, 'Label', 'Load filelist (YML)', 'Callback', @loadFilelist_Callback, 'Separator','on');
 uimenu(m, 'Label', 'Save filelist (YML)', 'Callback', @saveFilelist_Callback);
