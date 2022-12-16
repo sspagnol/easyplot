@@ -117,18 +117,18 @@ plot_ctd_comparison(userData, plotVar);
         refStrTag = strcat(plotVar, '-', refinst_sam.meta.EP_instrument_model_shortname, '-', refinst_sam.meta.EP_instrument_serial_no_deployment);
         refStrTag = regexprep(refStrTag, '[^ -~]', '-');
         
-        [refinst_time, refinst_data, refinst_depth] = get_refinst_data(refinst_sam, plotVar);
+        [ref_inst_time, ref_inst_data_raw, ref_inst_depth] = get_refinst_data(refinst_sam, plotVar);
         
-        refinst_timediff = nanmedian(diff(refinst_time)); % datenum format
+        ref_inst_time_diff = nanmedian(diff(ref_inst_time)); % datenum format
         
-        if numel(refinst_time) == 0
+        if numel(ref_inst_time) == 0
             warning('No coincident calibration data for selected period.');
             return
         end
         
-        tmin = refinst_time(1);
-        tmax = refinst_time(end);
-        [~, ind_min_depth] = min(refinst_depth, [], 'omitnan');
+        tmin = ref_inst_time(1);
+        tmax = ref_inst_time(end);
+        [~, ind_min_depth] = min(ref_inst_depth, [], 'omitnan');
         % time buffer (in days) at start/end of CTD cast to include in matching
         tbuffer = 30/60/24;
         
@@ -144,36 +144,32 @@ plot_ctd_comparison(userData, plotVar);
         % inst variable versus time:
         f1 = figure('visible', 'off');
         clf(f1);
-        ax1 = subplot(2,2,1, 'Parent', f1);
-        hold('on');
+        mplots = 2;
+        nplots = 4;
+        axs = gobjects(mplots, nplots);
+        haxs = cell(mplots, nplots);
+        legText = cell(mplots, nplots);
+        
         dcm_h = datacursormode(f1);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
-        ax1_legText = {};
         
-        % ctd depth versus time:
-        ax2 = subplot(2,2,2, 'Parent', f1);
-        hold('on');
-        ax2_legText = {};
+        % pp=1, variable versus time, match by time
+        % pp=2, ctd depth versus time, match by time
+        % pp=3, ctd depth versus variable, match by time
+        % pp=4, (ctd var - var) versus time, match by time
+        % pp=5, variable versus time, match by depth
+        % pp=6, ctd depth versus time, match by depth
+        % pp=7, ctd depth versus variable, match by depth
+        % pp=8, (ctd var - var) versus time, match by depth
         
-        ax3 = subplot(2,2,3, 'Parent', f1);
-        hold('on');
-        ax3_legText = {};
-        
-        ax4 = subplot(2,2,4, 'Parent', f1);
-        hold('on');
-        ax4_legText = {};
-        
-        f2 = figure('visible', 'off');
-        clf(f2);
-        dcm_f2_h = datacursormode(f2);
-        set(dcm_f2_h, 'UpdateFcn', @customDatacursorText)
-        f2_ax1 = subplot(1,2,1, 'Parent', f2);
-        hold(f2_ax1, 'on');
-        f2_ax1_legText = {};
-        
-        f2_ax2 = subplot(1,2,2, 'Parent', f2);
-        hold(f2_ax2, 'on');
-        f2_ax2_legText = {};
+        for pp = 1:8
+            mm = div(pp-1,nplots) + 1;
+            nn = mod(pp-1,nplots) + 1;
+            axs(mm, nn) = subplot(mplots, nplots, pp, 'Parent', f1);
+            hold('on');
+            legText{mm, nn} = {};
+            grid(axs(mm, nn), 'on');
+        end
         
         cfunc = @(x) colorspace('RGB->Lab',x);
         cc = distinguishable_colors(numel(data), {'w','k'}, cfunc);
@@ -183,40 +179,47 @@ plot_ctd_comparison(userData, plotVar);
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
         rmins = [];
         
-        % arrays to hold plot handles to allow control of legend entries
-        h1 = [];
-        h2 = [];
-        h3 = [];
-        h4 = [];
-        f2_h1 = [];
-        f2_h2 = [];
-        
         % plot CTD profiles
-        hold(ax1, 'on');
-        h1(end+1) = plot(ax1, datetime(refinst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), refinst_data(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
-        plot(ax1, datetime(refinst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), refinst_data(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
-        ax1_legText{end+1} = refStrTag;
+        nn = 1;
+        for mm = 1:2
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), ref_inst_data_raw(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
+            plot(ax, datetime(ref_inst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), ref_inst_data_raw(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
+            legText{mm,nn}{end+1} = refStrTag;
+            xlabel(ax, 'Time');
+            ylabel(ax, makeTexSafe(plotVar));
+        end
         
-        hold(ax2, 'on');
-        h2(end+1) = plot(ax2, datetime(refinst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), refinst_depth(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
-        plot(ax2, datetime(refinst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), refinst_depth(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
-        ax2_legText{end+1} = refStrTag;
+        nn = 2;
+        for mm = 1:2
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), ref_inst_depth(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
+            plot(ax, datetime(ref_inst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), ref_inst_depth(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
+            legText{mm,nn}{end+1} = refStrTag;
+            xlabel(ax, 'Time');
+            ylabel(ax, 'CTD EP\_DEPTH');
+        end
         
-        hold(ax3, 'on');
-        h3(end+1) = plot(ax3, datetime(refinst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), refinst_data(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
-        plot(ax3, datetime(refinst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), refinst_data(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
-        ax3_legText{end+1} = refStrTag;
+        nn = 3;
+        for mm = 1:2
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, ref_inst_data_raw(1:ind_min_depth), ref_inst_depth(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
+            plot(ax, ref_inst_data_raw(ind_min_depth:end), ref_inst_depth(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
+            legText{mm,nn}{end+1} = refStrTag;
+            xlabel(ax, makeTexSafe(plotVar));
+            ylabel(ax, 'CTD EP\_DEPTH');
+        end
         
-        hold(ax4, 'on');
-        h4(end+1) = plot(ax4, datetime(refinst_time(1:ind_min_depth), 'ConvertFrom', 'datenum'), refinst_depth(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
-        plot(ax4, datetime(refinst_time(ind_min_depth:end), 'ConvertFrom', 'datenum'), refinst_depth(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
-        ax4_legText{end+1} = refStrTag;
-        
-        hold(f2_ax1, 'on');
-        f2_h1(end+1) = plot(f2_ax1, refinst_data(1:ind_min_depth), refinst_depth(1:ind_min_depth), 'k-', 'linewidth', 1, 'Tag', refStrTag);
-        plot(f2_ax1, refinst_data(ind_min_depth:end), refinst_depth(ind_min_depth:end), 'Color', [0.75, 0.75, 0.75], 'LineStyle', '-', 'linewidth', 1, 'Tag', refStrTag);
-        f2_ax1_legText{end+1} = refStrTag;
-        
+        nn = 4;
+        for mm = 1:2
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            xlabel(ax, 'Time');
+            ylabel(ax, {[plotVar ' difference'], 'Instrument - CTD'});
+        end
         
         %disp(['| Instrument | Date Range | ' plotVar ' Mean(Inst - Cal Inst) |']);
         %disp('| --- | --- | --- |');
@@ -228,128 +231,153 @@ plot_ctd_comparison(userData, plotVar);
             instStrTag = strcat(plotVar, '-', data{ii}.meta.EP_instrument_model_shortname, '-', data{ii}.meta.EP_instrument_serial_no_deployment);
             instStrTag = regexprep(instStrTag, '[^ -~]', '-'); %only printable ascii characters
             
-            [inst_time, inst_data, inst_depth, inst_has_depth] = get_inst_data(data{ii}, plotVar);
+            [inst_time, inst_data_raw, inst_depth_raw, inst_has_depth] = get_inst_data(data{ii}, plotVar);
             
             igIns1 = (inst_time >= (tmin-tbuffer)) & (inst_time <= (tmax+tbuffer));
             %need the largest time diff between ref and each ins as timebase:
-            inst_timediff = nanmedian(diff(inst_time));
-
+            inst_time_diff = nanmedian(diff(inst_time));
+            
             % inst has faster sampling rate than the reference instrument
-            faster_inst_sample = (refinst_timediff >= inst_timediff);
+            faster_inst_sample = (ref_inst_time_diff >= inst_time_diff);
             % the ref sample occurs fully within inst sample period e.g.
             % 5min ctd cast versus 0.5h WQM sample period
-            ref_sample_in_inst_sample = ((refinst_time(end)-refinst_time(1)) < inst_timediff);
+            ref_sample_in_inst_sample = ((ref_inst_time(end)-ref_inst_time(1)) < inst_time_diff);
             do_tbase_swap = faster_inst_sample | ref_sample_in_inst_sample;
             
             if do_tbase_swap
                 % NOTE: not fully tested
                 disp(['Interpolating ' instStrTag ' time base onto reference instrument time base.']);
-                tbase = refinst_time;
-                refinst_caldata = refinst_data;
-                refinst_caldep = refinst_depth;
-                insdat = interp1(inst_time, inst_data, tbase); %match_timebase(tbase, inst_time, inst_data, {'linear'});
+                tbase = ref_inst_time;
+                ref_inst_data_tbase = ref_inst_data_raw;
+                ref_inst_depth_tbase = ref_inst_depth;
+                inst_data = interp1(inst_time, inst_data_raw, tbase); %match_timebase(tbase, inst_time, inst_data, {'linear'});
                 if inst_has_depth
-                    insdep = interp1(inst_time, inst_depth, tbase);
+                    inst_depth = interp1(inst_time, inst_depth_raw, tbase);
+                else
+                    inst_depth = NaN(size(tbase));
                 end
-                iNaN = isnan(refinst_caldata) & isnan(insdat);
+                iNaN = isnan(ref_inst_data_tbase) & isnan(inst_data);
                 tbase(iNaN) = [];
-                refinst_caldata(iNaN) = [];
-                refinst_caldep(iNaN) = [];
-                insdat(iNaN) = [];
-                insdep(iNaN) = [];
+                ref_inst_data_tbase(iNaN) = [];
+                ref_inst_depth_tbase(iNaN) = [];
+                inst_data(iNaN) = [];
+                inst_depth(iNaN) = [];
             else
                 tbase = inst_time(igIns1);
-                insdat = inst_data(igIns1);
+                inst_data = inst_data_raw(igIns1);
                 if inst_has_depth
-                    insdep = inst_depth(igIns1);
+                    inst_depth = inst_depth_raw(igIns1);
+                else
+                    inst_depth = NaN(size(tbase));
                 end
                 disp(['Interpolating reference instrument time base onto ' instStrTag ' time base.']);
                 %%disp(ii)
                 if isempty(tbase)
                     disp(['Unable to match ' instStrTag]);
+                    disp(['  inst time range ' datestr(inst_time(1)) ' to ' datestr(inst_time(end))]);
+                    disp(['  ref  time range ' datestr(ref_inst_time(1)) ' to ' datestr(ref_inst_time(end))]);
                     rmins(end+1) = ii;
                     continue;
                 elseif numel(tbase) > 2
                     if inst_has_depth
-                        refinst_caldep = match_timebase(tbase, refinst_time, refinst_depth, {'linear'});
-                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data, {'linear'});
-                        iNaN = isnan(refinst_caldep) | isnan(refinst_caldata);
+                        ref_inst_depth_tbase = match_timebase(tbase, ref_inst_time, ref_inst_depth, {'linear'});
+                        ref_inst_data_tbase = match_timebase(tbase, ref_inst_time, ref_inst_data_raw, {'linear'});
+                        iNaN = isnan(ref_inst_depth_tbase) | isnan(ref_inst_data_tbase);
                         if all(iNaN)
-                            refinst_caldep = interp1(refinst_time, refinst_depth, tbase, {'nearest', 'extrap'});
-                            refinst_caldata = interp1(refinst_time, refinst_data, tbase, {'nearest', 'extrap'});
-                            iNaN = isnan(refinst_caldep) | isnan(refinst_caldata);
+                            ref_inst_depth_tbase = interp1(ref_inst_time, ref_inst_depth, tbase, 'nearest', 'extrap');
+                            ref_inst_data_tbase = interp1(ref_inst_time, ref_inst_data_raw, tbase, 'nearest', 'extrap');
+                            iNaN = isnan(ref_inst_depth_tbase) | isnan(ref_inst_data_tbase);
                         end
                         tbase(iNaN) = [];
-                        refinst_caldep(iNaN) = [];
-                        refinst_caldata(iNaN) = [];
-                        insdat(iNaN) = [];
-                        insdep(iNaN) = [];
+                        ref_inst_depth_tbase(iNaN) = [];
+                        ref_inst_data_tbase(iNaN) = [];
+                        inst_data(iNaN) = [];
+                        inst_depth(iNaN) = [];
                     else
-                        refinst_caldata = match_timebase(tbase, refinst_time, refinst_data, {'linear'});
-                        iNaN = isnan(refinst_caldata) | isnan(insdat);
+                        ref_inst_data_tbase = match_timebase(tbase, ref_inst_time, ref_inst_data_raw, {'linear'});
+                        iNaN = isnan(ref_inst_data_tbase) | isnan(inst_data);
                         tbase(iNaN) = [];
-                        refinst_caldata(iNaN) = [];
-                        insdat(iNaN) = [];
+                        ref_inst_data_tbase(iNaN) = [];
+                        inst_data(iNaN) = [];
                     end
                 else
                     if inst_has_depth
-                        index = arrayfun(@(x) near(x-refinst_depth, 0.0), insdep);
-                        refinst_caldata = refinst_data(index);
-                        refinst_caldep = refinst_depth(index);
+                        index = arrayfun(@(x) near(x-ref_inst_depth, 0.0), inst_depth);
+                        ref_inst_data_tbase = ref_inst_data_raw(index);
+                        ref_inst_depth_tbase = ref_inst_depth(index);
                     else
-                        index = arrayfun(@(x) near(x-refinst_time, 0.0), tbase);
-                        refinst_caldata = refinst_data(index);
+                        index = arrayfun(@(x) near(x-ref_inst_time, 0.0), tbase);
+                        ref_inst_data_tbase = ref_inst_data_raw(index);
                     end
                 end
             end
-            if ~any(refinst_caldata)
+            if ~any(ref_inst_data_tbase)
                 disp(['No coincident calibration data for ' refStrTag]);
                 disp(['   Selected data range : ' char(datetime(tbase(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(tbase(end), 'ConvertFrom', 'datenum'))]);
-                disp(['   Ref Inst data range : ' char(datetime(refinst_time(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(refinst_time(end), 'ConvertFrom', 'datenum'))]);
+                disp(['   Ref Inst data range : ' char(datetime(ref_inst_time(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(ref_inst_time(end), 'ConvertFrom', 'datenum'))]);
                 %continue;
             end
             
             %ik = find(strcmp(dinstModels{ii}, udinstModels));
             marker = mrkSymbol{max(mod(ii,numel(mrkSymbol)),1)};
-
-            % set plots matching by nearest time
-            hold(ax1, 'on');
-            insdat_caldat = insdat-refinst_caldata;
-            [index, ~] = near(insdat_caldat, 0.0, 2);
-            h1(end+1) = plot(ax1, datetime(tbase(index), 'ConvertFrom', 'datenum'), insdat(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-            ax1_legText{end+1} = instStrTag;
             
-            hold(ax2, 'on');
-            index2 = cell2mat(arrayfun(@(x) near(x-refinst_time, 0.0, 2), tbase(index), 'UniformOutput', false));
-            h2(end+1) = plot(ax2, datetime(refinst_time(index2), 'ConvertFrom', 'datenum'), refinst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-            ax2_legText{end+1} = instStrTag;
-                
             if inst_has_depth
-                % set plots matching by nearest depth
-                hold(ax3, 'on');
-                index = near(insdep-refinst_caldep, 0.0, 2);
-                h3(end+1) = plot(ax3, datetime(tbase(index), 'ConvertFrom', 'datenum'), insdat(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-                ax3_legText{end+1} = instStrTag;
-                
-                hold(ax4, 'on');
-                %index2 = arrayfun(@(x) near(x-refinst_time, 0.0), tbase(index));
-                index2 = cell2mat(arrayfun(@(x) near(x-refinst_depth, 0.0, 2), insdep(index), 'UniformOutput', false));
-                %plot(ax4, datetime(refinst_time(index2), 'ConvertFrom', 'datenum'), refinst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-                h4(end+1) = plot(ax4, datetime(tbase(index), 'ConvertFrom', 'datenum'), insdep(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-                ax4_legText{end+1} = instStrTag;
-                
-                hold(f2_ax1, 'on');
-                f2_h1(end+1) = plot(f2_ax1, insdat(index), insdep(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-                f2_ax1_legText{end+1} = instStrTag;
+                mm = 2;
+                [index, ~] = near(inst_depth-ref_inst_depth_tbase, 0.0, 2);
+                %index3 = cell2mat(arrayfun(@(x) near(abs(x-ref_inst_depth), 0.0, 2), inst_depth, 'UniformOutput', false));
+                match_str = ' (match by depth)';
+                insdat_caldat = nan(size(inst_depth));
+                for jj=1:numel(inst_depth)
+                    idx = near(abs(inst_depth(jj)-ref_inst_depth), 0.0, 1);
+                    insdat_caldat(jj) = inst_data(jj) - ref_inst_data_raw(idx);
+                end
+            else
+                mm = 1;
+                insdat_caldat = inst_data - ref_inst_data_tbase;
+                [index, ~] = near(insdat_caldat, 0.0, 2);
+                match_str = ' (match by time)';
+                inst_depth = match_timebase(tbase, ref_inst_time, ref_inst_depth, {'linear'});
             end
             
-            hold(f2_ax2, 'on');
-            insdat_caldat = insdat-refinst_caldata;
-            [index, ~] = near(insdat_caldat, 0.0, 2);
-            f2_h2(end+1) = plot(f2_ax2, datetime(tbase(index), 'ConvertFrom', 'datenum'), insdat_caldat(index), 'LineStyle', '-', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
-            f2_ax2_legText{end+1} = instStrTag;
+            index2 = cell2mat(arrayfun(@(x) near(x-ref_inst_time, 0.0, 2), tbase(index), 'UniformOutput', false));
             
-            %                 diffdat = insdat-refinst_caldata;
+            nn = 1;
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, datetime(tbase(index), 'ConvertFrom', 'datenum'), inst_data(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
+            legText{mm,nn}{end+1} = instStrTag;
+            
+            nn = 2;
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            %haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(index2), 'ConvertFrom', 'datenum'), ref_inst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
+            if inst_has_depth
+                haxs{mm,nn}{end+1} = plot(ax, datetime(tbase(index), 'ConvertFrom', 'datenum'), inst_depth(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
+            else
+                haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(index2), 'ConvertFrom', 'datenum'), ref_inst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);  
+            end
+            legText{mm,nn}{end+1} = instStrTag;
+            
+            nn = 3;
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, inst_data(index), inst_depth(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
+            legText{mm,nn}{end+1} = instStrTag;
+            
+            nn = 4;
+            ax = axs(mm, nn);
+            hold(ax, 'on');
+            haxs{mm,nn}{end+1} = plot(ax, datetime(tbase(index), 'ConvertFrom', 'datenum'), insdat_caldat(index), 'LineStyle', '-', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
+            legText{mm,nn}{end+1} = instStrTag;
+            
+            disp(instStrTag)
+            for jj = 1:numel(index)
+                indx = index(jj);
+                disp([datestr(tbase(indx)) ' Inst: ' num2str(inst_data(indx),'%10.6f') ' Ref: ' num2str(ref_inst_data_tbase(indx),'%10.6f') ' Diff: ' num2str(insdat_caldat(indx),'%10.6f') match_str]);
+            end
+            
+            
+            %                 diffdat = insdat-ref_inst_data;
             %                 STATS = statistic(diffdat);
             %                 inststr = [data{ii}.meta.instrument_make '-' data{ii}.meta.instrument_model '-' data{ii}.meta.instrument_serial_no];
             %                 str = ['| ' inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN) ' |'];
@@ -377,53 +405,78 @@ plot_ctd_comparison(userData, plotVar);
         dinstModels(rmins) = [];
         
         f1.Visible = 'on';
+        trange = [tmin-tbuffer/2; tmax+tbuffer/2];
         
-        legText = [refStrTag; dinstShortnameSerial];
-        grid(ax1, 'on');
-        xlabel(ax1, 'Time');
-        ylabel(ax1, makeTexSafe(plotVar));
-        legend(h1, ax1_legText);
-        %title(ax1, makeTexSafe({['CTD compared to other instruments (without a pressure sensor) : ' plotVar], 'matching by nearest time'}));
-        title(ax1, makeTexSafe({['CTD compared to all instruments : ' plotVar], 'matching by nearest time'}));
-        ax1.XLim = datetime([tmin-tbuffer; tmax+tbuffer], 'ConvertFrom', 'datenum');
-        
-        grid(ax2, 'on');
-        xlabel(ax2, 'Time');
-        ylabel(ax2, 'EP\_DEPTH');
-        legend(h2, ax2_legText);
-        ax2.XLim = datetime([tmin-tbuffer; tmax+tbuffer], 'ConvertFrom', 'datenum');
-        
-        grid(ax3, 'on');
-        xlabel(ax3, 'Time');
-        ylabel(ax3, makeTexSafe(plotVar));
-        legend(h3, ax3_legText);
-        title(ax3, makeTexSafe({['CTD compared to only instruments with a pressure sensor : ' plotVar], 'matching by nearest EP_DEPTH'}));
-        ax3.XLim = datetime([tmin-tbuffer; tmax+tbuffer], 'ConvertFrom', 'datenum');
-        
-        grid(ax4, 'on');
-        xlabel(ax4, 'Time');
-        ylabel(ax4, 'EP\_DEPTH');
-        legend(h4, ax4_legText);
-        ax4.XLim = datetime([tmin-tbuffer; tmax+tbuffer], 'ConvertFrom', 'datenum');
-        
-        linkaxes([ax1, ax3], 'xy');
-        linkaxes([ax2, ax4], 'xy');
-        
-        f2.Visible = 'on';
-        
-        ax = f2_ax1;
+        mm = 1;
+        nn = 1;
+        ax = axs(mm, nn);
         grid(ax, 'on');
-        xlabel(ax, plotVar);
-        ylabel(ax, 'EP\_DEPTH');
-        legend(f2_h1, f2_ax1_legText, 'Location', 'northwest');
-        title(ax, makeTexSafe({['CTD compared to only instruments with a pressure sensor : ' plotVar], 'matching by nearest EP_DEPTH'}));
+        h = haxs{mm,nn};
+        legend([h{:}], legText{mm,nn});
+        title(ax, makeTexSafe({['CTD compared to instruments without pressure sensor : ' plotVar], 'matching by nearest time'}));
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
-        ax = f2_ax2;
+        mm = 1;
+        nn = 2;
+        ax = axs(mm, nn);
         grid(ax, 'on');
-        xlabel(ax, 'Time');
-        ylabel(ax, {[plotVar ' difference'], 'Instrument - CTD'});
-        legend(f2_h2, f2_ax2_legText);
-        ax.XLim = datetime([tmin-tbuffer; tmax+tbuffer], 'ConvertFrom', 'datenum');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn});
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
+        
+        mm = 2;
+        nn = 1;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        h = haxs{mm,nn};
+        legend([h{:}], legText{mm,nn});
+        title(ax, makeTexSafe({['CTD compared to instruments with a pressure sensor : ' plotVar], 'matching by nearest CTD EP_DEPTH'}));
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
+        
+        mm = 2;
+        nn = 2;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn});
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
+        
+        mm = 1;
+        nn = 3;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
+        
+        mm = 2;
+        nn = 3;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
+        
+        mm = 1;
+        nn = 4;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
+        
+        mm = 2;
+        nn = 4;
+        ax = axs(mm, nn);
+        grid(ax, 'on');
+        %h = haxs{mm,nn};
+        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
+        ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
+        
+        linkaxes([axs(1, 1), axs(1, 2), axs(1, 4), axs(2, 1), axs(2, 2), axs(2, 4)], 'x');
+        linkaxes([axs(1, 1), axs(2, 1)], 'y');
+        linkaxes([axs(1, 2), axs(2, 2), axs(1, 3), axs(2, 3)], 'y');
+        linkaxes([axs(1, 4), axs(2, 4)], 'y');
+        %linkaxes([axs(1, 1), axs(1, 2), axs(1, 4), axs(2, 1), axs(2, 2), axs(2, 4)], 'x');
+        linkaxes([axs(1, 1), axs(1, 2), axs(2, 1), axs(2, 2)], 'x');
     end
 
 %%
@@ -457,7 +510,7 @@ plot_ctd_comparison(userData, plotVar);
         refinst_data(iNaN) = [];
         refinst_depth(iNaN) = [];
         
-        ctd_in_water = refinst_depth < -3;
+        ctd_in_water = refinst_depth < -2;
         refinst_time(~ctd_in_water) = [];
         refinst_data(~ctd_in_water) = [];
         refinst_depth(~ctd_in_water) = [];
@@ -483,6 +536,10 @@ plot_ctd_comparison(userData, plotVar);
             inst_has_depth = true;
             inst_depth = sam.variables{idDEPTH}.data;
             inst_depth = inst_depth(indx);
+            inst_in_water = inst_depth < 0;
+            inst_time(~inst_in_water) = [];
+            inst_depth(~inst_in_water) = [];
+            inst_data(~inst_in_water) = [];
         end
     end
 %%
