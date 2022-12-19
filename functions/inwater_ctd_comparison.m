@@ -217,6 +217,7 @@ plot_ctd_comparison(userData, plotVar);
         for mm = 1:2
             ax = axs(mm, nn);
             hold(ax, 'on');
+            ax.XAxis = matlab.graphics.axis.decorator.DatetimeRuler;
             xlabel(ax, 'Time');
             ylabel(ax, {[plotVar ' difference'], 'Instrument - CTD'});
         end
@@ -420,8 +421,6 @@ plot_ctd_comparison(userData, plotVar);
         nn = 2;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn});
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
         mm = 2;
@@ -437,38 +436,28 @@ plot_ctd_comparison(userData, plotVar);
         nn = 2;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn});
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
         mm = 1;
         nn = 3;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
         
         mm = 2;
         nn = 3;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
         
         mm = 1;
         nn = 4;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
         mm = 2;
         nn = 4;
         ax = axs(mm, nn);
         grid(ax, 'on');
-        %h = haxs{mm,nn};
-        %legend([h{:}], legText{mm,nn}, 'Location', 'northwest');
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
         linkaxes([axs(1, 1), axs(1, 2), axs(1, 4), axs(2, 1), axs(2, 2), axs(2, 4)], 'x');
@@ -529,17 +518,26 @@ plot_ctd_comparison(userData, plotVar);
         inst_time = inst_time(indx);
         inst_data = inst_data(indx);
         
-        idDEPTH  = getVar(sam.variables, 'EP_DEPTH');
         inst_has_depth = false;
-        inst_depth = [];
+        idDEPTH  = getVar(sam.variables, 'EP_DEPTH');
+        depth_conversion = 1;
+        if idDEPTH == 0
+            idDEPTH  = getVar(sam.variables, 'DEPTH');
+            depth_conversion = -1;
+        end
         if idDEPTH ~= 0
-            inst_has_depth = true;
-            inst_depth = sam.variables{idDEPTH}.data;
-            inst_depth = inst_depth(indx);
+          inst_has_depth = true;
+        end
+        
+        if inst_has_depth
+            inst_depth = depth_conversion * sam.variables{idDEPTH}.data;
+            inst_depth = inst_depth(indx); % workaround any non-monotonic time issues
             inst_in_water = inst_depth < 0;
             inst_time(~inst_in_water) = [];
             inst_depth(~inst_in_water) = [];
             inst_data(~inst_in_water) = [];
+        else
+            inst_depth = nan(size(inst_time));  
         end
     end
 %%
