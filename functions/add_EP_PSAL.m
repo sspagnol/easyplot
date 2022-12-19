@@ -24,9 +24,11 @@ if depthIdx == 0
 end
 if depthIdx > 0, isDepthInfo = true; end
 
+use_instrument_nominal_depth = false;
 if isfield(sam, 'instrument_nominal_depth')
     if ~isempty(sam.instrument_nominal_depth)
         isDepthInfo = true;
+        use_instrument_nominal_depth = true;
     end
 end
 
@@ -70,8 +72,11 @@ else
         % with depth data
         depth = sam.(depthType){depthIdx}.data;
         presName = 'DEPTH';
-    else
+    elseif use_instrument_nominal_depth
         % with nominal depth information
+        depth = sam.instrument_nominal_depth*ones(size(temp));
+    else
+        % with unknown depth information
         depth = 10*ones(size(temp));
         presName = 'instrument_nominal_depth';
     end
@@ -86,7 +91,7 @@ else
         latitude = str2double(inputdlg(prompt,dlg_title,num_lines,defaultans));
         sam.meta.latitude = latitude;
     end
-    presRel = gsw_p_from_z(depth, latitude);
+    presRel = gsw_p_from_z(-depth, latitude);
     defaultLatitude = latitude;
 end
 % calculate C(S,T,P)/C(35,15,0) ratio
