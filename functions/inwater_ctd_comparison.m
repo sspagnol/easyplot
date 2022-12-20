@@ -144,8 +144,9 @@ plot_ctd_comparison(userData, plotVar);
         % inst variable versus time:
         f1 = figure('visible', 'off');
         clf(f1);
+        
         mplots = 2;
-        nplots = 4;
+        nplots = 5;
         axs = gobjects(mplots, nplots);
         haxs = cell(mplots, nplots);
         legText = cell(mplots, nplots);
@@ -162,10 +163,10 @@ plot_ctd_comparison(userData, plotVar);
         % pp=7, ctd depth versus variable, match by depth
         % pp=8, (ctd var - var) versus time, match by depth
         
-        for pp = 1:8
+        for pp = 1:mplots*nplots
             mm = div(pp-1,nplots) + 1;
             nn = mod(pp-1,nplots) + 1;
-            axs(mm, nn) = subplot(mplots, nplots, pp, 'Parent', f1);
+            axs(mm, nn) = subplot_tight(mplots, nplots, pp, [0.075, 0.03], 'Parent', f1);
             hold('on');
             legText{mm, nn} = {};
             grid(axs(mm, nn), 'on');
@@ -355,7 +356,7 @@ plot_ctd_comparison(userData, plotVar);
             if inst_has_depth
                 haxs{mm,nn}{end+1} = plot(ax, datetime(tbase(index), 'ConvertFrom', 'datenum'), inst_depth(index), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
             else
-                haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(index2), 'ConvertFrom', 'datenum'), ref_inst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);  
+                haxs{mm,nn}{end+1} = plot(ax, datetime(ref_inst_time(index2), 'ConvertFrom', 'datenum'), ref_inst_depth(index2), 'LineStyle', 'none', 'Marker', marker, 'MarkerSize', 10, 'color', cc(ii,:), 'Tag', instStrTag);
             end
             legText{mm,nn}{end+1} = instStrTag;
             
@@ -413,7 +414,7 @@ plot_ctd_comparison(userData, plotVar);
         ax = axs(mm, nn);
         grid(ax, 'on');
         h = haxs{mm,nn};
-        legend([h{:}], legText{mm,nn});
+        lh1 = legend([h{:}], legText{mm,nn});
         title(ax, makeTexSafe({['CTD compared to instruments without pressure sensor : ' plotVar], 'matching by nearest time'}));
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
@@ -428,7 +429,7 @@ plot_ctd_comparison(userData, plotVar);
         ax = axs(mm, nn);
         grid(ax, 'on');
         h = haxs{mm,nn};
-        legend([h{:}], legText{mm,nn});
+        lh2 = legend([h{:}], legText{mm,nn});
         title(ax, makeTexSafe({['CTD compared to instruments with a pressure sensor : ' plotVar], 'matching by nearest CTD EP_DEPTH'}));
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
@@ -460,12 +461,46 @@ plot_ctd_comparison(userData, plotVar);
         grid(ax, 'on');
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
+        % create fake plot and copy legend entries
+        mm = 1;
+        nn = 5;
+        ax = axs(mm, nn);
+        grid(ax, 'off');
+        set(ax,'xticklabel',[]);
+        set(ax,'yticklabel',[])
+        for ii=1:numel(haxs{1,1})
+            h = haxs{1,1}{ii};
+            plot(ax, 1, nan, 'Marker', h.Marker, 'MarkerSize', h.MarkerSize, 'LineStyle', h.LineStyle, 'LineWidth', h.LineWidth, 'Color', h.Color, 'Tag', h.Tag)    ;
+        end
+        hh1 = legend(ax, lh1.String{:}, 'location', 'northwest');
+        drawnow();
+        set(ax, 'Visible', 'off');
+        lh1.Visible = 'off';
+        
+        % create fake plot and copy legend entries
+        mm = 2;
+        nn = 5;
+        drawnow;
+        ax = axs(mm, nn);
+        grid(ax, 'off');
+        set(ax,'xticklabel',[]);
+        set(ax,'yticklabel',[])
+        for ii=1:numel(haxs{2,1})
+            h = haxs{2,1}{ii};
+            plot(ax, 1, nan, 'Marker', h.Marker, 'MarkerSize', h.MarkerSize, 'LineStyle', h.LineStyle, 'LineWidth', h.LineWidth, 'Color', h.Color, 'Tag', h.Tag)    ;
+        end
+        hh2 = legend(ax, lh2.String{:}, 'location', 'northwest');
+        drawnow();
+        set(ax, 'Visible', 'off');
+        lh2.Visible = 'off';
+        
         linkaxes([axs(1, 1), axs(1, 2), axs(1, 4), axs(2, 1), axs(2, 2), axs(2, 4)], 'x');
         linkaxes([axs(1, 1), axs(2, 1)], 'y');
         linkaxes([axs(1, 2), axs(2, 2), axs(1, 3), axs(2, 3)], 'y');
         linkaxes([axs(1, 4), axs(2, 4)], 'y');
         %linkaxes([axs(1, 1), axs(1, 2), axs(1, 4), axs(2, 1), axs(2, 2), axs(2, 4)], 'x');
         linkaxes([axs(1, 1), axs(1, 2), axs(2, 1), axs(2, 2)], 'x');
+        
     end
 
 %%
@@ -526,7 +561,7 @@ plot_ctd_comparison(userData, plotVar);
             depth_conversion = -1;
         end
         if idDEPTH ~= 0
-          inst_has_depth = true;
+            inst_has_depth = true;
         end
         
         if inst_has_depth
@@ -537,7 +572,7 @@ plot_ctd_comparison(userData, plotVar);
             inst_depth(~inst_in_water) = [];
             inst_data(~inst_in_water) = [];
         else
-            inst_depth = nan(size(inst_time));  
+            inst_depth = nan(size(inst_time));
         end
     end
 %%
