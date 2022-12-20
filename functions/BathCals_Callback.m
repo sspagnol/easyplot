@@ -38,7 +38,7 @@ uic = uicontextmenu(hFig);
 % Create the parent menu
 bathcalmenu = uimenu(uic,'label',[plotVar ' Bath Calibrations']);
 % Create the submenus
-m1 = uimenu(bathcalmenu,'label','Select Points',...
+m1 = uimenu(bathcalmenu,'label','Select Bound Box',...
     'Callback',{@selectPoints_Callback, 'bathCals'});
 
 %children = findobj(plotPanel,'Type','axes');
@@ -75,7 +75,7 @@ pan('off');
 %theParent.uic.HandleVisibility = 'on';
 
 h = helpdlg(['Select the region to use for bath calibrations by ' ...
-    'zooming in and then use the UIContextMenu ''Select Points''.', ...
+    'zooming in and then use the UIContextMenu ''Select Bound Box''.', ...
     'Calibration selection']);
 uiwait(h);
 %zoom('on');
