@@ -136,11 +136,7 @@ RSK = RSKappendtolog(RSK, logentry);
         if hashold && any(x) % Check if the channel contains zero value only
             switch action  
               case 'interp'
-                  try
                 y(I) = interp1(t(good), x(good), t(I)); 
-                  catch
-                      y(I) = NaN;
-                  end
               case 'nan'
                 y(I) = NaN;
             end

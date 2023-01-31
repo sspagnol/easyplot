@@ -5,20 +5,15 @@ function setcolormap(channel)
 % https://www.mathworks.com/matlabcentral/fileexchange/57773-cmocean-perceptually-uniform-colormaps 
 
 if exist('cmocean', 'file')==2 
-    if contains(channel, 'salinity', 'ignorecase', true)
-        cmocean('haline');
-    elseif contains(channel, 'temperature', 'ignorecase', true)
+    cmocean('haline');
+    if strcmpi(channel, 'temperature')
         cmocean('thermal'); 
-    elseif contains(channel, 'chlorophyll', 'ignorecase', true)
+    elseif strcmpi(channel, 'chlorophyll')
         cmocean('algae'); 
-    elseif contains(channel, 'backscatter', 'ignorecase', true)
+    elseif strcmpi(channel, 'backscatter')
         cmocean('matter');
-    elseif contains(channel, ["phycoerythrin", "turbidity"], 'ignorecase', true)
+    elseif strcmpi(channel, 'phycoerythrin')
         cmocean('turbid');
-    elseif strcmpi(channel, 'par')
-        cmocean('solar');
-	else
-		cmocean('haline');
     end
 else
     colormap default

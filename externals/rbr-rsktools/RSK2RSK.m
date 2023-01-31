@@ -66,7 +66,7 @@ fprintf('Wrote: %s/%s\n', outputdir, newfile);
 function newfile = setupOutputFilename(RSK,suffix)
     [~,name,~] = fileparts(RSK.toolSettings.filename);
     
-    if isempty(suffix)
+    if isempty(suffix); 
         suffix = datestr(now,'yyyymmddTHHMM'); 
     end
     
@@ -102,7 +102,7 @@ end
 function createTabledata(nchannel)
     tempstr = cell(nchannel,1);
     
-    for n = 1:nchannel
+    for n = 1:nchannel; 
         tempstr{n} = [', channel', sprintf('%02d',n), ' DOUBLE'];
     end
     
@@ -156,13 +156,7 @@ function insertEpochs(RSK,data)
 end
 
 function insertChannels(RSK)
-    channelID = {RSK.channels.channelID};
-    channelID(cell2mat(cellfun(@(x) numel(x)<1, channelID, 'UniformOutput', false))) = {[0]};
-    shortName = {RSK.channels.shortName};
-    longName = {RSK.channels.longName};
-    units = {RSK.channels.units};
-    formatAndTransact('INSERT INTO channels (channelID,shortName,longName,units ,isMeasured ,isDerived ) VALUES', '(%i,"%s","%s","%s",1,0)', [channelID;shortName;longName;units]);
-    %formatAndTransact('INSERT INTO channels (channelID,shortName,longName,units ,isMeasured ,isDerived ) VALUES', '(%i,"%s","%s","%s",1,0)', {RSK.channels.channelID;RSK.channels.shortName;RSK.channels.longName;RSK.channels.units});
+    formatAndTransact('INSERT INTO channels (channelID,shortName,longName,units ,isMeasured ,isDerived )  VALUES','(%i,"%s","%s","%s",1,0)',{RSK.channels.channelID;RSK.channels.shortName;RSK.channels.longName;RSK.channels.units});       
 end
 
 function insertData(data)
@@ -179,22 +173,22 @@ function insertRegionTables(RSK)
         insertRegion(RSK)
         insertRegionProfile(RSK)
         
-        if isfield(RSK,'regionCast')
+        if isfield(RSK,'regionCast'); 
             insertRegionCast(RSK); 
         end
         
-        if isfield(RSK,'regionGeoData')
+        if isfield(RSK,'regionGeoData'); 
             insertRegionGeoData(RSK); 
         end
         
-        if isfield(RSK,'regionComment')
+        if isfield(RSK,'regionComment'); 
             insertRegionComment(RSK); 
         end       
     end  
 end
 
 function insertRegion(RSK)
-    if isfield(RSK.region,'description')
+    if isfield(RSK.region,'description');
         formatAndTransact('INSERT INTO region (datasetID,regionID,type,tstamp1,tstamp2,label,description) VALUES','(%i,%i,"%s",%i,%i,"%s","%s")',struct2cell(RSK.region));       
     else
         formatAndTransact('INSERT INTO region (datasetID,regionID,type,tstamp1,tstamp2,label) VALUES','(%i,%i,"%s",%i,%i,"%s")',struct2cell(RSK.region));       
@@ -233,10 +227,10 @@ function formatAndTransact(insertString, sql_fmt, values)
     sql = buildSQLstring(values, sql_fmt);
 
     if strncmp(insertString,'INSERT INTO data',16)
-        sql = strrep(sql, 'NaN', 'null');
+        sql = strrep(sql, 'NaN', 'null');    
     end
 
-    doTransaction([insertString ' ' sql]);
+    doTransaction([insertString sql]);
 end
 
 end

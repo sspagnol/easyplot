@@ -22,14 +22,13 @@ if isfield(RSK,'instruments') && isfield(RSK.instruments,'serialID') && ...
 
     fprintf('Model: %s\n',RSK.instruments.model);
     fprintf('Serial ID: %d\n',RSK.instruments.serialID);
-    if isfield(RSK, 'directional')
-        try
-            [fastPeriod,slowPeriod] = readsamplingperiod(RSK);
-            fprintf('Sampling period: fast %0.4f second, slow %0.4f second\n',fastPeriod,slowPeriod);
-        catch
-            fprintf('Sampling period: %0.3f second\n',readsamplingperiod(RSK));
-        end
+    try
+        [fastPeriod,slowPeriod] = readsamplingperiod(RSK);
+        fprintf('Sampling period: fast %0.4f second, slow %0.4f second\n',fastPeriod,slowPeriod);
+    catch
+        fprintf('Sampling period: %0.3f second\n',readsamplingperiod(RSK));
     end
+    
 end
 
 channelTable = struct2table(RSK.channels);

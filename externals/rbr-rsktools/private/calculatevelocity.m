@@ -30,10 +30,6 @@ deltaD = diff(depth);
 deltaT = diff(time * secondsperday);
 dDdT = deltaD ./ deltaT;
 midtime = time(1:end-1) + deltaT/(2*secondsperday);
-try
 velocity = interp1(midtime, dDdT, time, 'linear', 'extrap');
-catch
-   velocity = NaN(size(time)); 
-end
     
 end

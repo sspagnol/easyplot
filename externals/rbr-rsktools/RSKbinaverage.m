@@ -79,7 +79,7 @@ visualize = p.Results.visualize;
 
 checkDataField(RSK)
 
-if isempty(direction)
+if isempty(direction);
     if isfield(RSK.data,'direction') && all(ismember({RSK.data.direction},'up'))
         direction = 'up';
     elseif isfield(RSK.data,'direction')
@@ -99,7 +99,7 @@ end
 
 samplingPeriod = readsamplingperiod(RSK);
 
-if visualize ~= 0
+if visualize ~= 0; 
     [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); 
 end
 diagChanCol = [getchannelindex(RSK,'Conductivity'), getchannelindex(RSK,'Temperature')];
@@ -108,7 +108,7 @@ if any(strcmp({RSK.channels.longName},'Salinity'))
 end
 
 k = 1;
-for ndx = castidx
+for ndx = castidx;
     if binByTime
         ref = RSK.data(ndx).tstamp;
         Y(1:length(ref),k) = ref-ref(1);
