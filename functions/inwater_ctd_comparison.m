@@ -461,13 +461,12 @@ plot_ctd_comparison(userData, plotVar);
         grid(ax, 'on');
         ax.XLim = datetime(trange, 'ConvertFrom', 'datenum');
         
-        % create fake plot and copy legend entries
+        % nn = 5 subplot purely used to display a legend for previous plots
+        % so as not to obscure them. So create fake plot and copy legend 
+        % entries
         mm = 1;
         nn = 5;
         ax = axs(mm, nn);
-        grid(ax, 'off');
-        set(ax,'xticklabel',[]);
-        set(ax,'yticklabel',[])
         for ii=1:numel(haxs{1,1})
             h = haxs{1,1}{ii};
             plot(ax, 1, nan, 'Marker', h.Marker, 'MarkerSize', h.MarkerSize, 'LineStyle', h.LineStyle, 'LineWidth', h.LineWidth, 'Color', h.Color, 'Tag', h.Tag)    ;
@@ -477,14 +476,12 @@ plot_ctd_comparison(userData, plotVar);
         set(ax, 'Visible', 'off');
         lh1.Visible = 'off';
         
-        % create fake plot and copy legend entries
+        % nn = 5 subplot purely used to display a legend for previous plots
+        % so as not to obscure them. So create fake plot and copy legend 
+        % entries
         mm = 2;
         nn = 5;
-        drawnow;
         ax = axs(mm, nn);
-        grid(ax, 'off');
-        set(ax,'xticklabel',[]);
-        set(ax,'yticklabel',[])
         for ii=1:numel(haxs{2,1})
             h = haxs{2,1}{ii};
             plot(ax, 1, nan, 'Marker', h.Marker, 'MarkerSize', h.MarkerSize, 'LineStyle', h.LineStyle, 'LineWidth', h.LineWidth, 'Color', h.Color, 'Tag', h.Tag)    ;
