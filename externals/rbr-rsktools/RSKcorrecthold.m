@@ -4,7 +4,7 @@ function [RSK, holdpts] = RSKcorrecthold(RSK, varargin)
 %                  value or NaN.
 %
 % Syntax:  [RSK, holdpts] = RSKcorrecthold(RSK, [OPTIONS])
-% 
+%
 % The analog-to-digital (A2D) converter on RBR instruments must
 % recalibrate periodically.  In the time it takes for the calibration
 % to finish, one or more samples are missed.  The onboard firmware
@@ -35,12 +35,12 @@ function [RSK, holdpts] = RSKcorrecthold(RSK, varargin)
 %                      'both' for all. Default is all directions available.
 %
 %                action - Action to perform on a hold point. The default is
-%                      'nan', whereby hold points are replaced with NaN. 
+%                      'nan', whereby hold points are replaced with NaN.
 %                      Another option is 'interp', whereby hold points are
-%                      replaced with values calculated by linearly 
+%                      replaced with values calculated by linearly
 %                      interpolating from the neighbouring points.
 %
-%                visualize - To give a diagnostic plot on specified profile 
+%                visualize - To give a diagnostic plot on specified profile
 %                      number(s). Original, processed data and flagged
 %                      data will be plotted to show users how the algorithm
 %                      works. Default is 0.
@@ -48,14 +48,14 @@ function [RSK, holdpts] = RSKcorrecthold(RSK, varargin)
 % Outputs:
 %    RSK - Structure with zero-order hold corrected values.
 %
-%    holdpts - Structure containing the index of the corrected hold points; 
+%    holdpts - Structure containing the index of the corrected hold points;
 %              if more than one channel has hold points, hold is a structure
-%              with a field for each channel.  
+%              with a field for each channel.
 %
-% Example: 
+% Example:
 %    [rsk, holdpts] = RSKcorrecthold(rsk)
 %     OR
-%    [rsk, holdpts] = RSKcorrecthold(rsk, 'channel', 'Temperature', 'action', 'interp','visualize',1); 
+%    [rsk, holdpts] = RSKcorrecthold(rsk, 'channel', 'Temperature', 'action', 'interp','visualize',1);
 %
 % See also: RSKdespike, RSKremoveloops, RSKsmooth.
 %
@@ -100,47 +100,51 @@ castidx = getdataindex(RSK, profile, direction);
 if visualize ~= 0; [raw, diagndx] = checkDiagPlot(RSK, visualize, direction, castidx); end
 
 %loop through channels
-for c = chanCol 
+for c = chanCol
     k = 1;
     for ndx = castidx
         in = RSK.data(ndx).values(:,c);
-        intime = RSK.data(ndx).tstamp; 
-        [out, index] = correcthold(in, intime, action);  
+        intime = RSK.data(ndx).tstamp;
+        [out, index] = correcthold(in, intime, action);
         RSK.data(ndx).values(:,c) = out;
-        holdpts(k).index{c} = index;       
-        if all(visualize ~= 0) && c == chanCol(1);    
-            for d = diagndx;
-                if ndx == d;
+        holdpts(k).index{c} = index;
+        if all(visualize ~= 0) && c == chanCol(1)
+            for d = diagndx
+                if ndx == d
                     figure
-                    doDiagPlot(RSK,raw,'index',index,'ndx',ndx,'channelidx',chanCol(1),'fn',mfilename); 
+                    doDiagPlot(RSK,raw,'index',index,'ndx',ndx,'channelidx',chanCol(1),'fn',mfilename);
                 end
             end
-        end        
+        end
         k = k+1;
-    end     
+    end
 end
 
 logentry = sprintf(['Zero-order hold corrected for ' repmat('%s ', 1, length(channels)) 'channel.' ' Hold points were treated with %s.'], channels{:}, action);
 RSK = RSKappendtolog(RSK, logentry);
 
-    %% Nested Functions
+%% Nested Functions
     function [y, I] = correcthold(x, t, action)
-    % Replaces zero-order hold values with either a NaN or interpolated 
-    % value using the neighbouring points. 
-
+        % Replaces zero-order hold values with either a NaN or interpolated
+        % value using the neighbouring points.
+        
         y = x;
         I = find(diff(x) == 0) + 1;
         good = find(ismember(1:length(t),I) == 0);
         hashold = ~isempty(I);
-
+        
         if hashold && any(x) % Check if the channel contains zero value only
-            switch action  
-              case 'interp'
-                y(I) = interp1(t(good), x(good), t(I)); 
-              case 'nan'
-                y(I) = NaN;
+            switch action
+                case 'interp'
+                    if numel(t(good)) > 1
+                        y(I) = interp1(t(good), x(good), t(I));
+                    else
+                        y(I) = NaN;
+                    end
+                case 'nan'
+                    y(I) = NaN;
             end
-        end  
+        end
     end
 
 end
