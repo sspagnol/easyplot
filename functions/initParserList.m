@@ -49,8 +49,8 @@ parserList.parser{ii}='InterOceanS4Parse';
 
 ii=ii+1;
 parserList.name{ii}='JCU Marotte (csv)';
-parserList.wildcard{ii}={'*.csv'};
-parserList.message{ii}='Choose Marotte csv files:';
+parserList.wildcard{ii}={'*.csv', '*.mat'};
+parserList.message{ii}='Choose Marotte csv/mat files:';
 parserList.parser{ii}='MarotteParse';
 
 ii=ii+1;
