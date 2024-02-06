@@ -565,9 +565,16 @@ plot_ctd_comparison(userData, plotVar);
             inst_depth = depth_conversion * sam.variables{idDEPTH}.data;
             inst_depth = inst_depth(indx); % workaround any non-monotonic time issues
             inst_in_water = inst_depth < 0;
-            inst_time(~inst_in_water) = [];
-            inst_depth(~inst_in_water) = [];
-            inst_data(~inst_in_water) = [];
+            if any(inst_in_water)
+                inst_time(~inst_in_water) = [];
+                inst_depth(~inst_in_water) = [];
+                inst_data(~inst_in_water) = [];
+            else
+                % something is wrong here, maybe you have added pressure to
+                % an instrument that doesn't have a pressure sensor
+                inst_depth = nan(size(sam.variables{idDEPTH}.data));
+                inst_has_depth = false;
+            end
         else
             inst_depth = nan(size(inst_time));
         end
