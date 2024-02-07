@@ -235,7 +235,7 @@ plot_ctd_comparison(userData, plotVar);
             
             [inst_time, inst_data_raw, inst_depth_raw, inst_has_depth] = get_inst_data(data{ii}, plotVar);
             
-            igIns1 = (inst_time >= (tmin-tbuffer)) & (inst_time <= (tmax+tbuffer));
+            idx_inst_time_in_ref_time = (inst_time >= (tmin-tbuffer)) & (inst_time <= (tmax+tbuffer));
             %need the largest time diff between ref and each ins as timebase:
             inst_time_diff = nanmedian(diff(inst_time));
             
@@ -265,10 +265,10 @@ plot_ctd_comparison(userData, plotVar);
                 inst_data(iNaN) = [];
                 inst_depth(iNaN) = [];
             else
-                tbase = inst_time(igIns1);
-                inst_data = inst_data_raw(igIns1);
+                tbase = inst_time(idx_inst_time_in_ref_time);
+                inst_data = inst_data_raw(idx_inst_time_in_ref_time);
                 if inst_has_depth
-                    inst_depth = inst_depth_raw(igIns1);
+                    inst_depth = inst_depth_raw(idx_inst_time_in_ref_time);
                 else
                     inst_depth = NaN(size(tbase));
                 end
@@ -564,11 +564,11 @@ plot_ctd_comparison(userData, plotVar);
         if inst_has_depth
             inst_depth = depth_conversion * sam.variables{idDEPTH}.data;
             inst_depth = inst_depth(indx); % workaround any non-monotonic time issues
-            inst_in_water = inst_depth < 0;
-            if any(inst_in_water)
-                inst_time(~inst_in_water) = [];
-                inst_depth(~inst_in_water) = [];
-                inst_data(~inst_in_water) = [];
+            idx_inst_in_water = inst_depth < 0;
+            if any(idx_inst_in_water)
+                inst_time(~idx_inst_in_water) = [];
+                inst_depth(~idx_inst_in_water) = [];
+                inst_data(~idx_inst_in_water) = [];
             else
                 % something is wrong here, maybe you have added pressure to
                 % an instrument that doesn't have a pressure sensor
