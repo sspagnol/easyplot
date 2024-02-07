@@ -37,7 +37,7 @@ instShortnameSerialFilename = strcat(instShortname, '#', instSerials, ' (', inst
 [refinst, ok] = listdlg('PromptString','Choose the reference instrument',...
     'SelectionMode','single',...
     'ListSize', [400,250],...
-    'ListString',instShortnameSerialFilename,...
+    'ListString', instShortnameSerialFilename,...
     'Name', 'Reference instrument');
 
 if ok == 0 % no instrument chosen
@@ -45,7 +45,7 @@ if ok == 0 % no instrument chosen
 end
 
 userData.refInst = refinst;
-%reset instList so that it doesn't include the reference instrument
+%reset instrument lists so that it doesn't include the reference instrument
 instShortnameSerial(refinst) = [];
 instShortnameSerialFilename(refinst) = [];
 instModels(refinst) = [];
@@ -55,7 +55,7 @@ iSet(refinst) = [];
 %bath:
 %make another input box:
 f = figure(...
-    'Name',        'Select the Bath Calibrated Instruments',...
+    'Name',        'Select the test tank instruments',...
     'Visible',     'off',...
     'MenuBar'  ,   'none',...
     'Resize',      'off',...
@@ -71,7 +71,7 @@ for k = 1:numel(instShortnameSerialFilename)
     setCheckboxes(k) = uicontrol(...
         'Style',    'checkbox',...
         'String',   instShortnameSerialFilename{k},...
-        'Value',    iSet(k), ...
+        'Value',    iSet(k),...
         'UserData', k);
 end
 
@@ -125,10 +125,11 @@ plotcals(userData);
         refStrTag = strcat(plotVar, '-', refinst_sam.meta.EP_instrument_model_shortname, '-', refinst_sam.meta.EP_instrument_serial_no_deployment);
         refStrTag = regexprep(refStrTag, '[^ -~]', '-');
         refinst_data = refinst_sam.variables{refinst_sam.EP_variablePlotStatus>0}.data;
-        %refTime = ref.dimensions{1}.data;
+
         idTime  = getVar(refinst_sam.dimensions, 'TIME');
         refinst_time = getXdata(refinst_sam.dimensions{idTime});
         refinst_timediff = nanmedian(diff(refinst_time)); %datenum
+		igRef = [];
         for ii = 1:size(userData.calx, 1)
             if isdatetime(userData.calx(ii,1))
                 tmin(ii) = datenum(userData.calx(ii,1));
@@ -179,7 +180,7 @@ plotcals(userData);
         dcm_h = datacursormode(f3);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
-        cfunc = @(x) colorspace('RGB->Lab',x);
+        cfunc = @(x) colorspace('RGB->Lab', x);
         cc = distinguishable_colors(numel(data), {'w','k'}, cfunc);
         cb = distinguishable_colors(numel(udinstModels), {'w','k'}, cfunc);
         clear('h');
@@ -187,7 +188,7 @@ plotcals(userData);
         mrkSymbol = {'+','o','*','.','x','s','d','^','>','<','p','h','+','o'};
         rmins = [];
 
-        % handles of plot that potentially be created
+        % handles of plots that potentially be created
         if hg2flag
             h1 = gobjects(size(data));
             h2 = gobjects(size(data));
@@ -258,8 +259,8 @@ plotcals(userData);
                    disp(['   Ref Inst data range : ' char(datetime(refinst_time(1), 'ConvertFrom', 'datenum')) ' - ' char(datetime(refinst_time(end), 'ConvertFrom', 'datenum'))]);
                    %continue;
                 end
+				
                 %plot only the regions of comparison
-                %axes(ax1);
                 hold(ax1, 'on');
                 if ii == 1
                     h1(ii) = plot(ax1, datetime(tbase, 'ConvertFrom', 'datenum'), refinst_caldata, 'kx-', 'linewidth', 2, 'Tag', refStrTag);
@@ -317,7 +318,7 @@ plotcals(userData);
         end
         disp(' ');
         
-        % remove handles of plots that weren't created (indicated by NaN)
+        % remove handles of plots that weren't created
         h1(rmins) = [];
         h2(rmins) = [];
         hh1(rmins) = [];
@@ -326,8 +327,7 @@ plotcals(userData);
         dinstShortnameSerialFilename(rmins) = [];
         dinstModels(rmins) = [];
         
-        if exist('h1','var')
-            %figure(f1);
+        if ~isemtpy(h1) %exist('h1','var')
             f1.Visible = 'on';
             legText = [refStrTag; dinstShortnameSerial];
             grid(ax1, 'on');
@@ -336,7 +336,6 @@ plotcals(userData);
             legend(ax1, legText);
             title(ax1, makeTexSafe(['Test tank ' plotVar]));
             
-            %figure(f2);
             f2.Visible = 'on';
             legText = dinstModels;
             %legText(rmins) = [];
@@ -347,7 +346,6 @@ plotcals(userData);
             ylabel(ax2, makeTexSafe([plotVar ' offset']));
             grid(ax2, 'on');
   
-            %figure(f3);
             f3.Visible = 'on';
             legText = dinstShortnameSerial;
             grid(ax3, 'on');
