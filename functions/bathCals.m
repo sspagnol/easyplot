@@ -155,7 +155,7 @@ plotcals(userData);
         dinstModels = instModels(iSet);
         udinstModels = unique(dinstModels, 'stable');
         
-        % plot test tank data by time:
+        % handle for plot of test tank data by time:
         f1 = figure('visible', 'off');
         clf;
         ax1 = axes(f1);
@@ -164,7 +164,7 @@ plotcals(userData);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
 
         
-        % plot difference to reference instrument coloured by instrument type
+        % handle for plot of difference to reference instrument coloured by instrument type
         f2 = figure('visible', 'off');
         clf;
         ax2 = axes(f2);
@@ -172,7 +172,7 @@ plotcals(userData);
         dcm_h = datacursormode(f2);
         set(dcm_h, 'UpdateFcn', @customDatacursorText)
         
-        % plot difference to reference instrument by time:
+        % handle for plot of difference to reference instrument by time:
         f3 = figure('visible', 'off');
         clf;
         ax3 = axes(f3);
@@ -289,9 +289,9 @@ plotcals(userData);
                 %plot difference to ref inst
                 %axes(ax3);
                 hold(ax3, 'on');
-                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat-refinst_caldata, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
+                plot(ax3, datetime(tbase, 'ConvertFrom', 'datenum'), insdat - refinst_caldata, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 if isfield(userData,'calx2')
-                    plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2-caldat2, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
+                    plot(ax3, datetime(tbase2, 'ConvertFrom', 'datenum'), insdat2 - caldat2, 'x-', 'color', cc(ii,:), 'Tag', instStrTag);
                 end
                 
                 diffdat = insdat-refinst_caldata;
@@ -300,14 +300,14 @@ plotcals(userData);
                 str = ['| ' inststr ' | ' datestr(tbase(istart)) ' -- ' datestr(tbase(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                 disp(str);
                 if size(userData.calx, 1) > 1
-                    hh2(ii) = plot(ax2, caldat2,insdat2-caldat2, 'Marker', mrkSymbol{mod(ik,numel(mrkSymbol))}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
+                    hh2(ii) = plot(ax2, caldat2, insdat2 - caldat2, 'Marker', mrkSymbol{mod(ik,numel(mrkSymbol))}, 'Color',cb(ik,:), 'DisplayName', udinstModels{ik});
                     XData = get(hh2(ii), 'XData');
                     YData = get(hh2(ii), 'YData');
                     iend = find(~isnan(XData) & ~isnan(YData), 1, 'last');
                     istart = find(~isnan(XData) & ~isnan(YData), 1, 'first');
                     text(ax2, double(XData(iend)),double(YData(iend)),...
                         data{ii}.meta.instrument_serial_no); %iu{ik}); %
-                    diffdat = insdat2-caldat2;
+                    diffdat = insdat2 - caldat2;
                     STATS = statistic(diffdat);
                     str = ['| ' inststr ' | ' datestr(tbase2(istart)) ' -- ' datestr(tbase2(iend)) ' | ' num2str(STATS.MEAN) ' |'];
                     disp(str);
@@ -327,7 +327,7 @@ plotcals(userData);
         dinstShortnameSerialFilename(rmins) = [];
         dinstModels(rmins) = [];
         
-        if ~isemtpy(h1) %exist('h1','var')
+        if ~isempty(h1) %exist('h1','var')
             f1.Visible = 'on';
             legText = [refStrTag; dinstShortnameSerial];
             grid(ax1, 'on');
