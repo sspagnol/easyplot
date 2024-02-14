@@ -258,6 +258,14 @@ plot_ctd_comparison(userData, plotVar);
             inst_time_diff = nanmedian(diff(inst_time));
             
             for cast = [cast_dn, cast_up]
+                idx_inst_time_in_cast_time = (inst_time >= (cast.time(1)-tbuffer)) & (cast.time(end) <= (tmax+tbuffer));
+                if ~any(idx_inst_time_in_cast_time)
+                    disp(['Unable to match ' instStrTag ' for ' cast.str ' cast']);
+                    disp(['  inst time range ' datestr(inst_time(1)) ' to ' datestr(inst_time(end))]);
+                    disp(['  ref  time range ' datestr(cast.time(1)) ' to ' datestr(cast.time(end))]);
+                    continue;
+                end
+                
                 % inst has faster sampling rate than the reference instrument
                 faster_inst_sample = (ref_inst_time_diff >= inst_time_diff);
                 % the ref sample occurs fully within inst sample period e.g.
