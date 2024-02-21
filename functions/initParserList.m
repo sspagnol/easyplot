@@ -150,6 +150,12 @@ parserList.message{ii}='Choose RDI 000/PD0 files:';
 parserList.parser{ii}='workhorseParse_local';
 
 ii=ii+1;
+parserList.name{ii}='SBE26 (tid)';
+parserList.wildcard{ii}={'*.tid'};
+parserList.message{ii}='Choose SBE26 tid files:';
+parserList.parser{ii}='SBE26Parse';
+
+ii=ii+1;
 parserList.name{ii}='SBE37 (asc)';
 parserList.wildcard{ii}={'*.asc'};
 parserList.message{ii}='Choose SBE37 files:';
