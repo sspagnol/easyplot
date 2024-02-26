@@ -24,6 +24,12 @@ parserList.message{ii}='Choose file list:';
 parserList.parser{ii}='fileListParse';
 
 ii=ii+1;
+parserList.name{ii}='Aanderaa (raw)';
+parserList.wildcard{ii}={'*.raw'};
+parserList.message{ii}='Choose Aanderaa raw files:';
+parserList.parser{ii}='AanderaaParse';
+
+ii=ii+1;
 parserList.name{ii}='AquaTec (csv)';
 parserList.wildcard{ii}={'*.csv'};
 parserList.message{ii}='Choose AquaTec csv files:';
