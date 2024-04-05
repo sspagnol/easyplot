@@ -567,8 +567,8 @@ plot_ctd_comparison(userData, plotVar);
         % smooth data and obtain index to deepest point in the cast
         new_ref_inst_depth_lpf = ezsmoothn(refinst_depth);
         [~, ind_min_depth] = min(new_ref_inst_depth_lpf, [], 'omitnan');
-        ind1 = find(new_ref_inst_depth_lpf(1:ind_min_depth) > -2.0, 1, 'last');
-        ind2 = find(new_ref_inst_depth_lpf(ind_min_depth:end) > -2.0, 1, 'first') + ind_min_depth - 1;
+        ind1 = find(new_ref_inst_depth_lpf(1:ind_min_depth) > -3.0, 1, 'last');
+        ind2 = find(new_ref_inst_depth_lpf(ind_min_depth:end) > -3.0, 1, 'first') + ind_min_depth - 1;
         
         % Extend out indexes by 5 seconds, more to help visual
         % confirmation that have complete down/up case data
