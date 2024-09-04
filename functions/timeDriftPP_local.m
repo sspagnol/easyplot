@@ -1,5 +1,5 @@
 function sample_data = timeDriftPP_local(sample_data, qcLevel, auto)
-%TIMEDRIFTPP Prompts the user to apply time drift correction to the given data 
+%TIMEDRIFTPP Prompts the user to apply time drift correction to the given data
 % sets. A pre-deployment time offset and end deployment time offset are
 % required and if included in the DDB (or CSV file), will be shown in the
 % dialog box. Otherwise, user is required to enter them.
@@ -29,7 +29,7 @@ function sample_data = timeDriftPP_local(sample_data, qcLevel, auto)
 %
 
 %
-% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 %
 % This program is free software: you can redistribute it and/or modify
@@ -53,7 +53,7 @@ if isempty(sample_data), return;                                    end
 
 % no modification of data is performed on the raw FV00 dataset except
 % local time to UTC conversion
-if strcmpi(qcLevel, 'raw'), return; end
+%if strcmpi(qcLevel, 'raw'), return; end
 
 % auto logical in input to enable running under batch processing
 if nargin<3, auto=false; end
@@ -77,11 +77,11 @@ for k = 1:nSample
         if isfield(sample_data{k}.meta.deployment, 'EndOffset')
             endOffsets(k) = sample_data{k}.meta.deployment.EndOffset;
         end
-%         if all(isfield(sample_data{k}.meta.deployment, {'TimeDriftInstrument', 'TimeDriftGPS'}))
-%             if ~isempty(sample_data{k}.meta.deployment.TimeDriftInstrument) && ~isempty(sample_data{k}.meta.deployment.TimeDriftGPS)
-%                 endOffsets(k) = (sample_data{k}.meta.deployment.TimeDriftInstrument - sample_data{k}.meta.deployment.TimeDriftGPS)*3600*24;
-%             end
-%         end
+        %         if all(isfield(sample_data{k}.meta.deployment, {'TimeDriftInstrument', 'TimeDriftGPS'}))
+        %             if ~isempty(sample_data{k}.meta.deployment.TimeDriftInstrument) && ~isempty(sample_data{k}.meta.deployment.TimeDriftGPS)
+        %                 endOffsets(k) = (sample_data{k}.meta.deployment.TimeDriftInstrument - sample_data{k}.meta.deployment.TimeDriftGPS)*3600*24;
+        %             end
+        %         end
     end
 end
 
@@ -172,13 +172,13 @@ for k = 1:nSample
     
     % this set has been deselected
     if ~sets(k), continue; end
-
-%     %check for zero values in both fields
-%     if startOffsets(k) == 0 && endOffsets(k) == 0
-%         continue;
-%     end
-%     
-%     % look time through dimensions
+    
+    %     %check for zero values in both fields
+    %     if startOffsets(k) == 0 && endOffsets(k) == 0
+    %         continue;
+    %     end
+    %
+    %     % look time through dimensions
     type = 'dimensions';
     timeIdx = getVar(sample_data{k}.(type), 'TIME');
     
@@ -190,40 +190,40 @@ for k = 1:nSample
     
     % no time dimension nor variable in this dataset
     if timeIdx == 0, continue; end
-
+    
     sample_data{k}.(type){timeIdx}.EP_StartOffset = startOffsets(k);
-    sample_data{k}.(type){timeIdx}.EP_StopOffset = stopOffsets(k);
-
-%     timeDriftComment = ['timeDriftPP: TIME values and time_coverage_end global attributes have been have been '...
-%         'linearly adjusted for an offset of: ' num2str(startOffsets(k)) ' seconds and a drift of: ' num2str(endOffsets(k) - startOffsets(k)) ' seconds ' ...
-%         'across the deployment.'];
-%
-%     % apply the drift correction
-%     newtime = timedrift_corr(sample_data{k}.(type){timeIdx}.data, ...
-%         startOffsets(k),endOffsets(k));
-%     sample_data{k}.(type){timeIdx}.data = newtime;
-%     
-%     % and to the time coverage atttributes
-%     sample_data{k}.time_coverage_start = newtime(1);
-%     sample_data{k}.time_coverage_end = ...
-%         newtime(end);
-%     
-%     
-%     comment = sample_data{k}.(type){timeIdx}.comment;
-%     if isempty(comment)
-%         sample_data{k}.(type){timeIdx}.comment = timeDriftComment;
-%     else
-%         sample_data{k}.(type){timeIdx}.comment = [comment ' ' timeDriftComment];
-%     end
-%     
-%     history = sample_data{k}.history;
-%     if isempty(history)
-%         sample_data{k}.history = sprintf('%s - %s', datestr(now_utc, ...
-%             readProperty('exportNetCDF.dateFormat')), timeDriftComment);
-%     else
-%         sample_data{k}.history = sprintf('%s\n%s - %s', history, ...
-%             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), timeDriftComment);
-%     end
+    sample_data{k}.(type){timeIdx}.EP_StopOffset = endOffsets(k);
+    
+    %     timeDriftComment = ['timeDriftPP: TIME values and time_coverage_end global attributes have been have been '...
+    %         'linearly adjusted for an offset of: ' num2str(startOffsets(k)) ' seconds and a drift of: ' num2str(endOffsets(k) - startOffsets(k)) ' seconds ' ...
+    %         'across the deployment.'];
+    %
+    %     % apply the drift correction
+    %     newtime = timedrift_corr(sample_data{k}.(type){timeIdx}.data, ...
+    %         startOffsets(k),endOffsets(k));
+    %     sample_data{k}.(type){timeIdx}.data = newtime;
+    %
+    %     % and to the time coverage atttributes
+    %     sample_data{k}.time_coverage_start = newtime(1);
+    %     sample_data{k}.time_coverage_end = ...
+    %         newtime(end);
+    %
+    %
+    %     comment = sample_data{k}.(type){timeIdx}.comment;
+    %     if isempty(comment)
+    %         sample_data{k}.(type){timeIdx}.comment = timeDriftComment;
+    %     else
+    %         sample_data{k}.(type){timeIdx}.comment = [comment ' ' timeDriftComment];
+    %     end
+    %
+    %     history = sample_data{k}.history;
+    %     if isempty(history)
+    %         sample_data{k}.history = sprintf('%s - %s', datestr(now_utc, ...
+    %             readProperty('exportNetCDF.dateFormat')), timeDriftComment);
+    %     else
+    %         sample_data{k}.history = sprintf('%s\n%s - %s', history, ...
+    %             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), timeDriftComment);
+    %     end
 end
 
     function keyPressCallback(source,ev)
