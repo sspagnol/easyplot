@@ -90,7 +90,7 @@ if ~redoSubplots && ~isempty(varDeleteNames) && isempty(varNewNames)
 end
 
 %% update axis index
-[userData.sample_data, nSubPlots] = calcAxisIndex(userData.sample_data, userData.EP_plotType, varNames);
+[userData.sample_data, nSubPlots, subplot_type] = calcAxisIndex(userData.sample_data, userData.EP_plotType, varNames);
 
 %% determine QC use
 try
@@ -182,9 +182,9 @@ for ii = 1:numel(userData.sample_data)
             idTime  = getVar(userData.sample_data{ii}.dimensions, 'TIME');
         end
         
-        instStr=strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
+        instStr = strcat(theVar, '-',userData.sample_data{ii}.meta.EP_instrument_model_shortname,'-',userData.sample_data{ii}.meta.EP_instrument_serial_no_deployment);
         instStr = regexprep(instStr, '[^ -~]', '-'); %only printable ascii characters
-        instStr = regexprep(instStr, ' ', '');
+        instStr = regexprep(instStr, '_', '\_');
         %legendString = strrep(instStr,'_','\_');
         legendString = instStr;
         
