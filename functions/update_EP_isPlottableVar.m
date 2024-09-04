@@ -7,8 +7,9 @@ sam.EP_isPlottableVar = false(1,numel(sam.variables));
 
 for kk=1:numel(sam.variables)
     isNotEmptyDim = ~isempty(sam.variables{kk}.dimensions);
+    isPlottableDim = numel(sam.variables{kk}.dimensions) < 3;
     hasDimData = isfield(sam.variables{kk},'data') & any(~isnan(sam.variables{kk}.data(:)));
-    if isNotEmptyDim && hasDimData
+    if isNotEmptyDim && isPlottableDim && hasDimData
         sam.EP_isPlottableVar(kk) = true;
     end
 end

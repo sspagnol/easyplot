@@ -154,6 +154,7 @@ sam  = sam{1};
 
 %% update EP_isPlottableVar, must be done after all variables have been added
 sam = update_EP_isPlottableVar(sam);
+sam = update_EP_axis_types(sam);
 sam = update_EP_slicing(sam);
 sam.EP_variablePlotStatus = zeros([numel(sam.variables), 1]);
 sam.EP_isNew = true;
