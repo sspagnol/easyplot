@@ -42,6 +42,7 @@ uimenu(sm2, 'Label', 'LINECOLOUR_PER_INSTRUMENTTYPE', 'Callback', @lineColourTyp
 uimenu(m, 'Label', 'Plot Using QC flags', 'Callback', @useQCflags_Callback);
 
 uimenu(m, 'Label', 'Do Time Offset', 'Callback', @timeOffsets_Callback, 'Separator','on');
+uimenu(m, 'Label', 'Do Time Drift', 'Callback', @timeDrift_Callback);
 uimenu(m, 'Label', 'Do Variable Offset', 'Callback', @variableOffsets_Callback);
 uimenu(m, 'Label', 'Do CTD test tank comparison', 'Callback', @BathCals_Callback);
 uimenu(m, 'Label', 'Do CTD cast comparison', 'Callback', @inwater_ctd_comparison_Callback);
@@ -383,6 +384,20 @@ setappdata(hFig, 'UserData', userData);
             return;
         end
         
+        if isfield(ymlData, 'plottype')
+            oldPlotType = userData.EP_plotType;
+            EP_plotType = upper(ymlData.plottype);
+            userData.EP_plotType = EP_plotType;
+            menuObject = findobj(hFig.Children, 'Text', EP_plotType);
+            if strcmp(userData.EP_plotType, oldPlotType)
+                set(menuObject,'Checked', 'on');
+            else
+                set(menuObject, 'Checked', 'on');
+                iCheckOff = arrayfun(@(x) strcmp(x.Label, oldPlotType), menuObject.Parent.Children);
+                set(menuObject.Parent.Children(iCheckOff), 'Checked', 'off');
+            end
+        end
+        
         for kk=1:numel(userData.sample_data)
             userData.sample_data{kk}.EP_isNew = false;
         end
@@ -554,6 +569,7 @@ setappdata(hFig, 'UserData', userData);
         [ymlFileName, ymlPathName, FilterIndex] = uiputfile('*.yml','Save file list as');
         
         ymlData = struct;
+        ymlData.plottype = userData.EP_plotType;
         for ii=1:numel(userData.sample_data)
             tmpStruct = struct;
             % older style only absolute path filename
@@ -579,6 +595,7 @@ setappdata(hFig, 'UserData', userData);
         userData.EP_previousYmlDir = ymlPathName;
         setappdata(hFig, 'UserData', userData);
     end
+
 %%
     function timeOffsets_Callback(hObject, eventdata, handles)
         hFig = ancestor(hObject,'figure');
@@ -592,6 +609,30 @@ setappdata(hFig, 'UserData', userData);
         end
         
         userData.sample_data = timeOffsetPP_local(userData.sample_data, 'raw', false);
+
+        if ~isfield(userData, 'dataLimits')
+            userData.dataLimits = [];
+        end
+        userData.dataLimits = updateVarExtents(userData.sample_data, userData.dataLimits);
+
+        userData.EP_redoPlots = true;
+        setappdata(hFig, 'UserData', userData);
+        plotData(hFig);
+    end
+
+%%
+    function timeDrift_Callback(hObject, eventdata, handles)
+        hFig = ancestor(hObject,'figure');
+        userData=getappdata(hFig, 'UserData');
+        
+        msgPanel = findobj(hFig, 'Tag','msgPanel');
+        msgPanelText = findobj(msgPanel, 'Tag','msgPanelText');
+
+        if ~isfield(userData,'sample_data')
+            return;
+        end
+        
+        userData.sample_data = timeDriftPP_local(userData.sample_data, 'raw', false);
 
         if ~isfield(userData, 'dataLimits')
             userData.dataLimits = [];
