@@ -82,6 +82,22 @@ for k = 1:nSample
         %                 endOffsets(k) = (sample_data{k}.meta.deployment.TimeDriftInstrument - sample_data{k}.meta.deployment.TimeDriftGPS)*3600*24;
         %             end
         %         end
+    else
+        type = 'dimensions';
+        timeIdx = getVar(sample_data{k}.(type), 'TIME');
+        
+        if timeIdx == 0
+            % look time through variables
+            type = 'variables';
+            timeIdx = getVar(sample_data{k}.(type), 'TIME');
+        end
+        
+        if isfield(sample_data{k}.(type){timeIdx}, 'EP_StartOffset')
+            startOffsets(k) = sample_data{k}.(type){timeIdx}.EP_StartOffset;
+        end
+        if isfield(sample_data{k}.(type){timeIdx}, 'EP_StopOffset')
+            endOffsets(k) = sample_data{k}.(type){timeIdx}.EP_StopOffset;
+        end
     end
 end
 
