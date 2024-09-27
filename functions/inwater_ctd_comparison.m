@@ -575,8 +575,17 @@ plot_ctd_comparison(userData, plotVar);
         % If this one day starts looking messy consider commenting out
         % these lines
         tbuffer = 5/60/60/24;
-        [ind1, ~] = near(refinst_time, refinst_time(ind1)-tbuffer, 1);
-        [ind2, ~] = near(refinst_time, refinst_time(ind2)+tbuffer, 1);
+        if isempty(ind1)
+            ind1 = 1; 
+        else
+            [ind1, ~] = near(refinst_time, refinst_time(ind1)-tbuffer, 1);
+        end
+
+        if isempty(ind2)
+            ind2 = numel(refinst_time);
+        else
+            [ind2, ~] = near(refinst_time, refinst_time(ind2)+tbuffer, 1);
+        end
         
         % keep only down/up cast data
         refinst_time = refinst_time(ind1:ind2);
