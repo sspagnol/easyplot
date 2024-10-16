@@ -509,6 +509,9 @@ setappdata(hFig, 'UserData', userData);
             latitude = NaN;
             if hasLatitude   
                 latitude = yml_data_info.latitude;
+                if ~isfloat(latitude)
+                    latitude = str2num(latitude);
+                end
             end
             
             if isfield(yml_data_info, 'variables') && ~isempty(yml_data_info.variables)
