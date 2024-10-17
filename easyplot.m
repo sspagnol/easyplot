@@ -422,8 +422,20 @@ setappdata(hFig, 'UserData', userData);
                     toolbox_input_file = strrep(toolbox_input_file, '\', filesep);
                 end
                 toolbox_input_file = strrep(toolbox_input_file, [filesep '.' filesep], filesep);
+
                 if ~exist(toolbox_input_file, 'file')
                     toolbox_input_file = ymlData.files{ii}.abspath_filename;
+                end
+                
+                % handle case if name in the db is the wrong case, windows
+                % will allow it but causes confusion on linux
+                [f_path, f_name, f_ext] = fileparts(toolbox_input_file);
+                files_in_dir = dir(f_path);
+                for jj = 1:numel(files_in_dir)
+                   if strcmpi([f_name f_ext], files_in_dir(jj).name)
+                       toolbox_input_file = fullfile(f_path, files_in_dir(jj).name);
+                       break;
+                   end
                 end
             end
             
