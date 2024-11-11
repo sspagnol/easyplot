@@ -156,13 +156,22 @@ if candoLpf
         end
 
         dT=lpf_sampleInterval;
+        % if not enough data skip
+        if numel(newRawData) < (3 * (33 / (dT/3600)))
+            continue;
+        end
         [filterData, nwts] = pl66tn(newRawData,dT/3600,33);
+        % if not enough lpf data skip
+        if all(isnan(filterData))
+            continue;
+        end
+        
 		filterData(1:nwts) = NaN;
 		filterData(end-nwts:end) = NaN;
         filterData = filterData + meansignal;
         
         % if not enough lpf data skip
-        if sum(isnan(filterData))==numel(filterData)
+        if all(isnan(filterData))
             continue;
         end
         
