@@ -14,7 +14,7 @@ if any(tf)
    ind = find(tf);
    sam_desc = strrep(sam_desc, names{ind}, values{ind});
 end
-sam.meta.instrument_model
+sam.meta.instrument_model;
 sam.meta.EP_instrument_model_shortname  = sam_desc;
                            
 if isempty(sam.meta.instrument_serial_no)
