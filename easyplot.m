@@ -413,6 +413,7 @@ setappdata(hFig, 'UserData', userData);
             parser_name = ymlData.files{ii}.parser;
             % older file with only absolute path filename
             toolbox_input_file = ymlData.files{ii}.filename;
+
             % newer file with relative and absolute path filename
             if isfield(ymlData.files{ii}, 'relpath_filename')
                 toolbox_input_file = fullfile(ymlPathName, ymlData.files{ii}.relpath_filename);
@@ -437,6 +438,15 @@ setappdata(hFig, 'UserData', userData);
                        break;
                    end
                 end
+            else
+                [f_path, f_name, f_ext] = fileparts(toolbox_input_file);
+                files_in_dir = dir([ymlPathName '**']);
+                for jj = 1:numel(files_in_dir)
+                   if ~files_in_dir(jj).isdir && strcmpi([f_name f_ext], files_in_dir(jj).name)
+                       toolbox_input_file = fullfile(f_path, files_in_dir(jj).name);
+                       break;
+                   end
+                end  
             end
             
             [pathStr, fileStr, extStr] = fileparts(toolbox_input_file);
