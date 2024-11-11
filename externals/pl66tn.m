@@ -83,7 +83,9 @@ for ic=1:ncol
         % add back trend
         xf(jgd,ic)=xf(jgd,ic)+trnd;
     else
-        warning('warning time series is too short')
+        xf(:,ic) = nan;
+        %warning('warning time series is too short');
+        disp('warning time series is too short')
     end
 end
 
